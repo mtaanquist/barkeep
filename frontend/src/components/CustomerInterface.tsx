@@ -337,6 +337,11 @@ const CustomerInterface: React.FC = () => {
                   src={randomDrink.image_url}
                   alt={randomDrink.title}
                   className="mx-auto mb-2 rounded-lg max-h-40 object-cover"
+                  style={{
+                    transform: `scale(${randomDrink.image_crop_zoom || 1})`,
+                    transformOrigin: `${50 + (randomDrink.image_crop_x || 0)}% ${50 + (randomDrink.image_crop_y || 0)}%`,
+                    objectPosition: `${50 + (randomDrink.image_crop_x || 0)}% ${50 + (randomDrink.image_crop_y || 0)}%`,
+                  }}
                 />
               )}
               <div className="text-sm text-gray-700 mb-2">
