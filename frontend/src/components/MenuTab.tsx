@@ -150,15 +150,19 @@ const MenuTab: React.FC = () => {
               {/* Image */}
               <div className="aspect-video overflow-hidden bg-gray-100">
                 {drink.image_url ? (
-                  <img
-                    src={drink.image_url}
-                    alt={drink.title}
-                    className="w-full h-full object-cover"
+                  <div
+                    className="w-full h-full"
                     style={{
-                      transform: `scale(${drink.image_crop_zoom || 1})`,
-                      transformOrigin: `${50 + (drink.image_crop_x || 0)}% ${50 + (drink.image_crop_y || 0)}%`,
+                      transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,
+                      transformOrigin: 'center center',
                     }}
-                  />
+                  >
+                    <img
+                      src={drink.image_url}
+                      alt={drink.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
                     <Package className="w-12 h-12" />

@@ -333,18 +333,22 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
                   {formData.image && (
                     <div className="mt-4 space-y-2">
                       <div className="relative w-full rounded-lg overflow-hidden bg-gray-100" style={{ aspectRatio: '16/9' }}>
-                        <img
-                          src={formData.image}
-                          alt="Preview"
-                          className="w-full h-full object-cover"
+                        <div
+                          className="absolute inset-0"
                           style={{
-                            transform: `scale(${formData.imageCropZoom})`,
-                            transformOrigin: `${50 + formData.imageCropX}% ${50 + formData.imageCropY}%`,
+                            transform: `translate(${formData.imageCropX}%, ${formData.imageCropY}%) scale(${formData.imageCropZoom})`,
+                            transformOrigin: 'center center',
                           }}
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
-                        />
+                        >
+                          <img
+                            src={formData.image}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        </div>
                       </div>
                       <button
                         type="button"

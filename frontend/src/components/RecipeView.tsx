@@ -50,15 +50,19 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
         <div className="relative">
           {drink.image_url && (
             <div className="h-64 lg:h-80 overflow-hidden">
-              <img
-                src={drink.image_url}
-                alt={drink.title}
-                className="w-full h-full object-cover"
+              <div
+                className="w-full h-full"
                 style={{
-                  transform: `scale(${drink.image_crop_zoom || 1})`,
-                  transformOrigin: `${50 + (drink.image_crop_x || 0)}% ${50 + (drink.image_crop_y || 0)}%`,
+                  transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,
+                  transformOrigin: 'center center',
                 }}
-              />
+              >
+                <img
+                  src={drink.image_url}
+                  alt={drink.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             </div>
           )}

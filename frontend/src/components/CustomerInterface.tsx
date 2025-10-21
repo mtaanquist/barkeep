@@ -372,15 +372,21 @@ const CustomerInterface: React.FC = () => {
                 {randomDrink.title}
               </h3>
               {randomDrink.image_url && (
-                <img
-                  src={randomDrink.image_url}
-                  alt={randomDrink.title}
-                  className="mx-auto mb-2 rounded-lg max-h-40 object-cover"
-                  style={{
-                    transform: `scale(${randomDrink.image_crop_zoom || 1})`,
-                    transformOrigin: `${50 + (randomDrink.image_crop_x || 0)}% ${50 + (randomDrink.image_crop_y || 0)}%`,
-                  }}
-                />
+                <div className="mx-auto mb-2 rounded-lg overflow-hidden max-h-40 aspect-video">
+                  <div
+                    className="w-full h-full"
+                    style={{
+                      transform: `translate(${randomDrink.image_crop_x || 0}%, ${randomDrink.image_crop_y || 0}%) scale(${randomDrink.image_crop_zoom || 1})`,
+                      transformOrigin: 'center center',
+                    }}
+                  >
+                    <img
+                      src={randomDrink.image_url}
+                      alt={randomDrink.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
               )}
               <div className="text-sm text-gray-700 mb-2">
                 {randomDrink.base_spirit && (
