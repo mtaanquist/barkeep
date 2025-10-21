@@ -70,10 +70,16 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({
       (userType === "bartender" || (userType === "guest" && customerName));
 
     if (isFullyAuthenticated) {
+      console.log("[WebSocket] Attempting to connect...", {
+        barId: currentBar.id,
+        userType,
+        customerName: userType === "guest" ? customerName : undefined,
+      });
+
       const websocket = new WebSocket(WS_URL);
 
       websocket.onopen = () => {
-        console.log("WebSocket connected");
+        console.log("[WebSocket] Connected successfully");
         setIsConnected(true);
         websocket.send(
           JSON.stringify({
@@ -98,23 +104,39 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({
         }
       };
 
-      websocket.onclose = () => {
-        console.log("WebSocket disconnected");
+      websocket.onclose = (event) => {
+        console.log("[WebSocket] Disconnected", {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean,
+        });
         setIsConnected(false);
       };
 
       websocket.onerror = (error) => {
-        console.error("WebSocket error:", error);
+        console.error("[WebSocket] Error occurred:", error);
+        console.error("[WebSocket] Attempted URL:", WS_URL);
+        console.error("[WebSocket] ReadyState:", websocket.readyState);
         setIsConnected(false);
       };
 
       setWs(websocket);
 
       return () => {
-        websocket.close();
+        console.log("[WebSocket] Cleaning up connection");
+        if (websocket.readyState === WebSocket.OPEN || websocket.readyState === WebSocket.CONNECTING) {
+          websocket.close();
+        }
       };
     } else {
+      console.log("[WebSocket] Not connecting - authentication incomplete", {
+        hasCurrentBar: !!currentBar,
+        userType,
+        hasCustomerName: !!customerName,
+      });
+      
       if (ws) {
+        console.log("[WebSocket] Closing existing connection");
         ws.close();
         setWs(null);
         setIsConnected(false);

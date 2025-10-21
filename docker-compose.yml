@@ -5,7 +5,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "21030:3000"
-      - "21080:8080"
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
@@ -13,7 +12,6 @@ services:
       - NODE_ENV=production
       - DB_PATH=/app/data/bar.db
       - PORT=3000
-      - WS_PORT=8080
     depends_on:
       - db-init
 
