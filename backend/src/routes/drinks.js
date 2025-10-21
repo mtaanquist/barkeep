@@ -415,7 +415,19 @@ router.get("/bar/:barId/favourites/:customerName", (req, res) => {
     `);
     const favourites = stmt.all(barId, customerName);
 
-    res.json(favourites);
+    // Filter drinks for guest access
+    const guestFavourites = favourites.map(drink => {
+      if (!drink.show_recipe_to_guests) {
+        // Hide recipe from guests if not allowed
+        return {
+          ...drink,
+          recipe: null // Don't show recipe to guests
+        };
+      }
+      return drink; // Show full drink including recipe
+    });
+
+    res.json(guestFavourites);
   } catch (error) {
     console.error("Error fetching user favourites:", error);
     res.status(500).json({ error: "Failed to fetch favourites" });
