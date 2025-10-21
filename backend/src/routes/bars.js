@@ -89,7 +89,7 @@ router.post("/", async (req, res) => {
 router.get("/:id", (req, res) => {
   try {
     const stmt = db.prepare(
-      "SELECT id, name, language, created_at FROM bars WHERE id = ?"
+      "SELECT id, name, language, skip_approval, created_at FROM bars WHERE id = ?"
     );
     const bar = stmt.get(req.params.id);
 
@@ -108,7 +108,7 @@ router.get("/:id", (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const barId = req.params.id;
-    const { name, language, newBartenderPassword, newGuestPassword } = req.body;
+    const { name, language, newBartenderPassword, newGuestPassword, skipApproval } = req.body;
 
     // Verify bar exists
     const checkStmt = db.prepare("SELECT * FROM bars WHERE id = ?");
@@ -141,6 +141,11 @@ router.put("/:id", async (req, res) => {
       }
       updates.push("language = ?");
       values.push(language);
+    }
+
+    if (skipApproval !== undefined) {
+      updates.push("skip_approval = ?");
+      values.push(skipApproval ? 1 : 0);
     }
 
     if (newBartenderPassword !== undefined) {
@@ -183,7 +188,7 @@ router.put("/:id", async (req, res) => {
 
     // Return updated bar info (without password hashes)
     const updatedBar = db
-      .prepare("SELECT id, name, language, created_at FROM bars WHERE id = ?")
+      .prepare("SELECT id, name, language, skip_approval, created_at FROM bars WHERE id = ?")
       .get(barId);
     res.json(updatedBar);
   } catch (error) {
@@ -199,7 +204,7 @@ router.get("/:id/dashboard", (req, res) => {
 
     // Verify bar exists
     const barStmt = db.prepare(
-      "SELECT id, name, language FROM bars WHERE id = ?"
+      "SELECT id, name, language, skip_approval FROM bars WHERE id = ?"
     );
     const bar = barStmt.get(barId);
 
@@ -314,7 +319,7 @@ router.get("/", (req, res) => {
     const { limit = 50 } = req.query;
 
     const stmt = db.prepare(`
-      SELECT id, name, language, created_at 
+      SELECT id, name, language, skip_approval, created_at 
       FROM bars 
       ORDER BY created_at DESC 
       LIMIT ?

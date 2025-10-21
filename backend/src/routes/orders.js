@@ -93,8 +93,8 @@ router.post("/", (req, res) => {
         });
     }
 
-    // Verify bar exists
-    const barStmt = db.prepare("SELECT id FROM bars WHERE id = ?");
+    // Verify bar exists and get skip_approval setting
+    const barStmt = db.prepare("SELECT id, skip_approval FROM bars WHERE id = ?");
     const bar = barStmt.get(barId);
 
     if (!bar) {
@@ -128,17 +128,21 @@ router.post("/", (req, res) => {
         .json({ error: "Customer already has a pending order" });
     }
 
+    // Determine initial status based on skip_approval setting
+    const initialStatus = bar.skip_approval ? 'accepted' : 'new';
+
     // Create the order
     const stmt = db.prepare(`
       INSERT INTO orders (bar_id, customer_name, drink_id, drink_title, status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, 'new', datetime('now'), datetime('now'))
+      VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `);
 
     const result = stmt.run(
       barId,
       customerName.trim(),
       drinkId,
-      drinkTitle.trim()
+      drinkTitle.trim(),
+      initialStatus
     );
 
     // Return the created order
@@ -331,15 +335,15 @@ router.delete("/:orderId", (req, res) => {
     }
 
     // If customerName is provided, verify the customer owns this order
-    // and can only cancel if order hasn't been accepted yet
+    // and can only cancel if order hasn't been processed yet
     if (customerName) {
       if (order.customer_name !== customerName) {
         return res.status(403).json({ error: "You can only cancel your own orders" });
       }
       
-      if (order.status !== "new") {
+      if (order.status === "processed") {
         return res.status(400).json({ 
-          error: "You can only cancel orders that haven't been accepted yet" 
+          error: "You cannot cancel orders that have been completed" 
         });
       }
     }
