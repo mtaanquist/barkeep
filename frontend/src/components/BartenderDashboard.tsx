@@ -7,6 +7,7 @@ import OrdersTab from "./OrdersTab";
 import MenuTab from "./MenuTab";
 import AnalyticsTab from "./AnalyticsTab";
 import CategoriesTab from "./CategoriesTab";
+import SettingsTab from "./SettingsTab";
 
 const BartenderDashboard: React.FC = () => {
   const {
@@ -177,6 +178,16 @@ const BartenderDashboard: React.FC = () => {
             >
               Categories
             </button>
+            <button
+              onClick={() => setCurrentTab("settings")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-200 ${
+                currentTab === "settings"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              {t("settings")}
+            </button>
           </nav>
         </div>
       </div>
@@ -187,6 +198,7 @@ const BartenderDashboard: React.FC = () => {
         {currentTab === "menu" && <MenuTab />}
         {currentTab === "analytics" && <AnalyticsTab />}
         {currentTab === "categories" && <CategoriesTab />}
+        {currentTab === "settings" && <SettingsTab />}
       </div>
 
       {/* Floating Action Button for Mobile */}

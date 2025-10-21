@@ -36,7 +36,7 @@ const OrderStatusCard: React.FC<OrderStatusCardProps> = ({
             <div className="text-xs font-medium">Ready!</div>
           </div>
         )}
-        {order.status === "new" && onCancelOrder && (
+        {order.status !== "processed" && onCancelOrder && (
           <button
             onClick={() => onCancelOrder(order.id)}
             disabled={loading}

@@ -11,6 +11,7 @@ export interface Bar {
   id: number;
   name: string;
   language: string;
+  skip_approval?: boolean;
 }
 
 export interface Category {
@@ -84,7 +85,7 @@ interface AppContextType {
   editingDrink: Drink | {} | null;
   viewingRecipe: Drink | null;
   showPassword: boolean;
-  currentTab: "orders" | "menu" | "analytics" | "categories";
+  currentTab: "orders" | "menu" | "analytics" | "categories" | "settings";
 
   // Setters
   setUserType: (type: "bartender" | "guest" | null) => void;
@@ -111,7 +112,7 @@ interface AppContextType {
   setEditingDrink: (drink: Drink | {} | null) => void;
   setViewingRecipe: (drink: Drink | null) => void;
   setShowPassword: (show: boolean) => void;
-  setCurrentTab: (tab: "orders" | "menu" | "analytics" | "categories") => void;
+  setCurrentTab: (tab: "orders" | "menu" | "analytics" | "categories" | "settings") => void;
 
   // API helper
   apiCall: (endpoint: string, options?: RequestInit) => Promise<any>;
@@ -172,7 +173,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   const [currentTab, setCurrentTabState] = useState<
-    "orders" | "menu" | "analytics" | "categories"
+    "orders" | "menu" | "analytics" | "categories" | "settings"
   >(() => loadFromStorage(STORAGE_KEYS.currentTab, "orders"));
 
   // Wrapper functions that save to storage
@@ -208,7 +209,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     saveToStorage(STORAGE_KEYS.language, lang);
   };
 
-  const setCurrentTab = (tab: "orders" | "menu" | "analytics" | "categories") => {
+  const setCurrentTab = (tab: "orders" | "menu" | "analytics" | "categories" | "settings") => {
     setCurrentTabState(tab);
     saveToStorage(STORAGE_KEYS.currentTab, tab);
   };
