@@ -36,7 +36,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     onSave(crop, zoom);
   };
 
-  const handleReset = () => {
+  const handleReset = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Prevent any form submission
     setCrop({ x: 0, y: 0 });
     setZoom(1);
   };
