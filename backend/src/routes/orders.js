@@ -359,7 +359,7 @@ router.delete("/:orderId", (req, res) => {
     // Broadcast to WebSocket clients
     req.app.locals.wss?.broadcast(barId, {
       type: "order_deleted",
-      orderId: orderId,
+      orderId: parseInt(orderId),
     });
 
     res.json({ success: true, message: "Order deleted successfully" });
