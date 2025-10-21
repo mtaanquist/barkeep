@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { X, Upload } from "lucide-react";
+import { X, Upload, Crop } from "lucide-react";
 import { useApp, Drink } from "../context/AppContext";
 import { useTranslation } from "../utils/translations";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 import LazyMDEditor from "./LazyMDEditor";
+import ImageCropper from "./ImageCropper";
 
 interface DrinkFormProps {
   drink: Drink | {};
@@ -35,9 +36,13 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
     guestDescription: "guest_description" in drink ? drink.guest_description || "" : "",
     showRecipeToGuests: "show_recipe_to_guests" in drink ? drink.show_recipe_to_guests || false : false,
     categoryId: "category_id" in drink ? drink.category_id || "" : "",
+    imageCropX: "image_crop_x" in drink ? drink.image_crop_x || 0 : 0,
+    imageCropY: "image_crop_y" in drink ? drink.image_crop_y || 0 : 0,
+    imageCropZoom: "image_crop_zoom" in drink ? drink.image_crop_zoom || 1 : 1,
   });
 
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [showCropper, setShowCropper] = useState(false);
 
   // Fetch categories when component mounts
   useEffect(() => {
@@ -131,6 +136,9 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
             guestDescription: formData.guestDescription.trim() || null,
             showRecipeToGuests: formData.showRecipeToGuests,
             categoryId: formData.categoryId || null,
+            imageCropX: formData.imageCropX,
+            imageCropY: formData.imageCropY,
+            imageCropZoom: formData.imageCropZoom,
           }),
         });
 
@@ -150,6 +158,9 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
             guestDescription: formData.guestDescription.trim() || null,
             showRecipeToGuests: formData.showRecipeToGuests,
             categoryId: formData.categoryId || null,
+            imageCropX: formData.imageCropX,
+            imageCropY: formData.imageCropY,
+            imageCropZoom: formData.imageCropZoom,
           }),
         });
 
@@ -320,19 +331,58 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
 
                   {/* Image Preview */}
                   {formData.image && (
-                    <div className="mt-4">
-                      <img
-                        src={formData.image}
-                        alt="Preview"
-                        className="w-full h-32 object-cover rounded-lg"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
+                    <div className="mt-4 space-y-2">
+                      <div
+                        className="relative w-full rounded-lg overflow-hidden"
+                        style={{
+                          aspectRatio: '16/9',
+                          transform: `scale(${formData.imageCropZoom})`,
+                          transformOrigin: `${50 + formData.imageCropX}% ${50 + formData.imageCropY}%`,
                         }}
-                      />
+                      >
+                        <img
+                          src={formData.image}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                          style={{
+                            objectPosition: `${50 + formData.imageCropX}% ${50 + formData.imageCropY}%`,
+                          }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowCropper(true)}
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        <Crop className="w-4 h-4" />
+                        <span>Crop & Position</span>
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
+
+              {/* Image Cropper Modal */}
+              {showCropper && formData.image && (
+                <ImageCropper
+                  imageUrl={formData.image}
+                  initialCrop={{ x: formData.imageCropX, y: formData.imageCropY }}
+                  initialZoom={formData.imageCropZoom}
+                  onSave={(crop, zoom) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      imageCropX: crop.x,
+                      imageCropY: crop.y,
+                      imageCropZoom: zoom,
+                    }));
+                    setShowCropper(false);
+                  }}
+                  onCancel={() => setShowCropper(false)}
+                />
+              )}
 
               {/* Recipe */}
               <div>

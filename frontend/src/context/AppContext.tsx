@@ -34,6 +34,9 @@ export interface Drink {
   is_favourite?: boolean; // Added for favourite status
   category_id?: number;
   category_name?: string;
+  image_crop_x?: number;
+  image_crop_y?: number;
+  image_crop_zoom?: number;
 }
 
 export interface Order {
