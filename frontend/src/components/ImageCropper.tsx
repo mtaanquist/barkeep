@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Cropper from "react-easy-crop";
 import { X, RotateCcw } from "lucide-react";
 import { Area } from "react-easy-crop";
@@ -20,6 +20,12 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
 }) => {
   const [crop, setCrop] = useState(initialCrop);
   const [zoom, setZoom] = useState(initialZoom);
+
+  // Sync state with props when they change
+  useEffect(() => {
+    setCrop(initialCrop);
+    setZoom(initialZoom);
+  }, [initialCrop.x, initialCrop.y, initialZoom]);
 
   const onCropComplete = useCallback((_croppedArea: Area, _croppedAreaPixels: Area) => {
     // Crop area is tracked internally by react-easy-crop
