@@ -332,7 +332,7 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
                   {/* Image Preview */}
                   {formData.image && (
                     <div className="mt-4 space-y-2">
-                      <div className="relative w-full rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                      <div className="relative w-full rounded-lg overflow-hidden bg-gray-100" style={{ aspectRatio: '16/9' }}>
                         <img
                           src={formData.image}
                           alt="Preview"
@@ -340,7 +340,6 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
                           style={{
                             transform: `scale(${formData.imageCropZoom})`,
                             transformOrigin: `${50 + formData.imageCropX}% ${50 + formData.imageCropY}%`,
-                            objectPosition: `${50 + formData.imageCropX}% ${50 + formData.imageCropY}%`,
                           }}
                           onError={(e) => {
                             e.currentTarget.style.display = "none";

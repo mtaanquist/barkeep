@@ -379,7 +379,6 @@ const CustomerInterface: React.FC = () => {
                   style={{
                     transform: `scale(${randomDrink.image_crop_zoom || 1})`,
                     transformOrigin: `${50 + (randomDrink.image_crop_x || 0)}% ${50 + (randomDrink.image_crop_y || 0)}%`,
-                    objectPosition: `${50 + (randomDrink.image_crop_x || 0)}% ${50 + (randomDrink.image_crop_y || 0)}%`,
                   }}
                 />
               )}

@@ -94,7 +94,6 @@ const PastOrders: React.FC<PastOrdersProps> = ({
                       style={{
                         transform: `scale(${drink.image_crop_zoom || 1})`,
                         transformOrigin: `${50 + (drink.image_crop_x || 0)}% ${50 + (drink.image_crop_y || 0)}%`,
-                        objectPosition: `${50 + (drink.image_crop_x || 0)}% ${50 + (drink.image_crop_y || 0)}%`,
                       }}
                     />
                   ) : (

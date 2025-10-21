@@ -30,7 +30,7 @@ const DrinkCard: React.FC<DrinkCardProps> = ({
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md dark:hover:shadow-gray-900/20 transition-shadow">
       {drink.image_url && (
-        <div className="aspect-video overflow-hidden">
+        <div className="aspect-video overflow-hidden bg-gray-100">
           <img
             src={drink.image_url}
             alt={drink.title}
@@ -38,7 +38,6 @@ const DrinkCard: React.FC<DrinkCardProps> = ({
             style={{
               transform: `scale(${imageCropZoom})`,
               transformOrigin: `${50 + imageCropX}% ${50 + imageCropY}%`,
-              objectPosition: `${50 + imageCropX}% ${50 + imageCropY}%`,
             }}
           />
         </div>

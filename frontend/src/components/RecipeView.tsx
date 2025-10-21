@@ -57,7 +57,6 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
                 style={{
                   transform: `scale(${drink.image_crop_zoom || 1})`,
                   transformOrigin: `${50 + (drink.image_crop_x || 0)}% ${50 + (drink.image_crop_y || 0)}%`,
-                  objectPosition: `${50 + (drink.image_crop_x || 0)}% ${50 + (drink.image_crop_y || 0)}%`,
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
