@@ -154,6 +154,11 @@ const MenuTab: React.FC = () => {
                     src={drink.image_url}
                     alt={drink.title}
                     className="w-full h-full object-cover"
+                    style={{
+                      transform: `scale(${drink.image_crop_zoom || 1})`,
+                      transformOrigin: `${50 + (drink.image_crop_x || 0)}% ${50 + (drink.image_crop_y || 0)}%`,
+                      objectPosition: `${50 + (drink.image_crop_x || 0)}% ${50 + (drink.image_crop_y || 0)}%`,
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
