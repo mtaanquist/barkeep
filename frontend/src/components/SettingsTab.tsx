@@ -1,20 +1,16 @@
 import React, { useState } from "react";
 import { Settings, Save } from "lucide-react";
 import { useApp } from "../context/AppContext";
-import { useTranslation } from "../utils/translations";
 
 const SettingsTab: React.FC = () => {
   const {
     currentBar,
-    language,
     loading,
     setCurrentBar,
     setLoading,
     setError,
     apiCall,
   } = useApp();
-
-  const t = useTranslation(language);
   
   const [skipApproval, setSkipApproval] = useState(currentBar?.skip_approval || false);
   const [isSaving, setIsSaving] = useState(false);
