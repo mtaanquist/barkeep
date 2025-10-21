@@ -87,19 +87,15 @@ const PastOrders: React.FC<PastOrdersProps> = ({
                 {/* Drink Image */}
                 <div className="w-20 h-20 flex-shrink-0 overflow-hidden rounded-lg">
                   {drink?.image_url ? (
-                    <div
-                      className="w-full h-full"
+                    <img
+                      src={drink.image_url}
+                      alt={drink.title}
+                      className="w-full h-full object-cover"
                       style={{
-                        transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,
-                        transformOrigin: 'center center',
+                        transform: `scale(${drink.image_crop_zoom || 1})`,
+                        transformOrigin: `${50 + (drink.image_crop_x || 0)}% ${50 + (drink.image_crop_y || 0)}%`,
                       }}
-                    >
-                      <img
-                        src={drink.image_url}
-                        alt={drink.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
+                    />
                   ) : (
                     <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                       <Package className="w-6 h-6 text-gray-400" />
