@@ -43,6 +43,7 @@ export interface Order {
   customer_name: string;
   drink_id: number;
   drink_title: string;
+  drink_recipe?: string; // Recipe from drinks table, available for bartenders
   status: "new" | "accepted" | "rejected" | "ready" | "processed";
   created_at: string;
   updated_at: string;

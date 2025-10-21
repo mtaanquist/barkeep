@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Clock,
   CheckCircle,
@@ -7,6 +7,8 @@ import {
   Check,
   User,
   Calendar,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { useTranslation } from "../utils/translations";
@@ -24,6 +26,13 @@ const OrdersTab: React.FC = () => {
   } = useApp();
 
   const t = useTranslation(language);
+  
+  // Track whether to show recipes for all orders
+  const [showRecipes, setShowRecipes] = useState(false);
+
+  const toggleRecipes = () => {
+    setShowRecipes((prev) => !prev);
+  };
 
   const handleUpdateOrderStatus = async (orderId: number, status: string) => {
     setLoading(true);
@@ -121,9 +130,29 @@ const OrdersTab: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-800">
               {t("pendingOrders")}
             </h3>
-            <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-              {pendingOrders.length} active
-            </span>
+            <div className="flex items-center space-x-3">
+              <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                {pendingOrders.length} active
+              </span>
+              {pendingOrders.length > 0 && pendingOrders.some(order => order.drink_recipe) && (
+                <button
+                  onClick={toggleRecipes}
+                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors text-sm font-medium"
+                >
+                  {showRecipes ? (
+                    <>
+                      <ChevronUp className="w-4 h-4" />
+                      <span>Hide Recipes</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4" />
+                      <span>Show Recipes</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -216,6 +245,18 @@ const OrdersTab: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Recipe Display */}
+                {order.drink_recipe && showRecipes && (
+                  <div className="mt-3 border-t pt-3">
+                    <div className="p-3 bg-white rounded-lg border border-gray-200">
+                      <h4 className="font-semibold text-gray-700 mb-2">Recipe:</h4>
+                      <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                        {order.drink_recipe}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))
           )}

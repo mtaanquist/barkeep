@@ -9,21 +9,26 @@ router.get("/bar/:barId", (req, res) => {
     const barId = req.params.barId;
     const { status, customerName, limit = 100 } = req.query;
 
-    let query = "SELECT * FROM orders WHERE bar_id = ?";
+    let query = `
+      SELECT o.*, d.recipe as drink_recipe
+      FROM orders o
+      LEFT JOIN drinks d ON o.drink_id = d.id AND o.bar_id = d.bar_id
+      WHERE o.bar_id = ?
+    `;
     const params = [barId];
 
     // Add filters
     if (status) {
-      query += " AND status = ?";
+      query += " AND o.status = ?";
       params.push(status);
     }
 
     if (customerName) {
-      query += " AND customer_name = ?";
+      query += " AND o.customer_name = ?";
       params.push(customerName);
     }
 
-    query += " ORDER BY created_at DESC LIMIT ?";
+    query += " ORDER BY o.created_at DESC LIMIT ?";
     params.push(parseInt(limit));
 
     const stmt = db.prepare(query);
@@ -42,9 +47,11 @@ router.get("/bar/:barId/pending", (req, res) => {
     const barId = req.params.barId;
 
     const stmt = db.prepare(`
-      SELECT * FROM orders 
-      WHERE bar_id = ? AND status IN ('new', 'accepted', 'ready') 
-      ORDER BY created_at ASC
+      SELECT o.*, d.recipe as drink_recipe
+      FROM orders o
+      LEFT JOIN drinks d ON o.drink_id = d.id AND o.bar_id = d.bar_id
+      WHERE o.bar_id = ? AND o.status IN ('new', 'accepted', 'ready') 
+      ORDER BY o.created_at ASC
     `);
     const orders = stmt.all(barId);
 
