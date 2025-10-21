@@ -61,6 +61,8 @@ const CustomerInterface: React.FC = () => {
     if (!currentBar || !customerName) return;
     try {
       const data = await apiCall(`/drinks/bar/${currentBar.id}/favourites/${encodeURIComponent(customerName)}`);
+      // Sort favourites alphabetically
+      data.sort((a: Drink, b: Drink) => a.title.localeCompare(b.title));
       setFavouriteDrinks(data);
     } catch (err) {
       console.error("Error fetching favourites:", err);
@@ -102,6 +104,11 @@ const CustomerInterface: React.FC = () => {
     }
   });
   
+  // Sort drinks within each spirit group alphabetically
+  Object.keys(groupedDrinks).forEach((spirit) => {
+    groupedDrinks[spirit].sort((a, b) => a.title.localeCompare(b.title));
+  });
+  
   // Group available drinks by category
   const groupedByCategory: { [category: string]: typeof drinks } = {};
   drinks.forEach((drink) => {
@@ -110,6 +117,11 @@ const CustomerInterface: React.FC = () => {
       if (!groupedByCategory[category]) groupedByCategory[category] = [];
       groupedByCategory[category].push(drink);
     }
+  });
+  
+  // Sort drinks within each category alphabetically
+  Object.keys(groupedByCategory).forEach((category) => {
+    groupedByCategory[category].sort((a, b) => a.title.localeCompare(b.title));
   });
   
   const baseSpiritOrder = [
