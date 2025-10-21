@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Clock,
   CheckCircle,
@@ -7,6 +7,8 @@ import {
   Check,
   User,
   Calendar,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { useTranslation } from "../utils/translations";
@@ -24,6 +26,21 @@ const OrdersTab: React.FC = () => {
   } = useApp();
 
   const t = useTranslation(language);
+  
+  // Track which orders have their recipe expanded
+  const [expandedRecipes, setExpandedRecipes] = useState<Set<number>>(new Set());
+
+  const toggleRecipe = (orderId: number) => {
+    setExpandedRecipes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
+  };
 
   const handleUpdateOrderStatus = async (orderId: number, status: string) => {
     setLoading(true);
@@ -216,6 +233,37 @@ const OrdersTab: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Recipe Toggle and Display */}
+                {order.drink_recipe && (
+                  <div className="mt-3 border-t pt-3">
+                    <button
+                      onClick={() => toggleRecipe(order.id)}
+                      className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors text-sm font-medium"
+                    >
+                      {expandedRecipes.has(order.id) ? (
+                        <>
+                          <ChevronUp className="w-4 h-4" />
+                          <span>Hide Recipe</span>
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-4 h-4" />
+                          <span>Show Recipe</span>
+                        </>
+                      )}
+                    </button>
+                    
+                    {expandedRecipes.has(order.id) && (
+                      <div className="mt-3 p-3 bg-white rounded-lg border border-gray-200">
+                        <h4 className="font-semibold text-gray-700 mb-2">Recipe:</h4>
+                        <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                          {order.drink_recipe}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))
           )}
