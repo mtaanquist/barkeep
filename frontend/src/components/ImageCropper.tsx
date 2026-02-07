@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import Cropper from "react-easy-crop";
 import { X, RotateCcw } from "lucide-react";
 import { Area } from "react-easy-crop";
@@ -21,6 +21,12 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   const [crop, setCrop] = useState(initialCrop);
   const [zoom, setZoom] = useState(initialZoom);
 
+  // Sync state with props when they change
+  useEffect(() => {
+    setCrop(initialCrop);
+    setZoom(initialZoom);
+  }, [initialCrop.x, initialCrop.y, initialZoom]);
+
   const onCropComplete = useCallback((_croppedArea: Area, _croppedAreaPixels: Area) => {
     // Crop area is tracked internally by react-easy-crop
     // We use the crop position and zoom values directly
@@ -30,7 +36,8 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
     onSave(crop, zoom);
   };
 
-  const handleReset = () => {
+  const handleReset = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault(); // Prevent any form submission
     setCrop({ x: 0, y: 0 });
     setZoom(1);
   };

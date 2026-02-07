@@ -95,7 +95,14 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
       }
 
       const data = await response.json();
-      setFormData((prev) => ({ ...prev, image: data.imageUrl }));
+      // Reset crop parameters when uploading a new image
+      setFormData((prev) => ({ 
+        ...prev, 
+        image: data.imageUrl,
+        imageCropX: 0,
+        imageCropY: 0,
+        imageCropZoom: 1,
+      }));
     } catch (err) {
       setUploadError("Failed to upload image. Please try again.");
     } finally {
@@ -319,12 +326,17 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
                   <input
                     type="url"
                     value={formData.image}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const newImageUrl = e.target.value;
+                      // Reset crop parameters when image URL changes
                       setFormData((prev) => ({
                         ...prev,
-                        image: e.target.value,
-                      }))
-                    }
+                        image: newImageUrl,
+                        imageCropX: 0,
+                        imageCropY: 0,
+                        imageCropZoom: 1,
+                      }));
+                    }}
                     placeholder="https://example.com/image.jpg"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -332,20 +344,20 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
                   {/* Image Preview */}
                   {formData.image && (
                     <div className="mt-4 space-y-2">
-                      <div className="relative w-full rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
-                        <img
-                          src={formData.image}
-                          alt="Preview"
-                          className="w-full h-full object-cover"
-                          style={{
-                            transform: `scale(${formData.imageCropZoom})`,
-                            transformOrigin: `${50 + formData.imageCropX}% ${50 + formData.imageCropY}%`,
-                            objectPosition: `${50 + formData.imageCropX}% ${50 + formData.imageCropY}%`,
-                          }}
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
-                        />
+                      <div className="relative w-full rounded-lg overflow-hidden bg-gray-100" style={{ aspectRatio: '16/9' }}>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <img
+                            src={formData.image}
+                            alt="Preview"
+                            className="w-full h-full object-contain"
+                            style={{
+                              transform: `translate(${formData.imageCropX}%, ${formData.imageCropY}%) scale(${formData.imageCropZoom})`,
+                            }}
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        </div>
                       </div>
                       <button
                         type="button"
