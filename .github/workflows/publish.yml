@@ -2,10 +2,13 @@ name: Publish image
 
 on:
   push:
-    branches: [main]
+    # staging is the working branch and publishes a :staging tag, so a build
+    # can be tested on the real host before being squashed into main. Only
+    # main publishes :latest.
+    branches: [main, staging]
     tags: ["v*"]
   pull_request:
-    branches: [main]
+    branches: [main, staging]
   workflow_dispatch:
 
 env:

@@ -28,6 +28,15 @@ docker compose up -d
 
 Then open <http://localhost:21000>.
 
+### Image tags
+
+| Tag | Built from |
+| --- | --- |
+| `latest` | `main` — what the bar should normally run |
+| `staging` | `staging` — the working branch, for trying a change on the real host first |
+| `v1.2.3`, `v1.2` | release tags |
+| `sha-abc1234` | any build, for pinning to an exact commit |
+
 ### Configuration
 
 | Variable      | Default             | Purpose                                                                                                |
