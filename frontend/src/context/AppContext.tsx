@@ -134,6 +134,10 @@ export const useApp = () => {
 
 const API_BASE = "/api";
 
+// Everything this app saves in the browser starts with this, so signing out
+// can clear its own things without touching anything else on the site.
+export const STORAGE_PREFIX = "homeBarSystem_";
+
 const STORAGE_KEYS = {
   userType: "homeBarSystem_userType",
   currentBar: "homeBarSystem_currentBar",
@@ -256,7 +260,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
       language: "en",
     });
     setLoginForm({ password: "", name: "" });
-    localStorage.clear();
+
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith(STORAGE_PREFIX))
+      .forEach((key) => localStorage.removeItem(key));
   };
 
   // Session validation effect
