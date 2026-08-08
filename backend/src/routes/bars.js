@@ -1,10 +1,10 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import QRCode from "qrcode";
-import { db } from "../db/index.js";
 import { PUBLIC_URL } from "../config.js";
 
-const router = express.Router();
+export default function createBarRoutes(db) {
+  const router = express.Router();
 
 // Create new bar
 router.post("/", async (req, res) => {
@@ -431,4 +431,5 @@ router.post("/:id/guest-token-login", async (req, res) => {
   }
 });
 
-export default router;
+  return router;
+}

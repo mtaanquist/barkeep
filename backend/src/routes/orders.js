@@ -1,7 +1,7 @@
 import express from "express";
-import { db } from "../db/index.js";
 
-const router = express.Router();
+export default function createOrderRoutes(db) {
+  const router = express.Router();
 
 // Get all orders for a bar (with optional status filter)
 router.get("/bar/:barId", (req, res) => {
@@ -376,4 +376,5 @@ router.delete("/:orderId", (req, res) => {
   }
 });
 
-export default router;
+  return router;
+}

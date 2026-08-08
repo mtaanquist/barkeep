@@ -1,8 +1,8 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { db } from "../db/index.js";
 
-const router = express.Router();
+export default function createAuthRoutes(db) {
+  const router = express.Router();
 
 // Bartender login
 router.post("/bartender", async (req, res) => {
@@ -124,4 +124,5 @@ router.post("/verify", async (req, res) => {
   }
 });
 
-export default router;
+  return router;
+}

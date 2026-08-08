@@ -3,16 +3,15 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
-import { db } from "../db/index.js";
-import { UPLOADS_DIR } from "../config.js";
 
-const router = express.Router();
+export default function createDrinkRoutes({ db, uploadsDir }) {
+  const router = express.Router();
 
 // Configure multer for image uploads (v1.x syntax)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-    cb(null, UPLOADS_DIR);
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -380,7 +379,7 @@ router.delete("/:drinkId", (req, res) => {
     // image_url from reaching outside the uploads directory.
     if (drink.image_url && drink.image_url.startsWith("/uploads/")) {
       const imagePath = path.join(
-        UPLOADS_DIR,
+        uploadsDir,
         path.basename(drink.image_url)
       );
       if (fs.existsSync(imagePath)) {
@@ -581,4 +580,5 @@ router.get("/bar/:barId/guest/:customerName", (req, res) => {
   }
 });
 
-export default router;
+  return router;
+}

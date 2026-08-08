@@ -1,7 +1,7 @@
 import express from "express";
-import { db } from "../db/index.js";
 
-const router = express.Router();
+export default function createCategoryRoutes(db) {
+  const router = express.Router();
 
 // Get all categories for a bar
 router.get("/bar/:barId", (req, res) => {
@@ -149,4 +149,5 @@ router.delete("/:id", (req, res) => {
   }
 });
 
-export default router;
+  return router;
+}
