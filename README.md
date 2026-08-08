@@ -46,7 +46,13 @@ Then open <http://localhost:21000>.
 | `UPLOADS_DIR` | `/app/uploads`      | Uploaded drink images.                                                                                  |
 | `PUBLIC_URL`  | derived from request | Base URL baked into guest QR codes. Only needed when guests reach the bar on a different address.       |
 | `PUID`/`PGID` | unset (runs as root) | Run as an unprivileged user. Ownership of the data directories is adjusted on start.                    |
+| `TRUST_PROXY` | private addresses    | Which upstreams may set `X-Forwarded-*`. Accepts Express `trust proxy` values.                          |
 | `TZ`          | `UTC`               | Container timezone.                                                                                     |
+
+The published port is bound to `127.0.0.1`, so only a reverse proxy running on
+the same host can reach it — not the wider LAN. If the proxy later moves into a
+container of its own, drop the `ports` block and join both stacks on a shared
+external network instead; `compose.yaml` carries the exact steps.
 
 The container reports health on `/api/health`, so `docker ps` and Dockge show a
 real status rather than just "running".

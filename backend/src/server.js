@@ -12,6 +12,7 @@ import {
   UPLOADS_DIR,
   FRONTEND_DIR,
   CORS_ORIGIN,
+  TRUST_PROXY,
 } from "./config.js";
 // Importing the database opens it and runs migrations before any route module
 // is loaded.
@@ -29,8 +30,9 @@ const app = express();
 const server = createServer(app);
 
 // Honour X-Forwarded-* so request-derived URLs (QR codes) are correct when the
-// container sits behind a reverse proxy.
-app.set("trust proxy", true);
+// container sits behind a reverse proxy. Scoped to trusted upstreams — see
+// TRUST_PROXY in config.js.
+app.set("trust proxy", TRUST_PROXY);
 
 // Same-origin in the packaged deployment, so CORS is only wired up when an
 // origin is explicitly configured (i.e. running against the Vite dev server).

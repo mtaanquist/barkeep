@@ -7,7 +7,12 @@ services:
     ports:
       # The API, the WebSocket endpoint, the uploaded images and the frontend
       # are all served from this one port.
-      - "21000:3000"
+      #
+      # Bound to loopback so only Caddy, running on the host, can reach it.
+      # Without this the app is reachable from the whole LAN, bypassing the
+      # proxy — and since QR code URLs are derived from request headers, a
+      # request that skips Caddy can set those headers itself.
+      - "127.0.0.1:21000:3000"
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
@@ -33,3 +38,26 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+# When Caddy moves into a container of its own — a separate stack, not a service
+# here — join it on a shared external network instead of publishing a port. The
+# app is then unreachable from outside Docker entirely, and Caddy addresses it
+# by container name.
+#
+# Create the network once, outside either stack:
+#
+#     docker network create edge
+#
+# Then drop the `ports` block above and add to this file:
+#
+#     services:
+#       home-bar:
+#         networks: [edge]
+#     networks:
+#       edge:
+#         external: true
+#
+# Caddy's own compose file joins the same network, and its Caddyfile becomes:
+#
+#     bar.example.com {
+#         reverse_proxy home-bar:3000
+#     }
