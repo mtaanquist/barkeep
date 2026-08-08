@@ -9,10 +9,29 @@ import {
 } from "./config.js";
 import { openDatabase, closeDatabase } from "./db/index.js";
 import { createApp } from "./app.js";
+import { sweepUnusedPhotos } from "./uploads.js";
 
 const db = openDatabase(DB_PATH);
 const app = createApp({ db });
 const server = createServer(app);
+
+// A photo is saved before its drink is, so an abandoned form leaves one
+// behind. Clear out anything old that nothing refers to.
+const SWEEP_EVERY_MS = 24 * 60 * 60 * 1000;
+
+const sweepPhotos = () => {
+  try {
+    const removed = sweepUnusedPhotos({ db, uploadsDir: UPLOADS_DIR });
+    if (removed.length) {
+      console.log(`Removed ${removed.length} unused photo(s)`);
+    }
+  } catch (error) {
+    console.error("Could not tidy up photos:", error);
+  }
+};
+
+sweepPhotos();
+setInterval(sweepPhotos, SWEEP_EVERY_MS).unref();
 
 server.listen(PORT, () => {
   console.log(`🍸 Bar running on port ${PORT}`);

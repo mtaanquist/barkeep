@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { deletePhotoIfUnused } from "../uploads.js";
 
 export default function createDrinkRoutes({ db, uploadsDir }) {
   const router = express.Router();
@@ -256,6 +257,13 @@ router.put("/:drinkId", (req, res) => {
     if (imageUrl !== undefined) {
       updates.push("image_url = ?");
       values.push(imageUrl || null);
+
+      // The photo being replaced is no longer needed.
+      if (existingDrink.image_url && existingDrink.image_url !== imageUrl) {
+        deletePhotoIfUnused({ db, uploadsDir }, existingDrink.image_url, {
+          exceptDrinkId: Number(drinkId),
+        });
+      }
     }
     if (recipe !== undefined) {
       updates.push("recipe = ?");
@@ -374,17 +382,10 @@ router.delete("/:drinkId", (req, res) => {
       return res.status(404).json({ error: "Drink not found" });
     }
 
-    // Delete associated image file if it exists. basename() keeps a crafted
-    // image_url from reaching outside the uploads directory.
-    if (drink.image_url && drink.image_url.startsWith("/uploads/")) {
-      const imagePath = path.join(
-        uploadsDir,
-        path.basename(drink.image_url)
-      );
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      }
-    }
+    // Remove its photo, unless another drink is using the same one.
+    deletePhotoIfUnused({ db, uploadsDir }, drink.image_url, {
+      exceptDrinkId: Number(drinkId),
+    });
 
     // Delete the drink
     const stmt = db.prepare("DELETE FROM drinks WHERE id = ? AND bar_id = ?");
