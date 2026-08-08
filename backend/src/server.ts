@@ -9,17 +9,19 @@ import {
 } from "./config.js";
 import { openDatabase, closeDatabase } from "./db/index.js";
 import { createApp } from "./app.js";
+import type { Realtime } from "./realtime.js";
 import { sweepUnusedPhotos } from "./uploads.js";
 
 const db = openDatabase(DB_PATH);
 const app = createApp({ db });
+const realtime = app.locals["realtime"] as Realtime;
 const server = createServer(app);
 
 // A photo is saved before its drink is, so an abandoned form leaves one
 // behind. Clear out anything old that nothing refers to.
 const SWEEP_EVERY_MS = 24 * 60 * 60 * 1000;
 
-const sweepPhotos = () => {
+const sweepPhotos = (): void => {
   try {
     const removed = sweepUnusedPhotos({ db, uploadsDir: UPLOADS_DIR });
     if (removed.length) {
@@ -43,7 +45,7 @@ server.listen(PORT, () => {
 
 let shuttingDown = false;
 
-const gracefulShutdown = (signal) => {
+const gracefulShutdown = (signal: string): void => {
   if (shuttingDown) return;
   shuttingDown = true;
 
@@ -56,7 +58,7 @@ const gracefulShutdown = (signal) => {
   });
 
   // Without this the open update connections would hold the server open.
-  app.locals.realtime.closeAll();
+  realtime.closeAll();
 
   setTimeout(() => {
     console.error("Could not close connections in time, forcing shutdown");
@@ -67,11 +69,11 @@ const gracefulShutdown = (signal) => {
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-process.on("unhandledRejection", (reason) => {
+process.on("unhandledRejection", (reason: unknown) => {
   console.error("Unhandled rejection:", reason);
 });
 
-process.on("uncaughtException", (error) => {
+process.on("uncaughtException", (error: Error) => {
   console.error("Uncaught exception:", error);
   gracefulShutdown("UNCAUGHT_EXCEPTION");
 });

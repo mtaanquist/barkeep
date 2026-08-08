@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, afterAll } from "vitest";
+import type { Express } from "express";
+import type { Db } from "../src/db/queries.js";
 import request from "supertest";
 import fs from "fs";
 import path from "path";
@@ -14,17 +16,17 @@ const PNG = Buffer.from(
 afterAll(cleanUpTempDirs);
 
 describe("tidying up photos", () => {
-  let app;
-  let db;
-  let uploadsDir;
-  let barId;
+  let app: Express;
+  let db: Db;
+  let uploadsDir: string;
+  let barId: number;
 
   beforeEach(() => {
     ({ app, db, uploadsDir } = makeTestApp());
     ({ barId } = seedBar(db));
   });
 
-  const photoOnDisk = (name) => fs.existsSync(path.join(uploadsDir, name));
+  const photoOnDisk = (name: string) => fs.existsSync(path.join(uploadsDir, name));
 
   const uploadPhoto = async () => {
     const res = await request(app)
@@ -33,7 +35,7 @@ describe("tidying up photos", () => {
     return res.body;
   };
 
-  const createDrink = (imageUrl, title = "Negroni") =>
+  const createDrink = (imageUrl: string, title = "Negroni") =>
     request(app).post("/api/drinks").send({ barId, title, recipe: "gin", imageUrl });
 
   it("removes the old photo when a drink gets a new one", async () => {
@@ -102,9 +104,9 @@ describe("tidying up photos", () => {
 });
 
 describe("the daily sweep", () => {
-  let db;
-  let uploadsDir;
-  let barId;
+  let db: Db;
+  let uploadsDir: string;
+  let barId: number;
 
   beforeEach(() => {
     ({ db, uploadsDir, barId } = (() => {
@@ -113,7 +115,7 @@ describe("the daily sweep", () => {
     })());
   });
 
-  const writePhoto = (name, ageMs = 0) => {
+  const writePhoto = (name: string, ageMs = 0): string => {
     const filePath = path.join(uploadsDir, name);
     fs.writeFileSync(filePath, "photo");
     if (ageMs) {

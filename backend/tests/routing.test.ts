@@ -1,6 +1,7 @@
 // These cover the three routing faults that reached production, all caused by
 // handlers being registered in the wrong order.
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import type { Express } from "express";
 import request from "supertest";
 import fs from "fs";
 import path from "path";
@@ -16,7 +17,7 @@ import {
 afterAll(cleanUpTempDirs);
 
 describe("api routing", () => {
-  let app;
+  let app: Express;
   beforeAll(() => ({ app } = makeTestApp()));
 
   it("answers unknown api addresses with an error, not a web page", async () => {
@@ -58,8 +59,8 @@ describe("api routing", () => {
 });
 
 describe("drink photos", () => {
-  let app;
-  let uploadsDir;
+  let app: Express;
+  let uploadsDir: string;
   beforeAll(() => ({ app, uploadsDir } = makeTestApp()));
 
   it("serves a photo that exists", async () => {

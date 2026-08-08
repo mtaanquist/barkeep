@@ -1,0 +1,6 @@
+{
+  "name": "@home-bar/shared",
+  "private": true,
+  "type": "module",
+  "types": "types.d.ts"
+}

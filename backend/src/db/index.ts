@@ -3,13 +3,14 @@ import fs from "fs";
 import path from "path";
 
 import { DB_PATH } from "../config.js";
+import type { Db } from "./queries.js";
 import { runMigrations } from "./migrate.js";
 
 /**
  * Opens a database and brings it up to date. Pass a path to work on a
  * different one, which is how tests keep out of each other's way.
  */
-export function openDatabase(dbPath = DB_PATH) {
+export function openDatabase(dbPath: string = DB_PATH): Db {
   if (dbPath !== ":memory:") {
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   }
@@ -24,7 +25,7 @@ export function openDatabase(dbPath = DB_PATH) {
   return db;
 }
 
-export function closeDatabase(db) {
+export function closeDatabase(db: Db | undefined): void {
   try {
     db?.close();
   } catch (error) {

@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { runMigrations } from "../src/db/migrate.js";
+import type { Db } from "../src/db/queries.js";
 import {
   makeEmptyDatabase,
   makeTestDatabase,
@@ -20,17 +21,15 @@ const allMigrations = fs
   .filter((f) => f.endsWith(".sql"))
   .sort();
 
-const appliedNames = (db) =>
-  db
-    .prepare("SELECT name FROM migrations ORDER BY name")
-    .all()
-    .map((r) => r.name);
+const appliedNames = (db: Db): string[] =>
+  (db.prepare("SELECT name FROM migrations ORDER BY name").all() as {
+    name: string;
+  }[]).map((r) => r.name);
 
-const columnsOf = (db, table) =>
-  db
-    .prepare(`SELECT name FROM pragma_table_info('${table}')`)
-    .all()
-    .map((r) => r.name);
+const columnsOf = (db: Db, table: string): string[] =>
+  (db.prepare(`SELECT name FROM pragma_table_info('${table}')`).all() as {
+    name: string;
+  }[]).map((r) => r.name);
 
 afterAll(cleanUpTempDirs);
 
@@ -78,8 +77,12 @@ describe("migrations", () => {
 
     expect(applied).toEqual(rolledBack);
     expect(appliedNames(db)).toEqual(allMigrations);
-    expect(db.prepare("SELECT COUNT(*) AS n FROM drinks").get().n).toBe(1);
-    expect(db.prepare("SELECT name FROM bars").get().name).toBe("Old Bar");
+    expect(
+      (db.prepare("SELECT COUNT(*) AS n FROM drinks").get() as { n: number }).n
+    ).toBe(1);
+    expect(
+      (db.prepare("SELECT name FROM bars").get() as { name: string }).name
+    ).toBe("Old Bar");
   });
 
   it("recovers a database that predates the record of applied changes", () => {
@@ -99,7 +102,9 @@ describe("migrations", () => {
   it("applies in date order regardless of how the folder is read", () => {
     const db = makeTestDatabase();
 
-    const order = db.prepare("SELECT name FROM migrations ORDER BY id").all();
+    const order = db
+      .prepare("SELECT name FROM migrations ORDER BY id")
+      .all() as { name: string }[];
 
     expect(order.map((r) => r.name)).toEqual(allMigrations);
   });

@@ -1,4 +1,5 @@
 import fs from "fs";
+import type { Db } from "./queries.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -7,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SCHEMA_FILE = path.join(__dirname, "schema.sql");
 const MIGRATIONS_DIR = path.join(__dirname, "migrations");
 
-const announce = (message) => {
+const announce = (message: string): void => {
   if (process.env.NODE_ENV !== "test") console.log(message);
 };
 
@@ -15,7 +16,7 @@ const announce = (message) => {
  * Brings the database up to date. Runs on every start; does nothing if there
  * is nothing new to apply.
  */
-export function runMigrations(db) {
+export function runMigrations(db: Db): string[] {
   // Creates the tables only if they are missing.
   db.exec(fs.readFileSync(SCHEMA_FILE, "utf8"));
 
@@ -38,7 +39,7 @@ export function runMigrations(db) {
     .filter((f) => f.endsWith(".sql"))
     .sort();
 
-  const applied = [];
+  const applied: string[] = [];
 
   for (const file of files) {
     if (isApplied.get(file)) continue;
@@ -54,7 +55,7 @@ export function runMigrations(db) {
     } catch (error) {
       // An older database may already have this change. Record it instead of
       // failing to start.
-      if (/duplicate column name/i.test(error.message)) {
+      if (error instanceof Error && /duplicate column name/i.test(error.message)) {
         announce(
           `Migration ${file} was already present in the schema; recording it as applied.`
         );
@@ -62,9 +63,12 @@ export function runMigrations(db) {
         applied.push(file);
         continue;
       }
-      throw new Error(`Migration ${file} failed: ${error.message}`, {
-        cause: error,
-      });
+      throw new Error(
+        `Migration ${file} failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        { cause: error }
+      );
     }
 
     announce(`Applied migration: ${file}`);

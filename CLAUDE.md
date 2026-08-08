@@ -65,7 +65,7 @@ Test the `staging` image against a copy of the real data before releasing.
 ## Local checks
 
 ```sh
-cd backend  && npm test && npm run lint
+cd backend  && npm test && npm run lint && npm run typecheck
 cd frontend && npx eslint src && npm run build
 ```
 
@@ -75,6 +75,23 @@ the real image from a checkout.
 For a change that touches startup, the database, or file handling, run the image
 against a copy of real data and confirm the container reports healthy — not just
 that it starts. Tests do not cover the container itself.
+
+## Types
+
+The server is TypeScript, built with `npm run build` and run from `dist/`.
+`npm run dev` runs the sources directly.
+
+The shapes the API sends live in `shared/types.d.ts` and are imported by both
+halves, so changing one without the other is a build error. It holds types only
+and disappears when built, which is why neither half has to bundle it.
+
+Routes share a few pieces rather than repeating them: `route()` turns a thrown
+error into the right reply, `HttpError` carries the status, `findBar`/`findDrink`
+and friends do the lookups, and `buildUpdate` assembles a partial update. A new
+route should not need a try/catch.
+
+Values that reach SQL must be passed as parameters, never built into the query
+text.
 
 ## Tests
 
