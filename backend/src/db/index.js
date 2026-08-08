@@ -13,9 +13,7 @@ export const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
 
-// Migrations run before anything imports the routes, so the server never serves
-// traffic against a stale schema. This replaces the old one-shot `db-init`
-// container, which had to exit and therefore showed up as a dead container.
+// Brought up to date before anything starts using it.
 runMigrations(db);
 
 export function closeDatabase() {
