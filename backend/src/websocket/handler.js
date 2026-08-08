@@ -4,7 +4,7 @@ export function setupWebSocket(wss) {
 
   console.log("WebSocket server initialized");
 
-  wss.on("connection", (ws, req) => {
+  wss.on("connection", (ws) => {
     const clientId = ++clientIdCounter;
     const clientInfo = {
       id: clientId,

@@ -1,10 +1,9 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import QRCode from "qrcode";
-import { db } from "../db/index.js";
-import { PUBLIC_URL } from "../config.js";
 
-const router = express.Router();
+export default function createBarRoutes({ db, publicUrl = "" }) {
+  const router = express.Router();
 
 // Create new bar
 router.post("/", async (req, res) => {
@@ -349,7 +348,7 @@ router.get("/:id/qrcode", async (req, res) => {
 
     // Prefer an explicitly configured public address, otherwise use the host
     // the request arrived on so the QR code points back at this same server.
-    const baseUrl = PUBLIC_URL || `${req.protocol}://${req.get("host")}`;
+    const baseUrl = publicUrl || `${req.protocol}://${req.get("host")}`;
 
     // Create a simple guest access token (base64 encoded bar info)
     // This is not super secure but good enough for a home bar system
@@ -431,4 +430,5 @@ router.post("/:id/guest-token-login", async (req, res) => {
   }
 });
 
-export default router;
+  return router;
+}

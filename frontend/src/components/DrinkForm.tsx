@@ -103,7 +103,7 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
         imageCropY: 0,
         imageCropZoom: 1,
       }));
-    } catch (err) {
+    } catch {
       setUploadError("Failed to upload image. Please try again.");
     } finally {
       setLoading(false);

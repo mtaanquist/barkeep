@@ -2,23 +2,31 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 
-import { DB_PATH, UPLOADS_DIR } from "../config.js";
+import { DB_PATH } from "../config.js";
 import { runMigrations } from "./migrate.js";
 
-fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
-fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+/**
+ * Opens a database and brings it up to date. Pass a path to work on a
+ * different one, which is how tests keep out of each other's way.
+ */
+export function openDatabase(dbPath = DB_PATH) {
+  if (dbPath !== ":memory:") {
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+  }
 
-export const db = new Database(DB_PATH);
+  const db = new Database(dbPath);
 
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
+  db.pragma("journal_mode = WAL");
+  db.pragma("foreign_keys = ON");
 
-// Brought up to date before anything starts using it.
-runMigrations(db);
+  runMigrations(db);
 
-export function closeDatabase() {
+  return db;
+}
+
+export function closeDatabase(db) {
   try {
-    db.close();
+    db?.close();
   } catch (error) {
     console.error("Error closing database:", error);
   }

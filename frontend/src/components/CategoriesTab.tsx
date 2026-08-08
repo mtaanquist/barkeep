@@ -250,13 +250,6 @@ const CategoriesTab: React.FC = () => {
   );
 };
 
-interface EditCategoryFormProps {
-  category: Category;
-  onSave: (newName: string) => void;
-  onCancel: () => void;
-  loading: boolean;
-}
-
 // EditCategoryForm component
 interface EditCategoryFormProps {
   category: Category;

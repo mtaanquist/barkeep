@@ -59,12 +59,31 @@ Test the `staging` image against a copy of the real data before releasing.
 
 ## Local checks
 
+```sh
+cd backend  && npm test && npm run lint
+cd frontend && npx eslint src && npm run build
+```
+
 `docker compose -f compose.yaml -f compose.dev.yaml up --build` builds and runs
 the real image from a checkout.
 
 For a change that touches startup, the database, or file handling, run the image
 against a copy of real data and confirm the container reports healthy — not just
-that it starts.
+that it starts. Tests do not cover the container itself.
+
+## Tests
+
+`createApp()` takes the database and folders it should use, so a test hands in
+its own and nothing touches real data. `tests/helpers.js` has the pieces:
+`makeTestApp()` for a wired-up app, `makeEmptyDatabase()` for testing the
+migration steps, `seedBar()` for something to order.
+
+Live updates are checked by putting a stand-in on `app.locals.wss` and looking
+at what got sent, rather than opening a real connection.
+
+Cover the behaviour, not the wiring. The tests worth having are the ones for
+things that have actually gone wrong before: migrations against half-updated
+databases, handler order, and anything touching files on disk.
 
 ## Don't commit
 

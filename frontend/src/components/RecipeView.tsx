@@ -36,7 +36,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose && onClose();
+        onClose?.();
       }
     };
     window.addEventListener("keydown", handleEsc);
