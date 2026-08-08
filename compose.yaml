@@ -1,0 +1,35 @@
+services:
+  home-bar:
+    image: ghcr.io/mtaanquist/home-bar-system:latest
+    container_name: home-bar
+    restart: unless-stopped
+    init: true
+    ports:
+      # The API, the WebSocket endpoint, the uploaded images and the frontend
+      # are all served from this one port.
+      - "21000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    environment:
+      # Set these to run as an unprivileged user; ownership of ./data and
+      # ./uploads is adjusted on start. Leave unset to keep running as root,
+      # which is how existing bind-mounted data was created.
+      # PUID: 1000
+      # PGID: 1000
+      TZ: Europe/Copenhagen
+      # Only needed if the address guests reach the bar on differs from the one
+      # the request arrives with. Otherwise QR codes use the requesting host.
+      # PUBLIC_URL: https://bar.example.com
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)throw 0;process.exit(0)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

@@ -50,6 +50,3 @@ coverage/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Docker
-.dockerignore
