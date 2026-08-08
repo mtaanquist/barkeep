@@ -1,4 +1,3 @@
-import { WebSocketServer } from "ws";
 import { createServer } from "http";
 
 import {
@@ -10,16 +9,10 @@ import {
 } from "./config.js";
 import { openDatabase, closeDatabase } from "./db/index.js";
 import { createApp } from "./app.js";
-import { setupWebSocket } from "./websocket/handler.js";
 
 const db = openDatabase(DB_PATH);
 const app = createApp({ db });
 const server = createServer(app);
-
-// Live order updates share the web address, so there is nothing extra to
-// open up or forward.
-const wss = new WebSocketServer({ server, path: "/ws" });
-app.locals.wss = setupWebSocket(wss);
 
 server.listen(PORT, () => {
   console.log(`🍸 Bar running on port ${PORT}`);
@@ -44,10 +37,7 @@ const gracefulShutdown = (signal) => {
   });
 
   // Without this the open update connections would hold the server open.
-  for (const client of wss.clients) {
-    client.close(1001, "Server shutting down");
-  }
-  wss.close();
+  app.locals.realtime.closeAll();
 
   setTimeout(() => {
     console.error("Could not close connections in time, forcing shutdown");

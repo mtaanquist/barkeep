@@ -8,7 +8,7 @@ afterAll(cleanUpTempDirs);
 /** Stands in for the live-update connections so we can see what was sent. */
 function watchUpdates(app) {
   const broadcast = vi.fn();
-  app.locals.wss = { broadcast };
+  app.locals.realtime = { broadcast };
   return broadcast;
 }
 
@@ -191,7 +191,7 @@ describe("orders", () => {
   });
 
   it("survives having no one listening for updates", async () => {
-    delete app.locals.wss;
+    delete app.locals.realtime;
 
     const res = await placeOrder();
 

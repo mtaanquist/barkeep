@@ -22,9 +22,14 @@ guessing at it.
 
 ## Shape of the thing
 
-One container serves everything on one port: the API at `/api`, live updates,
-drink photos at `/uploads`, and the web pages. There is no separate web server
-and no proxy between the parts.
+One container serves everything on one port: the API at `/api`, live updates at
+`/api/events`, drink photos at `/uploads`, and the web pages. There is no
+separate web server and no proxy between the parts.
+
+Live updates go one way, server to browser, over a long-lived request. The
+browser reconnects on its own when it drops, which is the main reason for doing
+it this way — the previous two-way setup had to hand-roll that, and gave up
+after three tries.
 
 That is deliberate. The previous split-container setup kept drifting out of sync
 with the code, and three separate bugs came from it. Keep it on one origin.

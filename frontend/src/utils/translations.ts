@@ -87,6 +87,12 @@ export interface TranslationMap {
   retry: string;
   logout: string;
   settings: string;
+
+  // Shown when the live order updates drop out
+  connectionLostTitle: string;
+  connectionLostBody: string;
+  connectionLostRetry: string;
+  connectionLostDismiss: string;
 }
 
 export const translations: { en: TranslationMap; da: TranslationMap } = {
@@ -180,6 +186,11 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     retry: "Retry",
     logout: "Logout",
     settings: "Settings",
+    connectionLostTitle: "Not updating right now",
+    connectionLostBody:
+      "You may not see new orders until this comes back. It usually sorts itself out in a moment.",
+    connectionLostRetry: "Try again now",
+    connectionLostDismiss: "Carry on anyway",
   },
   da: {
     // Landing page (Danish)
@@ -271,6 +282,11 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     retry: "Prøv igen",
     logout: "Log ud",
     settings: "Indstillinger",
+    connectionLostTitle: "Opdaterer ikke lige nu",
+    connectionLostBody:
+      "Du ser måske ikke nye bestillinger, før forbindelsen er tilbage. Det plejer at løse sig af sig selv.",
+    connectionLostRetry: "Prøv igen nu",
+    connectionLostDismiss: "Fortsæt alligevel",
   },
 };
 

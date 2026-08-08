@@ -17,6 +17,7 @@ import createDrinkRoutes from "./routes/drinks.js";
 import createOrderRoutes from "./routes/orders.js";
 import createAuthRoutes from "./routes/auth.js";
 import createCategoryRoutes from "./routes/categories.js";
+import { createRealtime } from "./realtime.js";
 
 /**
  * Builds the app. Nothing here listens on a port or opens a database, so a
@@ -79,6 +80,11 @@ export function createApp({
       });
     }
   });
+
+  // Live order updates. Kept on app.locals so routes can reach it.
+  const realtime = createRealtime();
+  app.locals.realtime = realtime;
+  app.get("/api/events", (req, res) => realtime.subscribe(req, res));
 
   app.use("/api/bars", createBarRoutes({ db, publicUrl }));
   app.use("/api/drinks", createDrinkRoutes({ db, uploadsDir }));
