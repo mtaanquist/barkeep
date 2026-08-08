@@ -5,6 +5,7 @@
 # Never bake a local database or uploaded images into the image
 data
 uploads
+.inspect
 **/*.db
 **/*.db-shm
 **/*.db-wal

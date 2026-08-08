@@ -23,6 +23,9 @@ data/
 # Uploads
 uploads/
 
+# Copies of production data taken for local inspection. Never commit.
+.inspect/
+
 # Logs
 logs/
 *.log
