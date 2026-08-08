@@ -20,6 +20,9 @@ const MenuTab: React.FC = () => {
 
   const t = useTranslation(language);
 
+  // Sorting state
+  const [sortBy, setSortBy] = React.useState<"alphabetical" | "category" | "default">("default");
+
   const handleDeleteDrink = async (id: number, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
 
@@ -61,6 +64,29 @@ const MenuTab: React.FC = () => {
   const inStockDrinks = drinks.filter((drink) => drink.in_stock);
   const outOfStockDrinks = drinks.filter((drink) => !drink.in_stock);
 
+  // Sort drinks based on selected sort option
+  const getSortedDrinks = () => {
+    const drinksCopy = [...drinks];
+    
+    if (sortBy === "alphabetical") {
+      return drinksCopy.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortBy === "category") {
+      return drinksCopy.sort((a, b) => {
+        // First sort by category, then by title within category
+        const categoryA = a.category_name || "Uncategorized";
+        const categoryB = b.category_name || "Uncategorized";
+        const categoryCompare = categoryA.localeCompare(categoryB);
+        if (categoryCompare !== 0) return categoryCompare;
+        return a.title.localeCompare(b.title);
+      });
+    }
+    
+    // Default: return as-is (database order)
+    return drinksCopy;
+  };
+  
+  const sortedDrinks = getSortedDrinks();
+
   return (
     <div className="space-y-6">
       {/* Header with Add Button */}
@@ -75,13 +101,24 @@ const MenuTab: React.FC = () => {
               {outOfStockDrinks.length} out of stock
             </p>
           </div>
-          <button
-            onClick={() => setEditingDrink({})}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 w-full sm:w-auto justify-center"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t("addDrink")}</span>
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "alphabetical" | "category" | "default")}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="default">Sort: Default</option>
+              <option value="alphabetical">Sort: Alphabetical</option>
+              <option value="category">Sort: Category</option>
+            </select>
+            <button
+              onClick={() => setEditingDrink({})}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 w-full sm:w-auto justify-center"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{t("addDrink")}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -105,19 +142,24 @@ const MenuTab: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {drinks.map((drink) => (
+          {sortedDrinks.map((drink) => (
             <div
               key={drink.id}
               className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow"
             >
               {/* Image */}
-              <div className="aspect-video overflow-hidden bg-gray-100">
+              <div className="aspect-video overflow-hidden bg-gray-100 relative">
                 {drink.image_url ? (
-                  <img
-                    src={drink.image_url}
-                    alt={drink.title}
-                    className="w-full h-full object-cover"
-                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <img
+                      src={drink.image_url}
+                      alt={drink.title}
+                      className="w-full h-full object-contain"
+                      style={{
+                        transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
                     <Package className="w-12 h-12" />

@@ -132,7 +132,19 @@ router.post("/upload-image", upload.single("image"), (req, res) => {
 // Create new drink
 router.post("/", (req, res) => {
   try {
-    const { barId, title, imageUrl, recipe, baseSpirit, guestDescription, showRecipeToGuests, categoryId } = req.body;
+    const { 
+      barId, 
+      title, 
+      imageUrl, 
+      recipe, 
+      baseSpirit, 
+      guestDescription, 
+      showRecipeToGuests, 
+      categoryId,
+      imageCropX,
+      imageCropY,
+      imageCropZoom
+    } = req.body;
 
     if (!barId || !title || !recipe) {
       return res
@@ -159,8 +171,12 @@ router.post("/", (req, res) => {
     }
 
     const stmt = db.prepare(`
-      INSERT INTO drinks (bar_id, title, image_url, recipe, in_stock, base_spirit, guest_description, show_recipe_to_guests, category_id)
-      VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)
+      INSERT INTO drinks (
+        bar_id, title, image_url, recipe, in_stock, base_spirit, 
+        guest_description, show_recipe_to_guests, category_id,
+        image_crop_x, image_crop_y, image_crop_zoom
+      )
+      VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = stmt.run(
@@ -171,7 +187,10 @@ router.post("/", (req, res) => {
       baseSpirit || null,
       guestDescription || null,
       showRecipeToGuests ? 1 : 0,
-      categoryId || null
+      categoryId || null,
+      imageCropX !== undefined ? imageCropX : 0,
+      imageCropY !== undefined ? imageCropY : 0,
+      imageCropZoom !== undefined ? imageCropZoom : 1
     );
 
     // Return the created drink
@@ -189,7 +208,20 @@ router.post("/", (req, res) => {
 router.put("/:drinkId", (req, res) => {
   try {
     const drinkId = req.params.drinkId;
-    const { barId, title, imageUrl, recipe, inStock, baseSpirit, guestDescription, showRecipeToGuests, categoryId } = req.body;
+    const { 
+      barId, 
+      title, 
+      imageUrl, 
+      recipe, 
+      inStock, 
+      baseSpirit, 
+      guestDescription, 
+      showRecipeToGuests, 
+      categoryId,
+      imageCropX,
+      imageCropY,
+      imageCropZoom
+    } = req.body;
 
     if (!barId) {
       return res.status(400).json({ error: "Bar ID is required" });
@@ -250,6 +282,18 @@ router.put("/:drinkId", (req, res) => {
     if (categoryId !== undefined) {
       updates.push("category_id = ?");
       values.push(categoryId || null);
+    }
+    if (imageCropX !== undefined) {
+      updates.push("image_crop_x = ?");
+      values.push(imageCropX);
+    }
+    if (imageCropY !== undefined) {
+      updates.push("image_crop_y = ?");
+      values.push(imageCropY);
+    }
+    if (imageCropZoom !== undefined) {
+      updates.push("image_crop_zoom = ?");
+      values.push(imageCropZoom);
     }
 
     if (updates.length === 0) {
@@ -417,7 +461,19 @@ router.get("/bar/:barId/favourites/:customerName", (req, res) => {
     `);
     const favourites = stmt.all(barId, customerName);
 
-    res.json(favourites);
+    // Filter drinks for guest access
+    const guestFavourites = favourites.map(drink => {
+      if (!drink.show_recipe_to_guests) {
+        // Hide recipe from guests if not allowed
+        return {
+          ...drink,
+          recipe: null // Don't show recipe to guests
+        };
+      }
+      return drink; // Show full drink including recipe
+    });
+
+    res.json(guestFavourites);
   } catch (error) {
     console.error("Error fetching user favourites:", error);
     res.status(500).json({ error: "Failed to fetch favourites" });

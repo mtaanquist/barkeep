@@ -9,21 +9,26 @@ router.get("/bar/:barId", (req, res) => {
     const barId = req.params.barId;
     const { status, customerName, limit = 100 } = req.query;
 
-    let query = "SELECT * FROM orders WHERE bar_id = ?";
+    let query = `
+      SELECT o.*, d.recipe as drink_recipe
+      FROM orders o
+      LEFT JOIN drinks d ON o.drink_id = d.id AND o.bar_id = d.bar_id
+      WHERE o.bar_id = ?
+    `;
     const params = [barId];
 
     // Add filters
     if (status) {
-      query += " AND status = ?";
+      query += " AND o.status = ?";
       params.push(status);
     }
 
     if (customerName) {
-      query += " AND customer_name = ?";
+      query += " AND o.customer_name = ?";
       params.push(customerName);
     }
 
-    query += " ORDER BY created_at DESC LIMIT ?";
+    query += " ORDER BY o.created_at DESC LIMIT ?";
     params.push(parseInt(limit));
 
     const stmt = db.prepare(query);
@@ -42,9 +47,11 @@ router.get("/bar/:barId/pending", (req, res) => {
     const barId = req.params.barId;
 
     const stmt = db.prepare(`
-      SELECT * FROM orders 
-      WHERE bar_id = ? AND status IN ('new', 'accepted', 'ready') 
-      ORDER BY created_at ASC
+      SELECT o.*, d.recipe as drink_recipe
+      FROM orders o
+      LEFT JOIN drinks d ON o.drink_id = d.id AND o.bar_id = d.bar_id
+      WHERE o.bar_id = ? AND o.status IN ('new', 'accepted', 'ready') 
+      ORDER BY o.created_at ASC
     `);
     const orders = stmt.all(barId);
 
@@ -93,8 +100,8 @@ router.post("/", (req, res) => {
         });
     }
 
-    // Verify bar exists
-    const barStmt = db.prepare("SELECT id FROM bars WHERE id = ?");
+    // Verify bar exists and get skip_approval setting
+    const barStmt = db.prepare("SELECT id, skip_approval FROM bars WHERE id = ?");
     const bar = barStmt.get(barId);
 
     if (!bar) {
@@ -128,17 +135,21 @@ router.post("/", (req, res) => {
         .json({ error: "Customer already has a pending order" });
     }
 
+    // Determine initial status based on skip_approval setting
+    const initialStatus = bar.skip_approval ? 'accepted' : 'new';
+
     // Create the order
     const stmt = db.prepare(`
       INSERT INTO orders (bar_id, customer_name, drink_id, drink_title, status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, 'new', datetime('now'), datetime('now'))
+      VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `);
 
     const result = stmt.run(
       barId,
       customerName.trim(),
       drinkId,
-      drinkTitle.trim()
+      drinkTitle.trim(),
+      initialStatus
     );
 
     // Return the created order
@@ -331,15 +342,15 @@ router.delete("/:orderId", (req, res) => {
     }
 
     // If customerName is provided, verify the customer owns this order
-    // and can only cancel if order hasn't been accepted yet
+    // and can only cancel if order hasn't been processed yet
     if (customerName) {
       if (order.customer_name !== customerName) {
         return res.status(403).json({ error: "You can only cancel your own orders" });
       }
       
-      if (order.status !== "new") {
+      if (order.status === "processed") {
         return res.status(400).json({ 
-          error: "You can only cancel orders that haven't been accepted yet" 
+          error: "You cannot cancel orders that have been completed" 
         });
       }
     }
@@ -355,7 +366,7 @@ router.delete("/:orderId", (req, res) => {
     // Broadcast to WebSocket clients
     req.app.locals.wss?.broadcast(barId, {
       type: "order_deleted",
-      orderId: orderId,
+      orderId: parseInt(orderId),
     });
 
     res.json({ success: true, message: "Order deleted successfully" });

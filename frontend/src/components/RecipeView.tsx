@@ -49,12 +49,17 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
         {/* Header */}
         <div className="relative">
           {drink.image_url && (
-            <div className="h-64 lg:h-80 overflow-hidden">
-              <img
-                src={drink.image_url}
-                alt={drink.title}
-                className="w-full h-full object-cover"
-              />
+            <div className="h-64 lg:h-80 overflow-hidden relative">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img
+                  src={drink.image_url}
+                  alt={drink.title}
+                  className="w-full h-full object-contain"
+                  style={{
+                    transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,
+                  }}
+                />
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             </div>
           )}

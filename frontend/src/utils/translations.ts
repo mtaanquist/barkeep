@@ -86,6 +86,7 @@ export interface TranslationMap {
   error: string;
   retry: string;
   logout: string;
+  settings: string;
 }
 
 export const translations: { en: TranslationMap; da: TranslationMap } = {
@@ -178,6 +179,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     error: "Error",
     retry: "Retry",
     logout: "Logout",
+    settings: "Settings",
   },
   da: {
     // Landing page (Danish)
@@ -268,6 +270,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     error: "Fejl",
     retry: "Prøv igen",
     logout: "Log ud",
+    settings: "Indstillinger",
   },
 };
 

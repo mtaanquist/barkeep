@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, CheckCircle, XCircle, Coffee, Check } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Coffee, Check, WifiOff, RefreshCw } from "lucide-react";
 import { useApp, Drink } from "../context/AppContext";
 import { useTranslation } from "../utils/translations";
 import { useSessionManager } from "../hooks/useSessionManager";
+import { useWebSocket } from "../context/WebSocketContext";
 import DrinkCard from "./DrinkCard";
 import OrderStatusCard from "./OrderStatusCard";
 
@@ -26,6 +27,7 @@ const CustomerInterface: React.FC = () => {
   const t = useTranslation(language);
   const { clearSession } = useSessionManager();
   const navigate = useNavigate();
+  const { connectionError, reconnect } = useWebSocket();
 
   // Modal state for order placed
   const [showOrderPlacedModal, setShowOrderPlacedModal] = useState(false);
@@ -61,6 +63,8 @@ const CustomerInterface: React.FC = () => {
     if (!currentBar || !customerName) return;
     try {
       const data = await apiCall(`/drinks/bar/${currentBar.id}/favourites/${encodeURIComponent(customerName)}`);
+      // Sort favourites alphabetically
+      data.sort((a: Drink, b: Drink) => a.title.localeCompare(b.title));
       setFavouriteDrinks(data);
     } catch (err) {
       console.error("Error fetching favourites:", err);
@@ -102,6 +106,11 @@ const CustomerInterface: React.FC = () => {
     }
   });
   
+  // Sort drinks within each spirit group alphabetically
+  Object.keys(groupedDrinks).forEach((spirit) => {
+    groupedDrinks[spirit].sort((a, b) => a.title.localeCompare(b.title));
+  });
+  
   // Group available drinks by category
   const groupedByCategory: { [category: string]: typeof drinks } = {};
   drinks.forEach((drink) => {
@@ -110,6 +119,11 @@ const CustomerInterface: React.FC = () => {
       if (!groupedByCategory[category]) groupedByCategory[category] = [];
       groupedByCategory[category].push(drink);
     }
+  });
+  
+  // Sort drinks within each category alphabetically
+  Object.keys(groupedByCategory).forEach((category) => {
+    groupedByCategory[category].sort((a, b) => a.title.localeCompare(b.title));
   });
   
   const baseSpiritOrder = [
@@ -294,6 +308,43 @@ const CustomerInterface: React.FC = () => {
 
   return (
     <div className="customer-container min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      {/* WebSocket Connection Error */}
+      {connectionError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-8 max-w-md w-full mx-4">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-red-100 dark:bg-red-900/30 rounded-full p-4 mb-4">
+                <WifiOff className="w-12 h-12 text-red-600 dark:text-red-400" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2 text-gray-800 dark:text-white">
+                Connection Lost
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                Unable to connect to the bar system. The backend server may be offline or unreachable.
+              </p>
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={reconnect}
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  <RefreshCw className="w-5 h-5" />
+                  Retry Connection
+                </button>
+                <button
+                  onClick={() => {
+                    clearSession();
+                    navigate("/");
+                  }}
+                  className="flex-1 px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
+                >
+                  Go Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Order Placed Modal */}
       {showOrderPlacedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
@@ -321,11 +372,18 @@ const CustomerInterface: React.FC = () => {
                 {randomDrink.title}
               </h3>
               {randomDrink.image_url && (
-                <img
-                  src={randomDrink.image_url}
-                  alt={randomDrink.title}
-                  className="mx-auto mb-2 rounded-lg max-h-40 object-cover"
-                />
+                <div className="mx-auto mb-2 rounded-lg overflow-hidden max-h-40 aspect-video relative">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <img
+                      src={randomDrink.image_url}
+                      alt={randomDrink.title}
+                      className="w-full h-full object-contain"
+                      style={{
+                        transform: `translate(${randomDrink.image_crop_x || 0}%, ${randomDrink.image_crop_y || 0}%) scale(${randomDrink.image_crop_zoom || 1})`,
+                      }}
+                    />
+                  </div>
+                </div>
               )}
               <div className="text-sm text-gray-700 mb-2">
                 {randomDrink.base_spirit && (
