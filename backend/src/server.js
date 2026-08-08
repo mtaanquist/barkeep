@@ -29,9 +29,8 @@ import { setupWebSocket } from "./websocket/handler.js";
 const app = express();
 const server = createServer(app);
 
-// Honour X-Forwarded-* so request-derived URLs (QR codes) are correct when the
-// container sits behind a reverse proxy. Scoped to trusted upstreams — see
-// TRUST_PROXY in config.js.
+// Lets QR codes use the address guests actually came in on when a reverse
+// proxy sits in front.
 app.set("trust proxy", TRUST_PROXY);
 
 // Same-origin in the packaged deployment, so CORS is only wired up when an

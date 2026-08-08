@@ -46,15 +46,9 @@ export const PUBLIC_URL = (
   ""
 ).replace(/\/+$/, "");
 
-// Which upstreams may set X-Forwarded-*. Those headers decide the scheme and
-// host in generated QR codes, so trusting them from anywhere lets a request
-// that bypasses the proxy point a QR code elsewhere.
-//
-// The default trusts only private and loopback addresses, which covers both
-// supported topologies — Caddy on the host reaching the container over the
-// Docker bridge, and Caddy in Docker on a shared network — while ignoring the
-// headers from any public source. Accepts Express's `trust proxy` values: a
-// boolean, a hop count, or a comma-separated list of addresses/subnets/presets.
+// Which reverse proxies are allowed to tell us the address guests used. By
+// default only ones on this machine or the local network, so an outsider
+// can't point QR codes somewhere else.
 export const TRUST_PROXY = (() => {
   const raw = process.env.TRUST_PROXY;
   if (raw === undefined || raw === "") return "loopback, linklocal, uniquelocal";

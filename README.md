@@ -49,10 +49,41 @@ Then open <http://localhost:21000>.
 | `TRUST_PROXY` | private addresses    | Which upstreams may set `X-Forwarded-*`. Accepts Express `trust proxy` values.                          |
 | `TZ`          | `UTC`               | Container timezone.                                                                                     |
 
-The published port is bound to `127.0.0.1`, so only a reverse proxy running on
-the same host can reach it — not the wider LAN. If the proxy later moves into a
-container of its own, drop the `ports` block and join both stacks on a shared
-external network instead; `compose.yaml` carries the exact steps.
+### Putting a reverse proxy in front
+
+The port is bound to `127.0.0.1`, so only the machine itself can reach the bar.
+A reverse proxy on the same machine is what makes it reachable from outside:
+
+```caddyfile
+bar.example.com {
+	reverse_proxy localhost:21000
+}
+```
+
+Caddy needs no extra settings — it handles both the live order updates and the
+image files as they are.
+
+If the proxy runs in its own container instead, share a network with it rather
+than publishing a port. Create the network once:
+
+```sh
+docker network create edge
+```
+
+Then remove the `ports` block from `compose.yaml` and add:
+
+```yaml
+services:
+  home-bar:
+    networks: [edge]
+
+networks:
+  edge:
+    external: true
+```
+
+The proxy joins the same network and points at `home-bar:3000`. The bar is then
+not reachable from outside Docker at all.
 
 The container reports health on `/api/health`, so `docker ps` and Dockge show a
 real status rather than just "running".
