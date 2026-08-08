@@ -8,7 +8,7 @@ import RecipeView from "./components/RecipeView";
 import ErrorDisplay from "./components/ErrorDisplay";
 import QRRedirect from "./components/QRRedirect";
 import { AppProvider, useApp } from "./context/AppContext";
-import { WebSocketProvider } from "./context/WebSocketContext";
+import { LiveUpdatesProvider } from "./context/LiveUpdatesContext";
 import PastOrdersPage from "./pages/PastOrdersPage";
 
 const AppContent: React.FC = () => {
@@ -95,9 +95,9 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <AppProvider>
-        <WebSocketProvider>
+        <LiveUpdatesProvider>
           <AppContent />
-        </WebSocketProvider>
+        </LiveUpdatesProvider>
       </AppProvider>
     </BrowserRouter>
   );

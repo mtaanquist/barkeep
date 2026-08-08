@@ -156,8 +156,8 @@ router.post("/", (req, res) => {
     const newOrderStmt = db.prepare("SELECT * FROM orders WHERE id = ?");
     const newOrder = newOrderStmt.get(result.lastInsertRowid);
 
-    // Broadcast to WebSocket clients (will be handled by the main server)
-    req.app.locals.wss?.broadcast(barId, {
+    // Tell everyone watching this bar.
+    req.app.locals.realtime?.broadcast(barId, {
       type: "new_order",
       order: newOrder,
     });
@@ -222,8 +222,8 @@ router.patch("/:orderId/status", (req, res) => {
     // Get updated order
     const updatedOrder = checkStmt.get(orderId, barId);
 
-    // Broadcast to WebSocket clients
-    req.app.locals.wss?.broadcast(barId, {
+    // Tell everyone watching this bar.
+    req.app.locals.realtime?.broadcast(barId, {
       type: "order_status_updated",
       order: updatedOrder,
     });
@@ -363,8 +363,8 @@ router.delete("/:orderId", (req, res) => {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    // Broadcast to WebSocket clients
-    req.app.locals.wss?.broadcast(barId, {
+    // Tell everyone watching this bar.
+    req.app.locals.realtime?.broadcast(barId, {
       type: "order_deleted",
       orderId: parseInt(orderId),
     });
