@@ -2,41 +2,47 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import Database from "better-sqlite3";
+import type { Express } from "express";
 
 import { openDatabase } from "../src/db/index.js";
 import { createApp } from "../src/app.js";
+import type { Db } from "../src/db/queries.js";
 
-const tempDirs = [];
+const tempDirs: string[] = [];
 
 /** A scratch folder that gets cleaned up after the test file finishes. */
-export function makeTempDir(prefix = "home-bar-test-") {
+export function makeTempDir(prefix = "home-bar-test-"): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
   tempDirs.push(dir);
   return dir;
 }
 
-export function cleanUpTempDirs() {
+export function cleanUpTempDirs(): void {
   while (tempDirs.length) {
-    fs.rmSync(tempDirs.pop(), { recursive: true, force: true });
+    fs.rmSync(tempDirs.pop() as string, { recursive: true, force: true });
   }
 }
 
 /** A fresh, fully migrated database in its own folder. */
-export function makeTestDatabase() {
-  const dir = makeTempDir();
-  return openDatabase(path.join(dir, "bar.db"));
+export function makeTestDatabase(): Db {
+  return openDatabase(path.join(makeTempDir(), "bar.db"));
 }
 
 /** A database with no tables at all, for testing the migration steps. */
-export function makeEmptyDatabase() {
-  const dir = makeTempDir();
-  const db = new Database(path.join(dir, "bar.db"));
+export function makeEmptyDatabase(): Db {
+  const db = new Database(path.join(makeTempDir(), "bar.db"));
   db.pragma("foreign_keys = ON");
   return db;
 }
 
+export interface TestApp {
+  app: Express;
+  db: Db;
+  uploadsDir: string;
+}
+
 /** The app, wired to a throwaway database and uploads folder. */
-export function makeTestApp() {
+export function makeTestApp(): TestApp {
   const db = makeTestDatabase();
   const uploadsDir = makeTempDir("home-bar-uploads-");
   // Pointed at a folder with no web pages in it, so the tests only ever see
@@ -46,8 +52,13 @@ export function makeTestApp() {
   return { app: createApp({ db, uploadsDir, frontendDir }), db, uploadsDir };
 }
 
+export interface SeededBar {
+  barId: number;
+  drinkId: number;
+}
+
 /** A bar with one drink, since most things need something to order. */
-export function seedBar(db, { name = "Test Bar" } = {}) {
+export function seedBar(db: Db, { name = "Test Bar" } = {}): SeededBar {
   const bar = db
     .prepare(
       `INSERT INTO bars (name, bartender_password_hash, guest_password_hash)

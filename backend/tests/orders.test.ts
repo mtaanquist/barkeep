@@ -2,22 +2,24 @@ import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import request from "supertest";
 
 import { makeTestApp, cleanUpTempDirs, seedBar } from "./helpers.js";
+import type { Express } from "express";
+import type { Db } from "../src/db/queries.js";
 
 afterAll(cleanUpTempDirs);
 
 /** Stands in for the live-update connections so we can see what was sent. */
-function watchUpdates(app) {
+function watchUpdates(app: Express) {
   const broadcast = vi.fn();
   app.locals.realtime = { broadcast };
   return broadcast;
 }
 
 describe("orders", () => {
-  let app;
-  let db;
-  let barId;
-  let drinkId;
-  let sent;
+  let app: Express;
+  let db: Db;
+  let barId: number;
+  let drinkId: number;
+  let sent: ReturnType<typeof watchUpdates>;
 
   beforeEach(() => {
     ({ app, db } = makeTestApp());
@@ -128,7 +130,7 @@ describe("orders", () => {
   });
 
   /** Walks an order through accepted → ready → processed. */
-  const advanceTo = async (orderId, ...statuses) => {
+  const advanceTo = async (orderId: number, ...statuses: string[]) => {
     for (const status of statuses) {
       const res = await request(app)
         .patch(`/api/orders/${orderId}/status`)
@@ -144,7 +146,7 @@ describe("orders", () => {
 
     const stored = db
       .prepare("SELECT status FROM orders WHERE id = ?")
-      .get(order.id);
+      .get(order.id) as { status: string };
     expect(stored.status).toBe("processed");
   });
 

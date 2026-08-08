@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import type { Express } from "express";
+import type { Db } from "../src/db/queries.js";
 import request from "supertest";
 import fs from "fs";
 import path from "path";
@@ -21,8 +23,8 @@ const PNG = Buffer.from(
 afterAll(cleanUpTempDirs);
 
 describe("qr code addresses", () => {
-  let app;
-  let barId;
+  let app: Express;
+  let barId: number;
 
   beforeAll(() => {
     const t = makeTestApp();
@@ -77,9 +79,9 @@ describe("qr code addresses", () => {
 });
 
 describe("photo uploads", () => {
-  let app;
-  let db;
-  let uploadsDir;
+  let app: Express;
+  let db: Db;
+  let uploadsDir: string;
 
   beforeAll(() => ({ app, db, uploadsDir } = makeTestApp()));
 

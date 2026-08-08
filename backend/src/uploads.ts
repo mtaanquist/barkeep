@@ -1,11 +1,19 @@
 import fs from "fs";
 import path from "path";
 
+import { all } from "./db/queries.js";
+import type { Db } from "./db/queries.js";
+
 const UPLOAD_PREFIX = "/uploads/";
 
 /** True for photos we store ourselves, as opposed to a web address. */
-export function isStoredPhoto(imageUrl) {
+export function isStoredPhoto(imageUrl: unknown): imageUrl is string {
   return typeof imageUrl === "string" && imageUrl.startsWith(UPLOAD_PREFIX);
+}
+
+interface PhotoStore {
+  db: Db;
+  uploadsDir: string;
 }
 
 /**
@@ -13,10 +21,10 @@ export function isStoredPhoto(imageUrl) {
  * touches files inside the photos folder.
  */
 export function deletePhotoIfUnused(
-  { db, uploadsDir },
-  imageUrl,
-  { exceptDrinkId = null } = {}
-) {
+  { db, uploadsDir }: PhotoStore,
+  imageUrl: unknown,
+  { exceptDrinkId = null }: { exceptDrinkId?: number | null } = {}
+): boolean {
   if (!isStoredPhoto(imageUrl)) return false;
 
   const stillUsed = db
@@ -46,19 +54,20 @@ export function sweepUnusedPhotos({
   uploadsDir,
   minimumAgeMs = 24 * 60 * 60 * 1000,
   now = Date.now(),
-}) {
+}: PhotoStore & { minimumAgeMs?: number; now?: number }): string[] {
   if (!fs.existsSync(uploadsDir)) return [];
 
   const inUse = new Set(
-    db
-      .prepare("SELECT DISTINCT image_url FROM drinks WHERE image_url IS NOT NULL")
-      .all()
+    all<{ image_url: string | null }>(
+      db,
+      "SELECT DISTINCT image_url FROM drinks WHERE image_url IS NOT NULL"
+    )
       .map((row) => row.image_url)
       .filter(isStoredPhoto)
       .map((url) => path.basename(url))
   );
 
-  const removed = [];
+  const removed: string[] = [];
 
   for (const name of fs.readdirSync(uploadsDir)) {
     if (inUse.has(name)) continue;
