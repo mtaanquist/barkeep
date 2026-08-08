@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 
 const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-const ACTIVITY_KEY = "homeBarSystem_lastActivity";
+export const ACTIVITY_KEY = "homeBarSystem_lastActivity";
 
 export const useSessionManager = () => {
   const { setUserType, setCurrentBar, setCustomerName, setLoginForm } =

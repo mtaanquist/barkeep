@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import LoginForm from "./LoginForm";
+import { ACTIVITY_KEY } from "../hooks/useSessionManager";
 
 const QRRedirect: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -88,7 +89,7 @@ const QRRedirect: React.FC = () => {
       setUserType("guest");
       
       // Update session activity timestamp
-      localStorage.setItem("homeBarSystem_lastActivity", Date.now().toString());
+      localStorage.setItem(ACTIVITY_KEY, Date.now().toString());
       
       // The current bar should already be set from the earlier fetchBarInfo call,
       // but let's make sure it has the latest info
