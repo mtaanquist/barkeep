@@ -5,21 +5,19 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      # The API, the WebSocket endpoint, the uploaded images and the frontend
-      # are all served from this one port.
-      - "21000:3000"
+      # Everything is served on this one port. Only this machine can reach it,
+      # so put a reverse proxy in front to expose the bar.
+      - "127.0.0.1:21000:3000"
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
     environment:
-      # Set these to run as an unprivileged user; ownership of ./data and
-      # ./uploads is adjusted on start. Leave unset to keep running as root,
-      # which is how existing bind-mounted data was created.
+      TZ: Europe/Copenhagen
+      # Run as a normal user instead of root. File ownership is fixed on start.
       # PUID: 1000
       # PGID: 1000
-      TZ: Europe/Copenhagen
-      # Only needed if the address guests reach the bar on differs from the one
-      # the request arrives with. Otherwise QR codes use the requesting host.
+      # Set this if the web address guests use differs from the one the bar
+      # is reached on. QR codes use it.
       # PUBLIC_URL: https://bar.example.com
     healthcheck:
       test:
@@ -33,3 +31,5 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+# If the reverse proxy is moved into its own container, remove the ports block
+# above and share a network with it instead. See the README.

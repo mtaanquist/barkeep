@@ -45,3 +45,15 @@ export const PUBLIC_URL = (
   process.env.FRONTEND_URL ||
   ""
 ).replace(/\/+$/, "");
+
+// Which reverse proxies are allowed to tell us the address guests used. By
+// default only ones on this machine or the local network, so an outsider
+// can't point QR codes somewhere else.
+export const TRUST_PROXY = (() => {
+  const raw = process.env.TRUST_PROXY;
+  if (raw === undefined || raw === "") return "loopback, linklocal, uniquelocal";
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  if (/^\d+$/.test(raw)) return Number(raw);
+  return raw;
+})();
