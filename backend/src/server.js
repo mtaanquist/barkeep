@@ -2,112 +2,71 @@ import express from "express";
 import cors from "cors";
 import { WebSocketServer } from "ws";
 import { createServer } from "http";
-import dotenv from "dotenv";
-import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
 
-// Import routes
+import {
+  PORT,
+  NODE_ENV,
+  DB_PATH,
+  UPLOADS_DIR,
+  FRONTEND_DIR,
+  CORS_ORIGIN,
+} from "./config.js";
+// Importing the database opens it and runs migrations before any route module
+// is loaded.
+import { db, closeDatabase } from "./db/index.js";
+
 import barRoutes from "./routes/bars.js";
 import drinkRoutes from "./routes/drinks.js";
 import orderRoutes from "./routes/orders.js";
 import authRoutes from "./routes/auth.js";
 import categoryRoutes from "./routes/categories.js";
 
-// WebSocket handler
 import { setupWebSocket } from "./websocket/handler.js";
-
-dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = createServer(app);
-const PORT = process.env.PORT || 3000;
 
-// Database setup
-const DB_PATH = process.env.DB_PATH || "./data/bar.db";
+// Honour X-Forwarded-* so request-derived URLs (QR codes) are correct when the
+// container sits behind a reverse proxy.
+app.set("trust proxy", true);
 
-// Ensure the data directory exists
-const dbDir = path.dirname(DB_PATH);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-  console.log(`Created directory: ${dbDir}`);
+// Same-origin in the packaged deployment, so CORS is only wired up when an
+// origin is explicitly configured (i.e. running against the Vite dev server).
+if (CORS_ORIGIN) {
+  app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 }
-
-// Ensure uploads directory exists
-const uploadsDir = "./uploads";
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log(`Created directory: ${uploadsDir}`);
-}
-
-export const db = new Database(DB_PATH);
-
-// Enable WAL mode for better concurrent access
-db.pragma("journal_mode = WAL");
-db.pragma("foreign_keys = ON");
-
-// Middleware
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    credentials: true,
-  })
-);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Serve static uploads
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
-
-// Request logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
 
-// Error handling middleware for multer
-app.use((error, req, res, next) => {
-  if (error) {
-    if (error.code === "LIMIT_FILE_SIZE") {
-      return res
-        .status(400)
-        .json({ error: "File too large. Maximum size is 5MB." });
-    }
-    if (error.message === "Only image files are allowed!") {
-      return res.status(400).json({ error: "Only image files are allowed." });
-    }
-    console.error("Middleware error:", error);
-    return res.status(500).json({ error: "Server error occurred." });
-  }
-  next();
-});
+// Uploaded drink images. Served from the same origin as the app, so the
+// relative /uploads/... paths stored in the database resolve without a proxy.
+app.use(
+  "/uploads",
+  express.static(UPLOADS_DIR, {
+    maxAge: "7d",
+    fallthrough: false,
+  })
+);
 
-// Routes
-app.use("/api/bars", barRoutes);
-app.use("/api/drinks", drinkRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/categories", categoryRoutes);
-
-// Health check endpoint
 app.get("/api/health", (req, res) => {
   try {
-    // Test database connection
-    const result = db.prepare("SELECT 1").get();
+    db.prepare("SELECT 1").get();
     res.json({
       status: "OK",
       timestamp: new Date().toISOString(),
       database: "connected",
-      version: "1.0.0",
     });
   } catch (error) {
     console.error("Health check failed:", error);
-    res.status(500).json({
+    res.status(503).json({
       status: "ERROR",
       timestamp: new Date().toISOString(),
       database: "disconnected",
@@ -116,91 +75,99 @@ app.get("/api/health", (req, res) => {
   }
 });
 
-// Serve frontend in production
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../../frontend/dist")));
+app.use("/api/bars", barRoutes);
+app.use("/api/drinks", drinkRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoryRoutes);
 
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"));
-  });
-}
-
-// 404 handler for API routes
-app.use("/api/*", (req, res) => {
+// Must sit before the SPA fallback, otherwise unknown API routes answer with
+// index.html instead of JSON.
+app.use("/api", (req, res) => {
   res.status(404).json({ error: "API endpoint not found" });
 });
 
-// WebSocket setup (attach to same HTTP server, path: /ws)
-const wss = new WebSocketServer({ server, path: "/ws" });
-app.locals.wss = setupWebSocket(wss); // <-- Save the return value, not wss itself
+// Built frontend. Absent during local development, where Vite serves it.
+const hasFrontend = fs.existsSync(path.join(FRONTEND_DIR, "index.html"));
 
-// Global error handler
+if (hasFrontend) {
+  app.use(express.static(FRONTEND_DIR));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(FRONTEND_DIR, "index.html"));
+  });
+}
+
+// Error handler. Must be last, and must take four arguments for Express to
+// recognise it as one.
 app.use((err, req, res, next) => {
-  console.error("Global error handler:", err);
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ error: "File too large. Maximum size is 5MB." });
+  }
+  if (err.message === "Only image files are allowed!") {
+    return res.status(400).json({ error: "Only image files are allowed." });
+  }
+  if (err.status === 404) {
+    return res.status(404).json({ error: "Not found" });
+  }
+
+  console.error("Unhandled error:", err);
   res.status(500).json({
     error: "Internal server error",
-    message:
-      process.env.NODE_ENV === "development"
-        ? err.message
-        : "Something went wrong",
+    message: NODE_ENV === "development" ? err.message : "Something went wrong",
   });
 });
 
-// Start server
-server.listen(PORT, () => {
-  console.log(`🍸 Bar API running on port ${PORT}`);
-  console.log(`📁 Database: ${path.resolve(DB_PATH)}`);
-  console.log(`📁 Uploads: ${path.resolve(uploadsDir)}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
+// The WebSocket server shares the HTTP server and listens on the same port, so
+// there is nothing extra to expose or proxy.
+const wss = new WebSocketServer({ server, path: "/ws" });
+app.locals.wss = setupWebSocket(wss);
 
-  if (process.env.NODE_ENV === "development") {
-    console.log(
-      `🔗 Frontend proxy: ${
-        process.env.FRONTEND_URL || "http://localhost:5173"
-      }`
-    );
-  }
+server.listen(PORT, () => {
+  console.log(`🍸 Bar running on port ${PORT}`);
+  console.log(`📁 Database: ${DB_PATH}`);
+  console.log(`📁 Uploads:  ${UPLOADS_DIR}`);
+  console.log(
+    `📁 Frontend: ${hasFrontend ? FRONTEND_DIR : "not bundled (served by Vite in development)"}`
+  );
+  console.log(`🌍 Environment: ${NODE_ENV}`);
 });
 
-// Graceful shutdown
+let shuttingDown = false;
+
 const gracefulShutdown = (signal) => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+
   console.log(`\n${signal} received. Starting graceful shutdown...`);
 
-  // Close HTTP server
+  // Stop accepting connections, then drop the WebSocket clients that would
+  // otherwise keep the server open until the force-exit timer fires.
   server.close(() => {
-    console.log("HTTP server closed.");
-
-    // Close database connection
-    try {
-      db.close();
-      console.log("Database connection closed.");
-    } catch (error) {
-      console.error("Error closing database:", error);
-    }
-
+    closeDatabase();
     console.log("Graceful shutdown complete.");
     process.exit(0);
   });
 
-  // Force exit after 10 seconds
+  for (const client of wss.clients) {
+    client.close(1001, "Server shutting down");
+  }
+  wss.close();
+
   setTimeout(() => {
-    console.error(
-      "Could not close connections in time, forcefully shutting down"
-    );
+    console.error("Could not close connections in time, forcing shutdown");
     process.exit(1);
-  }, 10000);
+  }, 10000).unref();
 };
 
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection:", reason);
 });
 
-// Handle uncaught exceptions
 process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
+  console.error("Uncaught exception:", error);
   gracefulShutdown("UNCAUGHT_EXCEPTION");
 });
