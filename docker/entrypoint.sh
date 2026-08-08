@@ -6,9 +6,8 @@ UPLOADS_DIR="${UPLOADS_DIR:-/app/uploads}"
 
 mkdir -p "$DATA_DIR" "$UPLOADS_DIR"
 
-# The container runs as root by default, which matches how existing bind-mounted
-# data directories were created. Set PUID/PGID to run as an unprivileged user
-# instead; ownership of the data is adjusted to match so nothing breaks.
+# Runs as root unless PUID/PGID are set, which matches how existing data was
+# created. When they are set, fix ownership first so nothing breaks.
 if [ "$(id -u)" = "0" ] && [ -n "${PUID}${PGID}" ]; then
     uid="${PUID:-1000}"
     gid="${PGID:-1000}"
