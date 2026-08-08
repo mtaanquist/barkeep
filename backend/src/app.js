@@ -8,6 +8,7 @@ import {
   UPLOADS_DIR,
   FRONTEND_DIR,
   CORS_ORIGIN,
+  PUBLIC_URL,
   TRUST_PROXY,
 } from "./config.js";
 
@@ -26,6 +27,7 @@ export function createApp({
   uploadsDir = UPLOADS_DIR,
   frontendDir = FRONTEND_DIR,
   corsOrigin = CORS_ORIGIN,
+  publicUrl = PUBLIC_URL,
   trustProxy = TRUST_PROXY,
   requestLogging = NODE_ENV !== "test",
 } = {}) {
@@ -78,7 +80,7 @@ export function createApp({
     }
   });
 
-  app.use("/api/bars", createBarRoutes(db));
+  app.use("/api/bars", createBarRoutes({ db, publicUrl }));
   app.use("/api/drinks", createDrinkRoutes({ db, uploadsDir }));
   app.use("/api/orders", createOrderRoutes(db));
   app.use("/api/auth", createAuthRoutes(db));

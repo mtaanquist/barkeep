@@ -42,11 +42,12 @@ const LandingPage: React.FC = () => {
           />
         );
 
-      case "login":
+      case "login": {
         const barToUse = selectedBar || currentBar;
         return barToUse ? (
           <LoginForm bar={barToUse} onBack={resetToBarSelection} />
         ) : null;
+      }
 
       default:
         return (
@@ -62,9 +63,10 @@ const LandingPage: React.FC = () => {
     switch (mode) {
       case "create":
         return "Create Your Bar";
-      case "login":
+      case "login": {
         const barToUse = selectedBar || currentBar;
         return barToUse ? `${t("welcome")} ${barToUse.name}` : "Login";
+      }
       default:
         return "Get Started";
     }
