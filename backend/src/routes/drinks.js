@@ -3,18 +3,16 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
-import { db } from "../server.js";
+import { db } from "../db/index.js";
+import { UPLOADS_DIR } from "../config.js";
 
 const router = express.Router();
 
 // Configure multer for image uploads (v1.x syntax)
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = "./uploads";
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+    cb(null, UPLOADS_DIR);
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -378,9 +376,13 @@ router.delete("/:drinkId", (req, res) => {
       return res.status(404).json({ error: "Drink not found" });
     }
 
-    // Delete associated image file if it exists
+    // Delete associated image file if it exists. basename() keeps a crafted
+    // image_url from reaching outside the uploads directory.
     if (drink.image_url && drink.image_url.startsWith("/uploads/")) {
-      const imagePath = "." + drink.image_url;
+      const imagePath = path.join(
+        UPLOADS_DIR,
+        path.basename(drink.image_url)
+      );
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
       }
