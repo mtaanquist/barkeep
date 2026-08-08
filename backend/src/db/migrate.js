@@ -7,6 +7,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SCHEMA_FILE = path.join(__dirname, "schema.sql");
 const MIGRATIONS_DIR = path.join(__dirname, "migrations");
 
+const announce = (message) => {
+  if (process.env.NODE_ENV !== "test") console.log(message);
+};
+
 /**
  * Brings the database up to date. Runs on every start; does nothing if there
  * is nothing new to apply.
@@ -51,7 +55,7 @@ export function runMigrations(db) {
       // An older database may already have this change. Record it instead of
       // failing to start.
       if (/duplicate column name/i.test(error.message)) {
-        console.warn(
+        announce(
           `Migration ${file} was already present in the schema; recording it as applied.`
         );
         markApplied.run(file);
@@ -63,7 +67,7 @@ export function runMigrations(db) {
       });
     }
 
-    console.log(`Applied migration: ${file}`);
+    announce(`Applied migration: ${file}`);
     applied.push(file);
   }
 

@@ -2,7 +2,6 @@ import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { v4 as uuidv4 } from "uuid";
 
 export default function createDrinkRoutes({ db, uploadsDir }) {
   const router = express.Router();
