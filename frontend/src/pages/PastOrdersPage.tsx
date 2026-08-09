@@ -4,7 +4,7 @@ import { useApp } from "../hooks/useApp";
 import { useGuestMenu } from "../hooks/useGuestMenu";
 import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
-import { ArrowLeft } from "lucide-react";
+import GuestShell from "../components/customer/GuestShell";
 import PastOrders from "../components/PastOrders";
 
 const PastOrdersPage: React.FC = () => {
@@ -38,6 +38,26 @@ const PastOrdersPage: React.FC = () => {
     navigate("/customer");
   };
 
+  // The order in progress is on this screen too now, so cancelling has to
+  // work from here as well.
+  const handleCancelOrder = async (orderId: number) => {
+    if (!currentBar || !customerName) return;
+    if (!window.confirm(t("confirmCancelOrder"))) return;
+
+    setLoading(true);
+    try {
+      await apiCall(`/orders/${orderId}`, {
+        method: "DELETE",
+        body: JSON.stringify({ barId: currentBar.id, customerName }),
+      });
+      await refreshOrders();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to cancel order");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePlaceOrder = async (drink: Drink) => {
     if (customerOrder) {
       alert("You can only have one active order at a time");
@@ -67,33 +87,13 @@ const PastOrdersPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-sunken">
-      {/* Header */}
-      <div className="bg-surface-raised border-b sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleGoBack}
-                className="flex items-center gap-2 text-text-muted hover:text-text font-medium"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Back to Menu
-              </button>
-              <div>
-                <h1 className="text-xl font-bold text-text">
-                  🍸 {currentBar?.name} - {t("pastOrders")}
-                </h1>
-                <p className="text-sm text-text-muted">
-                  Welcome, {customerName}!
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-2xl mx-auto px-4 py-8">
+    <GuestShell
+      back={{ label: t("backToMenu"), onClick: handleGoBack }}
+      onCancelOrder={handleCancelOrder}
+      loading={loading}
+    >
+      <section aria-label={t("pastOrders")} className="max-w-2xl mx-auto px-4 py-8">
+        <h2 className="text-display mb-6">{t("pastOrders")}</h2>
         <PastOrders
           orders={orders}
           drinks={drinks}
@@ -104,8 +104,8 @@ const PastOrdersPage: React.FC = () => {
           handlePlaceOrder={handlePlaceOrder}
           setViewingRecipe={setViewingRecipe}
         />
-      </div>
-    </div>
+      </section>
+    </GuestShell>
   );
 };
 

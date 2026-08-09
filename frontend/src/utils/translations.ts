@@ -3,6 +3,8 @@ export interface TranslationMap {
   welcome: string;
   barIsOpen: string;
   landingIntro: string;
+  readyCollect: string;
+  backToMenu: string;
   bartenderLogin: string;
   guestLogin: string;
   createBar: string;
@@ -102,6 +104,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     // Landing page
     welcome: "Welcome to",
     barIsOpen: "The bar is open.",
+    readyCollect: "Ready · collect at the bar",
+    backToMenu: "Back to the menu",
     landingIntro:
       "Pick a bar, type your first name, and order from your phone. No account, no app.",
     bartenderLogin: "Bartender Login",
@@ -201,6 +205,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     // Landing page (Danish)
     welcome: "Velkommen til",
     barIsOpen: "Baren er åben.",
+    readyCollect: "Klar · hent den i baren",
+    backToMenu: "Tilbage til menuen",
     landingIntro:
       "Vælg en bar, skriv dit fornavn, og bestil fra telefonen. Ingen konto, ingen app.",
     bartenderLogin: "Bartender Login",

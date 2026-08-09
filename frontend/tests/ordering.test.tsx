@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
+import App from "../src/App";
 import CustomerInterface from "../src/components/CustomerInterface";
 import RecipeView from "../src/components/RecipeView";
 import PastOrdersPage from "../src/pages/PastOrdersPage";
@@ -131,7 +132,9 @@ describe("ordering a drink", () => {
     vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
 
     await showMenu();
-    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    // Cancelling lives inside the dock, which opens when tapped.
+    await userEvent.click(screen.getByRole("button", { name: /Negroni/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Cancel Order" }));
 
     expect(api.calls.some((c) => c.method === "DELETE")).toBe(false);
   });
@@ -141,7 +144,8 @@ describe("ordering a drink", () => {
     vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
 
     await showMenu();
-    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await userEvent.click(screen.getByRole("button", { name: /Negroni/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Cancel Order" }));
 
     await waitFor(() =>
       expect(api.calls.some((c) => c.method === "DELETE")).toBe(true)
@@ -190,14 +194,42 @@ describe("looking at a recipe", () => {
 
     expect(onClose).toHaveBeenCalled();
   });
+
+  // The recipe used to be returned in place of the whole app, so a guest
+  // reading one could not be told their drink was ready.
+  it("opens over the menu, leaving the order in progress on screen", async () => {
+    orders = [anOrder({ id: 5, status: "ready", drink_title: "Daiquiri" })];
+    window.history.pushState({}, "", "/customer");
+
+    render(<App />);
+
+    const dock = await screen.findByRole("region", { name: "Your Order" });
+    expect(dock).toHaveTextContent("Daiquiri");
+
+    await userEvent.click(
+      (await screen.findAllByRole("button", { name: "View Recipe" }))[0]
+    );
+
+    // The recipe is open, and the dock survived it.
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "Your Order" })
+    ).toHaveTextContent("Daiquiri");
+
+    window.history.pushState({}, "", "/");
+  });
 });
 
 describe("the past orders page", () => {
+  // Wrapped in the live updates provider because the page now sits in the
+  // guest shell, which carries the order in progress and so needs them.
   const openDirectly = () =>
     render(
       <MemoryRouter initialEntries={["/customer/past-orders"]}>
         <AppProvider>
-          <PastOrdersPage />
+          <LiveUpdatesProvider>
+            <PastOrdersPage />
+          </LiveUpdatesProvider>
         </AppProvider>
       </MemoryRouter>
     );
@@ -232,8 +264,14 @@ describe("the past orders page", () => {
 
     openDirectly();
 
-    expect(await screen.findByText("Negroni")).toBeInTheDocument();
-    expect(screen.queryByText("Still Coming")).toBeNull();
-    expect(screen.queryByText("Someone Elses")).toBeNull();
+    const history = await screen.findByRole("region", { name: "Past Orders" });
+    expect(within(history).getByText("Negroni")).toBeInTheDocument();
+    expect(within(history).queryByText("Still Coming")).toBeNull();
+    expect(within(history).queryByText("Someone Elses")).toBeNull();
+
+    // The one still on the go is not history — it is in the dock, which
+    // follows the guest onto this screen.
+    const dock = screen.getByRole("region", { name: "Your Order" });
+    expect(within(dock).getByText("Still Coming")).toBeInTheDocument();
   });
 });

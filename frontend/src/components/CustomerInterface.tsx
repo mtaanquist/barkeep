@@ -1,16 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Coffee } from "lucide-react";
 import { useApp } from "../hooks/useApp";
 import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
-import { useSessionManager } from "../hooks/useSessionManager";
 import { useGuestMenu } from "../hooks/useGuestMenu";
-import { useLiveUpdates } from "../hooks/useLiveUpdates";
-import { ConnectionLost } from "./ConnectionLost";
-import OrderStatusCard from "./OrderStatusCard";
 import RandomDrinkModal from "./RandomDrinkModal";
 import DrinkGrid from "./customer/DrinkGrid";
+import GuestShell from "./customer/GuestShell";
 import OrderPlacedModal from "./customer/OrderPlacedModal";
 import { MenuFilterSelect, MenuSidebar } from "./customer/MenuFilters";
 
@@ -31,20 +27,11 @@ const CustomerInterface: React.FC = () => {
   } = useApp();
 
   const t = useTranslation(language);
-  const { clearSession } = useSessionManager();
-  const navigate = useNavigate();
-  const { connectionError, reconnect } = useLiveUpdates();
 
   const menu = useGuestMenu();
 
-  const [noticeDismissed, setNoticeDismissed] = useState(false);
   const [showOrderPlaced, setShowOrderPlaced] = useState(false);
   const [randomDrink, setRandomDrink] = useState<Drink | null>(null);
-
-  // Show the notice again if updates drop out a second time.
-  useEffect(() => {
-    if (!connectionError) setNoticeDismissed(false);
-  }, [connectionError]);
 
   // Escape closes the surprise-me pick.
   useEffect(() => {
@@ -161,14 +148,7 @@ const CustomerInterface: React.FC = () => {
     menu.favourites.length === 0;
 
   return (
-    <div className="min-h-screen bg-surface">
-      {connectionError && !noticeDismissed && (
-        <ConnectionLost
-          onRetry={reconnect}
-          onDismiss={() => setNoticeDismissed(true)}
-        />
-      )}
-
+    <GuestShell onCancelOrder={cancelOrder} loading={loading}>
       {showOrderPlaced && (
         <OrderPlacedModal onClose={() => setShowOrderPlaced(false)} t={t} />
       )}
@@ -190,33 +170,6 @@ const CustomerInterface: React.FC = () => {
         />
       )}
 
-      <div className="bg-surface-raised border-b border-border sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center gap-4">
-            <div className="min-w-0">
-              <h1 className="text-heading truncate">{currentBar?.name}</h1>
-              <div className="flex items-center gap-4">
-                <p className="font-mono text-caption uppercase text-text-muted truncate">
-                  {customerName}
-                </p>
-                <button
-                  onClick={() => navigate("/customer/past-orders")}
-                  className="text-label text-text-muted transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
-                >
-                  {t("pastOrders")}
-                </button>
-              </div>
-            </div>
-            <button
-              onClick={clearSession}
-              className="text-label text-text-muted shrink-0 transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
-            >
-              {t("logout")}
-            </button>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-4xl mx-auto px-4 py-6 flex space-x-6">
         <MenuSidebar
           {...filters}
@@ -227,15 +180,6 @@ const CustomerInterface: React.FC = () => {
 
         <div className="flex-1 space-y-8">
           <MenuFilterSelect {...filters} />
-
-          {currentOrder && (
-            <OrderStatusCard
-              order={currentOrder}
-              t={t}
-              onCancelOrder={cancelOrder}
-              loading={loading}
-            />
-          )}
 
           {nothingToShow ? (
             <div className="p-8 text-center text-text-muted">
@@ -297,7 +241,7 @@ const CustomerInterface: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+    </GuestShell>
   );
 };
 

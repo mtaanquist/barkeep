@@ -48,7 +48,12 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-overlay flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-surface-raised border border-border rounded-lg shadow-float w-full max-w-4xl max-h-[90vh] overflow-hidden my-8">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={drink.title}
+        className="bg-surface-raised border border-border rounded-lg shadow-float w-full max-w-4xl max-h-[90vh] overflow-hidden my-8"
+      >
         {/* Header */}
         <div className="relative">
           {drink.image_url && (

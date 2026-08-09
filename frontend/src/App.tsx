@@ -25,73 +25,70 @@ const AppContent: React.FC = () => {
     customerName,
   } = useApp();
 
-  // Error display
-  if (error) {
-    return <ErrorDisplay error={error} onRetry={() => setError(null)} />;
-  }
-
-  // Recipe view modal
-  if (viewingRecipe) {
-    return (
-      <RecipeView
-        drink={viewingRecipe}
-        onClose={() => setViewingRecipe(null)}
-      />
-    );
-  }
-
-  // Drink form modal
-  if (editingDrink !== null) {
-    return (
-      <DrinkForm
-        drink={editingDrink === "new" ? null : editingDrink}
-        onClose={() => setEditingDrink(null)}
-      />
-    );
-  }
-
   // Protected route logic
   const isAuthenticated = userType && currentBar;
   const isCustomerAuthenticated =
     isAuthenticated && userType === "guest" && customerName;
   const isBartenderAuthenticated = isAuthenticated && userType === "bartender";
 
+  // The recipe, the drink form and an error all sit OVER the app rather than
+  // replacing it. They were built as dialogs all along, but were returned in
+  // place of everything else, so opening one took away the header, the menu
+  // and — the reason this matters — the live order.
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/bar/:id" element={<QRRedirect />} />
-      <Route
-        path="/customer"
-        element={
-          isCustomerAuthenticated ? (
-            <CustomerInterface />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
-      <Route
-        path="/customer/past-orders"
-        element={
-          isCustomerAuthenticated ? (
-            <PastOrdersPage />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
-      <Route
-        path="/bartender"
-        element={
-          isBartenderAuthenticated ? (
-            <BartenderDashboard />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/bar/:id" element={<QRRedirect />} />
+        <Route
+          path="/customer"
+          element={
+            isCustomerAuthenticated ? (
+              <CustomerInterface />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="/customer/past-orders"
+          element={
+            isCustomerAuthenticated ? (
+              <PastOrdersPage />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route
+          path="/bartender"
+          element={
+            isBartenderAuthenticated ? (
+              <BartenderDashboard />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {viewingRecipe && (
+        <RecipeView
+          drink={viewingRecipe}
+          onClose={() => setViewingRecipe(null)}
+        />
+      )}
+
+      {editingDrink !== null && (
+        <DrinkForm
+          drink={editingDrink === "new" ? null : editingDrink}
+          onClose={() => setEditingDrink(null)}
+        />
+      )}
+
+      {error && <ErrorDisplay error={error} onRetry={() => setError(null)} />}
+    </>
   );
 };
 
