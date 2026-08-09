@@ -26,6 +26,7 @@ import {
 } from "../db/queries.js";
 import { liveUpdates } from "../realtime.js";
 import { assertCanMove, isOrderStatus, OPEN_STATUSES } from "../orders/status.js";
+import { ordersAreClosed } from "../orders/closing.js";
 
 /** Orders a guest is still waiting on. */
 const OPEN = OPEN_STATUSES.map((s) => `'${s}'`).join(", ");
@@ -125,7 +126,7 @@ export default function createOrderRoutes(db: Db): Router {
       const drink = findDrink(db, drinkId, barId);
 
       // Last orders. What is already in still gets served; nothing new joins.
-      if (bar.orders_closed) {
+      if (ordersAreClosed(bar)) {
         throw HttpError.badRequest("The bar has stopped taking orders");
       }
 

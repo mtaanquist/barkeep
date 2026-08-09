@@ -4,6 +4,7 @@ import type { Bar, Language } from "../types";
 import { useTranslation } from "../utils/translations";
 import Field from "./Field";
 import ToggleRow from "./ToggleRow";
+import { nextTimeOfDay, timeOfDay } from "../utils/lastOrders";
 
 const INPUT =
   "h-14 px-3.5 rounded-md border border-border bg-surface-raised text-body focus:outline-none focus:border-border-strong focus:shadow-focus";
@@ -27,6 +28,7 @@ const SettingsTab: React.FC = () => {
     language: (currentBar?.language ?? "en") as Language,
     skipApproval: currentBar?.skip_approval === 1,
     ordersClosed: currentBar?.orders_closed === 1,
+    lastOrdersAt: timeOfDay(currentBar?.last_orders_at ?? null),
     maxActiveOrders: currentBar?.max_active_orders ?? 1,
     newGuestPassword: "",
     newBartenderPassword: "",
@@ -72,6 +74,11 @@ const SettingsTab: React.FC = () => {
           language: form.language,
           skipApproval: form.skipApproval,
           ordersClosed: form.ordersClosed,
+          // A clock face means the next time it reads that, which after
+          // ten in the evening is tomorrow morning.
+          lastOrdersAt: form.lastOrdersAt
+            ? nextTimeOfDay(form.lastOrdersAt).toISOString()
+            : null,
           maxActiveOrders: form.maxActiveOrders,
           // Left out entirely when blank, so a code is never cleared by
           // saving something else on the page.
@@ -164,6 +171,18 @@ const SettingsTab: React.FC = () => {
                 title={t("ordersClosedLabel")}
                 help={t("ordersClosedHelp")}
               />
+
+              <Field
+                label={t("lastOrdersTime")}
+                hint={t("lastOrdersTimeHelp")}
+              >
+                <input
+                  type="time"
+                  value={form.lastOrdersAt}
+                  onChange={(e) => update({ lastOrdersAt: e.target.value })}
+                  className={`${INPUT} w-40`}
+                />
+              </Field>
 
               <Field
                 label={t("maxActiveOrders")}

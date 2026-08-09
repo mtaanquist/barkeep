@@ -3,7 +3,13 @@ import bcrypt from "bcrypt";
 
 import type { SignedIn, UserType } from "../../../shared/types.js";
 import { HttpError, requireId, requireText, route } from "../http.js";
-import { findBar, publicBar, type BarRow, type Db } from "../db/queries.js";
+import {
+  findBar,
+  publicBar,
+  run,
+  type BarRow,
+  type Db,
+} from "../db/queries.js";
 
 /** Which stored password a sign-in should be checked against. */
 const PASSWORD_FIELD = {
@@ -39,6 +45,18 @@ export default function createAuthRoutes(db: Db): Router {
     "/bartender",
     route(async (req, res) => {
       const bar = await signIn(req.body, "bartender");
+
+      // The bartender arriving is the bar opening. Last night's closing —
+      // whether it was the switch or the time — is cleared, so nobody has
+      // to remember to undo it before the next party.
+      if (bar.orders_closed === 1 || bar.last_orders_at) {
+        run(
+          db,
+          "UPDATE bars SET orders_closed = 0, last_orders_at = NULL WHERE id = ?",
+          bar.id
+        );
+        return res.json(signedInAs(findBar(db, bar.id), "bartender"));
+      }
 
       res.json(signedInAs(bar, "bartender"));
     })

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
@@ -191,6 +191,27 @@ describe("ordering a drink", () => {
     expect(
       screen.getByRole("button", { name: /Surprise me/ })
     ).toBeDisabled();
+  });
+
+  // A guest holding the menu open at one minute to should see it close,
+  // rather than finding out by tapping Order.
+  it("closes itself when the set time comes round", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const closesAt = new Date(Date.now() + 60_000).toISOString();
+    signIn({ bar: aBar({ last_orders_at: closesAt }) });
+
+    await showMenu();
+    expect(screen.getAllByRole("button", { name: "Order" }).length)
+      .toBeGreaterThan(0);
+
+    await act(async () => {
+      vi.advanceTimersByTime(61_000);
+    });
+
+    expect(
+      screen.getByText("The bar has stopped taking orders")
+    ).toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   it("says so plainly when there is nothing on", async () => {

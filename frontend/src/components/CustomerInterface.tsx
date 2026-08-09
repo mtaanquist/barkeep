@@ -5,6 +5,7 @@ import { useApp } from "../hooks/useApp";
 import { useSessionManager } from "../hooks/useSessionManager";
 import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
+import { ordersAreClosed } from "../utils/lastOrders";
 import { useGuestMenu } from "../hooks/useGuestMenu";
 import RandomDrinkModal from "./RandomDrinkModal";
 import DrinkGrid from "./customer/DrinkGrid";
@@ -62,7 +63,21 @@ const CustomerInterface: React.FC = () => {
   }, [randomDrink]);
 
   // Last orders: what is already in still arrives, nothing new goes in.
-  const closed = currentBar?.orders_closed === 1;
+  // Re-read on a timer so a guest holding the menu open at one minute to
+  // sees it close, rather than finding out by tapping Order.
+  const [now, setNow] = useState(() => Date.now());
+  const closed = ordersAreClosed(currentBar, now);
+
+  useEffect(() => {
+    const closesAt = currentBar?.last_orders_at;
+    if (!closesAt || closed) return;
+
+    const wait = new Date(closesAt).getTime() - Date.now();
+    if (wait <= 0 || wait > 2 ** 31 - 1) return;
+
+    const timer = setTimeout(() => setNow(Date.now()), wait);
+    return () => clearTimeout(timer);
+  }, [currentBar?.last_orders_at, closed]);
 
   const currentOrder = orders.find(
     (order) =>

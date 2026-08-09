@@ -41,7 +41,7 @@ const HASH_ROUNDS = 12;
 
 /** The bar fields that are safe to list. Never the token or the hashes. */
 const PUBLIC_COLUMNS =
-  "id, name, language, skip_approval, orders_closed, max_active_orders, created_at";
+  "id, name, language, skip_approval, orders_closed, max_active_orders, last_orders_at, created_at";
 
 /** One at a time is the point of the rule; a hundred is somebody's typo. */
 function requireOrderLimit(value: unknown): number {
@@ -52,6 +52,17 @@ function requireOrderLimit(value: unknown): number {
     );
   }
   return limit;
+}
+
+/** A moment to stop taking orders, or nothing to leave it to the switch. */
+function requireMoment(value: unknown): string | null {
+  if (value === null || value === "") return null;
+
+  const when = new Date(String(value));
+  if (Number.isNaN(when.getTime())) {
+    throw HttpError.badRequest("Last orders is not a time");
+  }
+  return when.toISOString();
 }
 
 function requireLanguage(value: unknown): Language {
@@ -178,6 +189,9 @@ export default function createBarRoutes({
           : undefined,
         max_active_orders: wasSent(body, "maxActiveOrders")
           ? requireOrderLimit(body["maxActiveOrders"])
+          : undefined,
+        last_orders_at: wasSent(body, "lastOrdersAt")
+          ? requireMoment(body["lastOrdersAt"])
           : undefined,
       };
 

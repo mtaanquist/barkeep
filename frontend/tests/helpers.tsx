@@ -11,6 +11,7 @@ export const aBar = (extra: Partial<Bar> = {}): Bar => ({
   skip_approval: 0,
   orders_closed: 0,
   max_active_orders: 1,
+  last_orders_at: null,
   created_at: "2025-07-13 14:23:32",
   ...extra,
 });

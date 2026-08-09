@@ -70,6 +70,11 @@ export interface TranslationMap {
   ordersClosedHelp: string;
   barClosed: string;
   barClosedHelp: string;
+  lastOrdersTime: string;
+  lastOrdersTimeHelp: string;
+  lastOrdersTonight: string;
+  lastOrdersTomorrow: string;
+  clearLastOrders: string;
   maxActiveOrders: string;
   maxActiveOrdersHelp: string;
   sectionAccess: string;
@@ -301,6 +306,12 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
       "Last orders. The queue keeps working, so anything already ordered still gets made.",
     barClosed: "The bar has stopped taking orders",
     barClosedHelp: "Anything you already ordered is still coming.",
+    lastOrdersTime: "Last orders at",
+    lastOrdersTimeHelp:
+      "The bar stops on its own at this time. Signing in again opens it up.",
+    lastOrdersTonight: "tonight",
+    lastOrdersTomorrow: "tomorrow morning",
+    clearLastOrders: "No set time",
     maxActiveOrders: "Drinks at a time, per guest",
     maxActiveOrdersHelp:
       "Guests give their own name, so treat this as a courtesy rather than a lock.",
@@ -536,6 +547,12 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
       "Sidste udkald. Køen virker stadig, så det der allerede er bestilt bliver lavet.",
     barClosed: "Baren tager ikke imod flere bestillinger",
     barClosedHelp: "Det du allerede har bestilt er stadig på vej.",
+    lastOrdersTime: "Sidste udkald kl.",
+    lastOrdersTimeHelp:
+      "Baren lukker af sig selv på det tidspunkt. Den åbner igen, når du logger ind.",
+    lastOrdersTonight: "i aften",
+    lastOrdersTomorrow: "i morgen tidlig",
+    clearLastOrders: "Intet fast tidspunkt",
     maxActiveOrders: "Drinks ad gangen, per gæst",
     maxActiveOrdersHelp:
       "Gæsterne skriver selv deres navn, så det er en høflighed mere end en lås.",
