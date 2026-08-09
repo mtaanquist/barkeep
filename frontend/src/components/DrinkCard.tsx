@@ -93,10 +93,10 @@ const DrinkCard: React.FC<DrinkCardProps> = ({
       </div>
       <div
         className="prose prose-sm text-gray-800 max-w-none"
-        style={{
-          // Force readable text color for markdown output
-          ["--color-fg-default" as any]: "#222",
-        }}
+        style={
+          // Keeps the markdown readable on a light background.
+          { "--color-fg-default": "#222" } as React.CSSProperties
+        }
       >
         {/* Rendered markdown content here */}
       </div>

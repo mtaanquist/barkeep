@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Coffee } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
 import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
 import { useSessionManager } from "../hooks/useSessionManager";
 import { useGuestMenu } from "../hooks/useGuestMenu";
-import { useLiveUpdates } from "../context/LiveUpdatesContext";
+import { useLiveUpdates } from "../hooks/useLiveUpdates";
 import { ConnectionLost } from "./ConnectionLost";
 import OrderStatusCard from "./OrderStatusCard";
 import RandomDrinkModal from "./RandomDrinkModal";

@@ -1,9 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Plus, QrCode } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
+import type {
+  Analytics,
+  BarQrCode,
+  Drink,
+  Order,
+} from "../types";
 import { useTranslation } from "../utils/translations";
 import { useSessionManager } from "../hooks/useSessionManager";
-import { useLiveUpdates } from "../context/LiveUpdatesContext";
+import { useLiveUpdates } from "../hooks/useLiveUpdates";
 import { ConnectionLost } from "./ConnectionLost";
 import OrdersTab from "./OrdersTab";
 import MenuTab from "./MenuTab";
@@ -44,36 +50,34 @@ const BartenderDashboard: React.FC = () => {
   } | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
 
-  // Data fetching functions
-  const fetchDrinks = async () => {
-    if (!currentBar) return;
-    try {
-      const data = await apiCall(`/drinks/bar/${currentBar.id}`);
-      setDrinks(data);
-    } catch (err) {
-      console.error("Error fetching drinks:", err);
-    }
-  };
+  const barId = currentBar?.id;
 
-  const fetchOrders = async () => {
-    if (!currentBar) return;
+  const fetchDrinks = useCallback(async () => {
+    if (!barId) return;
     try {
-      const data = await apiCall(`/orders/bar/${currentBar.id}`);
-      setOrders(data);
+      setDrinks(await apiCall<Drink[]>(`/drinks/bar/${barId}`));
     } catch (err) {
-      console.error("Error fetching orders:", err);
+      console.error("Could not load the drinks:", err);
     }
-  };
+  }, [barId, apiCall, setDrinks]);
 
-  const fetchAnalytics = async () => {
-    if (!currentBar) return;
+  const fetchOrders = useCallback(async () => {
+    if (!barId) return;
     try {
-      const data = await apiCall(`/orders/bar/${currentBar.id}/analytics`);
-      setAnalytics(data);
+      setOrders(await apiCall<Order[]>(`/orders/bar/${barId}`));
     } catch (err) {
-      console.error("Error fetching analytics:", err);
+      console.error("Could not load the orders:", err);
     }
-  };
+  }, [barId, apiCall, setOrders]);
+
+  const fetchAnalytics = useCallback(async () => {
+    if (!barId) return;
+    try {
+      setAnalytics(await apiCall<Analytics>(`/orders/bar/${barId}/analytics`));
+    } catch (err) {
+      console.error("Could not load the reports:", err);
+    }
+  }, [barId, apiCall, setAnalytics]);
 
   // Generate QR code
   const handleGenerateQR = async () => {
@@ -81,7 +85,7 @@ const BartenderDashboard: React.FC = () => {
     
     setQrLoading(true);
     try {
-      const data = await apiCall(`/bars/${currentBar.id}/qrcode`);
+      const data = await apiCall<BarQrCode>(`/bars/${currentBar.id}/qrcode`);
       setQrData(data);
       setShowQRModal(true);
     } catch (err) {
@@ -91,14 +95,11 @@ const BartenderDashboard: React.FC = () => {
     }
   };
 
-  // Initial data fetch
   useEffect(() => {
-    if (currentBar) {
-      fetchDrinks();
-      fetchOrders();
-      fetchAnalytics();
-    }
-  }, [currentBar]);
+    fetchDrinks();
+    fetchOrders();
+    fetchAnalytics();
+  }, [fetchDrinks, fetchOrders, fetchAnalytics]);
 
   const pendingOrders = orders.filter((order) =>
     ["new", "accepted", "ready"].includes(order.status)

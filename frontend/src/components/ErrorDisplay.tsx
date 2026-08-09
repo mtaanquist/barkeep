@@ -1,5 +1,5 @@
 import React from "react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
 import { useTranslation } from "../utils/translations";
 
 interface ErrorDisplayProps {

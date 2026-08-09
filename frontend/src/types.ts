@@ -5,11 +5,13 @@
 
 export type {
   Bar,
+  BarQrCode,
   Category,
   Flag,
   Language,
   LiveUpdate,
   OrderStatus,
+  SignedIn,
   UserType,
 } from "@shared/types";
 

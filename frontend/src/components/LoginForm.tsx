@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
 import type { Bar } from "../types";
 import { useTranslation } from "../utils/translations";
 
@@ -70,14 +70,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
     try {
       const endpoint =
         userType === "bartender" ? "/auth/bartender" : "/auth/guest";
-      const body: any = {
-        barId: barId,
+      const body = {
+        barId,
         password: loginForm.password,
+        // Guests give their name; the bartender does not.
+        ...(userType === "guest" && { customerName: loginForm.name }),
       };
-
-      if (userType === "guest") {
-        body.customerName = loginForm.name;
-      }
 
       await apiCall(endpoint, {
         method: "POST",

@@ -8,7 +8,8 @@ import {
   Coffee,
   User,
 } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
+import type { OrderStatus } from "../types";
 import { statusCard, statusIcon } from "../utils/orderStatus";
 import { useTranslation } from "../utils/translations";
 
@@ -33,7 +34,10 @@ const OrdersTab: React.FC = () => {
     setShowRecipes((prev) => !prev);
   };
 
-  const handleUpdateOrderStatus = async (orderId: number, status: string) => {
+  const handleUpdateOrderStatus = async (
+    orderId: number,
+    status: OrderStatus
+  ) => {
     setLoading(true);
     try {
       await apiCall(`/orders/${orderId}/status`, {
@@ -50,7 +54,7 @@ const OrdersTab: React.FC = () => {
           order.id === orderId
             ? {
                 ...order,
-                status: status as any,
+                status,
                 updated_at: new Date().toISOString(),
               }
             : order

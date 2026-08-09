@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
+import type { Drink, Order } from "../types";
 import { useTranslation } from "../utils/translations";
 import { ArrowLeft } from "lucide-react";
 import PastOrders from "../components/PastOrders";
@@ -33,7 +34,7 @@ const PastOrdersPage: React.FC = () => {
     navigate("/customer");
   };
 
-  const handlePlaceOrder = async (drink: any) => {
+  const handlePlaceOrder = async (drink: Drink) => {
     if (customerOrder) {
       alert("You can only have one active order at a time");
       return;
@@ -51,7 +52,7 @@ const PastOrdersPage: React.FC = () => {
       });
 
       // Refresh orders after placing order
-      const updatedOrders = await apiCall(`/orders/bar/${currentBar!.id}`);
+      const updatedOrders = await apiCall<Order[]>(`/orders/bar/${currentBar!.id}`);
       setOrders(updatedOrders);
 
       // Navigate back to customer interface to see the new order

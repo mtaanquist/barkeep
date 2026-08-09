@@ -24,6 +24,8 @@ export default tseslint.config(
         "error",
         { fixStyle: "inline-type-imports" },
       ],
+      // Both halves hold to this, so neither drifts back to untyped payloads.
+      "@typescript-eslint/no-explicit-any": "error",
     },
   },
   {

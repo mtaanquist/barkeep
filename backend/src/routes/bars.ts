@@ -2,7 +2,12 @@ import express, { type Router } from "express";
 import bcrypt from "bcrypt";
 import QRCode from "qrcode";
 
-import type { Bar, Language, Order } from "../../../shared/types.js";
+import type {
+  Bar,
+  BarQrCode,
+  Language,
+  Order,
+} from "../../../shared/types.js";
 import {
   HttpError,
   idParam,
@@ -262,7 +267,7 @@ export default function createBarRoutes({
       const baseUrl = publicUrl || `${req.protocol}://${req.get("host")}`;
       const url = `${baseUrl}/bar/${barId}?token=${guestToken(barId)}`;
 
-      res.json({
+      const code = {
         barId: bar.id,
         barName: bar.name,
         url,
@@ -271,7 +276,9 @@ export default function createBarRoutes({
           margin: 2,
           color: { dark: "#1e40af", light: "#ffffff" },
         }),
-      });
+      } satisfies BarQrCode;
+
+      res.json(code);
     })
   );
 

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Edit3, Trash2, Tag } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
 import type { Category } from "../types";
 import { useTranslation } from "../utils/translations";
 
@@ -23,23 +23,23 @@ const CategoriesTab: React.FC = () => {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // Fetch categories when component mounts
-  useEffect(() => {
-    if (currentBar) {
-      fetchCategories();
-    }
-  }, [currentBar]);
+  const barId = currentBar?.id;
 
-  const fetchCategories = async () => {
-    if (!currentBar) return;
+  const fetchCategories = useCallback(async () => {
+    if (!barId) return;
     try {
-      const data = await apiCall(`/categories/bar/${currentBar.id}`);
-      setCategories(data);
+      setCategories(await apiCall<Category[]>(`/categories/bar/${barId}`));
     } catch (err) {
-      console.error("Error fetching categories:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch categories");
+      console.error("Could not load the categories:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch categories"
+      );
     }
-  };
+  }, [barId, apiCall, setCategories, setError]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +48,7 @@ const CategoriesTab: React.FC = () => {
 
     setLoading(true);
     try {
-      const newCategory = await apiCall("/categories", {
+      const newCategory = await apiCall<Category>("/categories", {
         method: "POST",
         body: JSON.stringify({
           barId: currentBar.id,
@@ -71,7 +71,7 @@ const CategoriesTab: React.FC = () => {
 
     setLoading(true);
     try {
-      const updatedCategory = await apiCall(`/categories/${category.id}`, {
+      const updatedCategory = await apiCall<Category>(`/categories/${category.id}`, {
         method: "PUT",
         body: JSON.stringify({
           barId: currentBar.id,

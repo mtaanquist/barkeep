@@ -21,11 +21,14 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   const [crop, setCrop] = useState(initialCrop);
   const [zoom, setZoom] = useState(initialZoom);
 
-  // Sync state with props when they change
+  // Taken apart, because the caller passes a fresh object every render and
+  // watching that would reset the crop while it is being dragged.
+  const { x: startX, y: startY } = initialCrop;
+
   useEffect(() => {
-    setCrop(initialCrop);
+    setCrop({ x: startX, y: startY });
     setZoom(initialZoom);
-  }, [initialCrop.x, initialCrop.y, initialZoom]);
+  }, [startX, startY, initialZoom]);
 
   const onCropComplete = useCallback((_croppedArea: Area, _croppedAreaPixels: Area) => {
     // Crop area is tracked internally by react-easy-crop

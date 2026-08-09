@@ -1,6 +1,6 @@
 import React from "react";
 import { Plus, Edit3, Trash2, Package, PackageX, Eye } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
 import { useTranslation } from "../utils/translations";
 import { LazyMarkdownViewer } from "./LazyMDEditor";
 
