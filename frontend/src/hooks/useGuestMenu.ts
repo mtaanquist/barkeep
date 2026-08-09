@@ -1,19 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApp } from "../context/AppContext";
 import type { Drink } from "../types";
-
-/** The order the bar likes its spirits listed in. Anything else goes last. */
-const SPIRIT_ORDER = [
-  "Vodka",
-  "Gin",
-  "Rum",
-  "Tequila",
-  "Whisky/Whiskey",
-  "Brandy/Cognac",
-  "Liqueur",
-  "Non-alcoholic",
-  "Other",
-];
+import { BASE_SPIRITS } from "../utils/spirits";
 
 export type MenuFilter =
   | { type: "all" }
@@ -99,7 +87,7 @@ export function useGuestMenu() {
     [inStock]
   );
 
-  const spirits = SPIRIT_ORDER.filter((s) => bySpirit[s]?.length);
+  const spirits = BASE_SPIRITS.filter((s) => bySpirit[s]?.length);
   const categories = Object.keys(byCategory).sort();
 
   // "All" shows every group in turn rather than one flat list.

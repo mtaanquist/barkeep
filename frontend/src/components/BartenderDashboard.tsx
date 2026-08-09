@@ -221,7 +221,7 @@ const BartenderDashboard: React.FC = () => {
       {currentTab === "menu" && (
         <div className="fixed bottom-6 right-6 lg:hidden">
           <button
-            onClick={() => setEditingDrink({})}
+            onClick={() => setEditingDrink("new")}
             className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-6 h-6" />

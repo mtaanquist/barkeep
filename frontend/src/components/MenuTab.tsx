@@ -112,7 +112,7 @@ const MenuTab: React.FC = () => {
               <option value="category">Sort: Category</option>
             </select>
             <button
-              onClick={() => setEditingDrink({})}
+              onClick={() => setEditingDrink("new")}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 w-full sm:w-auto justify-center"
             >
               <Plus className="w-4 h-4" />
@@ -133,7 +133,7 @@ const MenuTab: React.FC = () => {
             Start building your menu by adding your first drink
           </p>
           <button
-            onClick={() => setEditingDrink({})}
+            onClick={() => setEditingDrink("new")}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
