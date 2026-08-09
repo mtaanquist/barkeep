@@ -8,6 +8,7 @@ import type { Db } from "../src/db/queries.js";
 import {
   makeEmptyDatabase,
   makeTestDatabase,
+  makeTempDir,
   cleanUpTempDirs,
 } from "./helpers.js";
 
@@ -117,5 +118,148 @@ describe("migrations", () => {
     expect(() => db.exec("ALTER TABLE drinks ADD COLUMN title TEXT")).toThrow();
 
     expect(appliedNames(db)).toEqual(before);
+  });
+});
+
+// A file that has already run is never run again, so editing one leaves the
+// database and the code saying different things with nothing to show for it.
+describe("noticing an edited migration", () => {
+  /** A folder holding just the migrations a test writes into it. */
+  const migrationFolder = (files: Record<string, string>): string => {
+    const dir = makeTempDir("home-bar-migrations-");
+    for (const [name, sql] of Object.entries(files)) {
+      fs.writeFileSync(path.join(dir, name), sql);
+    }
+    return dir;
+  };
+
+  const checksums = (db: Db): Record<string, string | null> =>
+    Object.fromEntries(
+      (
+        db.prepare("SELECT name, checksum FROM migrations").all() as {
+          name: string;
+          checksum: string | null;
+        }[]
+      ).map((r) => [r.name, r.checksum])
+    );
+
+  it("records a fingerprint with every migration it applies", () => {
+    const db = makeEmptyDatabase();
+
+    runMigrations(db);
+
+    const recorded = checksums(db);
+    expect(Object.keys(recorded).sort()).toEqual(allMigrations);
+    for (const name of allMigrations) {
+      expect(recorded[name]).toMatch(/^[0-9a-f]{64}$/);
+    }
+  });
+
+  it("refuses to start once an applied migration has been edited", () => {
+    const db = makeEmptyDatabase();
+    const dir = migrationFolder({
+      "2099-01-01-add-thing.sql": "ALTER TABLE drinks ADD COLUMN thing TEXT;",
+    });
+
+    runMigrations(db, { migrationsDir: dir });
+
+    fs.writeFileSync(
+      path.join(dir, "2099-01-01-add-thing.sql"),
+      "ALTER TABLE drinks ADD COLUMN something_else TEXT;"
+    );
+
+    expect(() => runMigrations(db, { migrationsDir: dir })).toThrow(
+      /2099-01-01-add-thing\.sql/
+    );
+  });
+
+  it("accepts rows recorded before fingerprints were kept, then watches them", () => {
+    const db = makeEmptyDatabase();
+    const file = "2099-01-01-add-thing.sql";
+    const dir = migrationFolder({
+      [file]: "ALTER TABLE drinks ADD COLUMN thing TEXT;",
+    });
+
+    // How an existing install looks: applied, with nothing to compare against.
+    runMigrations(db, { migrationsDir: dir });
+    db.prepare("UPDATE migrations SET checksum = NULL").run();
+
+    fs.writeFileSync(
+      path.join(dir, file),
+      "ALTER TABLE drinks ADD COLUMN something_else TEXT;"
+    );
+
+    // Starts anyway, and takes the file as it stands as the one to keep to.
+    expect(() => runMigrations(db, { migrationsDir: dir })).not.toThrow();
+    expect(checksums(db)[file]).toMatch(/^[0-9a-f]{64}$/);
+
+    // From here on an edit is caught like any other.
+    fs.writeFileSync(path.join(dir, file), "ALTER TABLE drinks ADD COLUMN third TEXT;");
+
+    expect(() => runMigrations(db, { migrationsDir: dir })).toThrow(
+      new RegExp(file.replace(/\./g, "\\."))
+    );
+  });
+
+  it("carries on when an applied migration file has been removed", () => {
+    const db = makeEmptyDatabase();
+    const dir = migrationFolder({
+      "2099-01-01-add-thing.sql": "ALTER TABLE drinks ADD COLUMN thing TEXT;",
+    });
+
+    runMigrations(db, { migrationsDir: dir });
+    fs.rmSync(path.join(dir, "2099-01-01-add-thing.sql"));
+
+    expect(() => runMigrations(db, { migrationsDir: dir })).not.toThrow();
+    expect(appliedNames(db)).toEqual(["2099-01-01-add-thing.sql"]);
+  });
+});
+
+// The old recovery wrote the whole file off as done the moment one column was
+// already there, so anything else in the same file never ran.
+describe("catching up a database that was changed by hand", () => {
+  const write = (dir: string, name: string, sql: string): void =>
+    fs.writeFileSync(path.join(dir, name), sql);
+
+  it("applies the rest of a migration whose column already exists", () => {
+    const db = makeEmptyDatabase();
+    const dir = makeTempDir("home-bar-migrations-");
+
+    write(
+      dir,
+      "2099-01-01-mixed.sql",
+      `CREATE TABLE IF NOT EXISTS widgets (id INTEGER PRIMARY KEY);
+       ALTER TABLE drinks ADD COLUMN widget_id INTEGER;`
+    );
+
+    // The column is there but the table is not — someone applied half of it.
+    runMigrations(db);
+    db.exec("ALTER TABLE drinks ADD COLUMN widget_id INTEGER");
+
+    expect(runMigrations(db, { migrationsDir: dir })).toEqual([
+      "2099-01-01-mixed.sql",
+    ]);
+    expect(columnsOf(db, "widgets")).toEqual(["id"]);
+  });
+
+  it("stops rather than skip a migration that cannot be run again safely", () => {
+    const db = makeEmptyDatabase();
+    const dir = makeTempDir("home-bar-migrations-");
+
+    // No "if not exists", so running this a second time is not harmless.
+    write(
+      dir,
+      "2099-01-02-unsafe.sql",
+      `CREATE TABLE gadgets (id INTEGER PRIMARY KEY);
+       ALTER TABLE drinks ADD COLUMN gadget_id INTEGER;`
+    );
+
+    runMigrations(db);
+    db.exec("ALTER TABLE drinks ADD COLUMN gadget_id INTEGER");
+
+    expect(() => runMigrations(db, { migrationsDir: dir })).toThrow(
+      /2099-01-02-unsafe\.sql/
+    );
+    expect(appliedNames(db)).not.toContain("2099-01-02-unsafe.sql");
   });
 });
