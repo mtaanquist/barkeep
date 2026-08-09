@@ -169,7 +169,7 @@ const CategoriesTab: React.FC = () => {
                   setShowCreateForm(false);
                   setNewCategoryName("");
                 }}
-                className="bg-surface-sunken text-text px-4 py-2 rounded-md hover:bg-surface-sunken transition-colors"
+                className="bg-surface-sunken text-text px-4 py-2 rounded-md hover:bg-border transition-colors"
               >
                 {t("cancel")}
               </button>
@@ -299,7 +299,7 @@ const EditCategoryForm: React.FC<EditCategoryFormProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          className="bg-surface-sunken text-text px-3 py-1.5 rounded text-sm hover:bg-surface-sunken transition-colors"
+          className="bg-surface-sunken text-text px-3 py-1.5 rounded text-sm hover:bg-border transition-colors"
         >
           {t("cancel")}
         </button>

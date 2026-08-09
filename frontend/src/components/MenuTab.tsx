@@ -205,7 +205,7 @@ const MenuTab: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setViewingRecipe(drink)}
-                      className="flex-1 bg-surface-sunken text-text py-2 px-3 rounded-md text-sm hover:bg-surface-sunken transition-colors flex items-center justify-center space-x-1"
+                      className="flex-1 bg-surface-sunken text-text py-2 px-3 rounded-md text-sm hover:bg-border transition-colors flex items-center justify-center space-x-1"
                     >
                       <Eye className="w-3 h-3" />
                       <span>View</span>
