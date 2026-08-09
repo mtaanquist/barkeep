@@ -5,6 +5,10 @@ export interface TranslationMap {
   landingIntro: string;
   readyCollect: string;
   backToMenu: string;
+  setup: string;
+  categories: string;
+  queue: string;
+  copyLink: string;
   bartenderLogin: string;
   guestLogin: string;
   createBar: string;
@@ -106,6 +110,10 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     barIsOpen: "The bar is open.",
     readyCollect: "Ready · collect at the bar",
     backToMenu: "Back to the menu",
+    setup: "Setup",
+    categories: "Categories",
+    queue: "The queue",
+    copyLink: "Copy link",
     landingIntro:
       "Pick a bar, type your first name, and order from your phone. No account, no app.",
     bartenderLogin: "Bartender Login",
@@ -207,6 +215,10 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     barIsOpen: "Baren er åben.",
     readyCollect: "Klar · hent den i baren",
     backToMenu: "Tilbage til menuen",
+    setup: "Opsætning",
+    categories: "Kategorier",
+    queue: "Køen",
+    copyLink: "Kopiér link",
     landingIntro:
       "Vælg en bar, skriv dit fornavn, og bestil fra telefonen. Ingen konto, ingen app.",
     bartenderLogin: "Bartender Login",
@@ -228,7 +240,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     acceptOrder: "Acceptér",
     rejectOrder: "Afvis",
     markReady: "Markér Klar",
-    drinkMenu: "Drink Menu",
+    drinkMenu: "Drinks",
     addDrink: "Tilføj Drink",
     editDrink: "Rediger Drink",
     deleteDrink: "Slet",

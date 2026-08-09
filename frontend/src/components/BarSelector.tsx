@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { RefreshCw, Plus } from "lucide-react";
+import { ChevronRight, RefreshCw, Plus } from "lucide-react";
 import { useApp } from "../hooks/useApp";
 import type { Bar } from "../types";
 import { useTranslation } from "../utils/translations";
@@ -55,15 +55,18 @@ const BarSelector: React.FC<BarSelectorProps> = ({
           </div>
           <div className="space-y-2 max-h-48 overflow-y-auto">
             {availableBars.map((bar) => (
+              /* Just the name. The row used to carry the database id and the
+                 language code, neither of which means anything to a guest —
+                 and picking a bar switches the language anyway. */
               <button
                 key={bar.id}
                 onClick={() => onSelectBar(bar)}
-                className="w-full p-3 text-left border border-border rounded-md hover:border-border-strong transition-colors"
+                className="w-full h-19 px-4 flex items-center gap-3.5 text-left border border-border rounded-md transition-colors duration-(--duration-instant) hover:border-border-strong cursor-pointer"
               >
-                <div className="font-medium text-text">{bar.name}</div>
-                <div className="text-sm text-text-muted">
-                  ID: {bar.id} • Language: {bar.language.toUpperCase()}
-                </div>
+                <span className="flex-1 min-w-0 text-heading truncate">
+                  {bar.name}
+                </span>
+                <ChevronRight className="w-5 h-5 shrink-0 text-text-muted" />
               </button>
             ))}
           </div>

@@ -1,7 +1,12 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./components/LandingPage";
-import BartenderDashboard from "./components/BartenderDashboard";
+import BartenderShell from "./components/bartender/BartenderShell";
+import OrdersTab from "./components/OrdersTab";
+import MenuTab from "./components/MenuTab";
+import CategoriesTab from "./components/CategoriesTab";
+import AnalyticsTab from "./components/AnalyticsTab";
+import SettingsTab from "./components/SettingsTab";
 import CustomerInterface from "./components/CustomerInterface";
 import DrinkForm from "./components/DrinkForm";
 import RecipeView from "./components/RecipeView";
@@ -60,16 +65,25 @@ const AppContent: React.FC = () => {
             )
           }
         />
+        {/* The bartender's screens are addresses now, not remembered state,
+            so the back button works and a screen can be linked to. */}
         <Route
           path="/bartender"
           element={
             isBartenderAuthenticated ? (
-              <BartenderDashboard />
+              <BartenderShell />
             ) : (
               <Navigate to="/" replace />
             )
           }
-        />
+        >
+          <Route index element={<Navigate to="queue" replace />} />
+          <Route path="queue" element={<OrdersTab />} />
+          <Route path="menu" element={<MenuTab />} />
+          <Route path="categories" element={<CategoriesTab />} />
+          <Route path="analytics" element={<AnalyticsTab />} />
+          <Route path="settings" element={<SettingsTab />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
