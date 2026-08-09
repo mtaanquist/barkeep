@@ -56,7 +56,7 @@ const GuestShell: React.FC<GuestShellProps> = ({
       )}
 
       <header className="bg-surface-raised border-b border-border sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex justify-between items-center gap-4">
             <div className="flex items-center gap-3 min-w-0">
               {back && (

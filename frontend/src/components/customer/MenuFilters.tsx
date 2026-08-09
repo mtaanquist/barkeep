@@ -55,7 +55,7 @@ export const MenuSidebar: React.FC<SidebarProps> = ({
   onSurpriseMe,
   t,
 }) => (
-  <nav className="hidden md:block w-48 sticky top-24 self-start">
+  <nav className="hidden lg:block w-62 shrink-0 sticky top-24 self-start">
     <ul className="space-y-1">
       <li className="mb-3">
         <button
@@ -130,7 +130,7 @@ export const MenuFilterSelect: React.FC<FilterProps> = ({
   onFilter,
   t,
 }) => (
-  <div className="md:hidden mb-4 space-y-3">
+  <div className="lg:hidden mb-4 space-y-3">
     <h2 className="text-heading">{t("availableDrinks")}</h2>
 
     <label className="block">

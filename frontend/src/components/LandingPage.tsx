@@ -118,7 +118,9 @@ const LandingPage: React.FC = () => {
 
       {/* The work. */}
       <div className="flex-1 min-w-0 px-6 py-8 lg:px-10 lg:py-9">
-        <div className="max-w-md mx-auto lg:mx-0 space-y-5">
+        {/* Fills the panel on a wide screen; centred and held narrow on a
+            phone, where the sign sits above rather than beside it. */}
+        <div className="max-w-md mx-auto lg:max-w-none lg:mx-0 space-y-5">
           <div className="flex justify-end">
             <div className="inline-flex border border-border rounded-md overflow-hidden divide-x divide-border">
               {languageOption("da", "Dansk")}

@@ -189,13 +189,16 @@ const OrdersTab: React.FC = () => {
                         </p>
                       </div>
 
-                      <div className="lg:w-52 shrink-0">
+                      <div className="lg:w-60 shrink-0">
                         <span className={statusPill(order.status)}>
                           {t(order.status)}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-5">
+                      {/* Fixed width whether or not there is a reject button,
+                          so the action and the status stay in their columns
+                          instead of sliding about from row to row. */}
+                      <div className="flex items-center justify-end gap-5 lg:w-74 shrink-0">
                         {order.status === "new" && (
                           <button
                             onClick={() =>

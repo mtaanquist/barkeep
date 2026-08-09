@@ -170,7 +170,7 @@ const CustomerInterface: React.FC = () => {
         />
       )}
 
-      <div className="max-w-4xl mx-auto px-4 py-6 flex space-x-6">
+      <div className="max-w-7xl mx-auto px-4 py-6 flex space-x-6">
         <MenuSidebar
           {...filters}
           favouriteCount={menu.favourites.length}
@@ -178,7 +178,7 @@ const CustomerInterface: React.FC = () => {
           onSurpriseMe={pickRandom}
         />
 
-        <div className="flex-1 space-y-8">
+        <div className="flex-1 min-w-0 space-y-8">
           <MenuFilterSelect {...filters} />
 
           {nothingToShow ? (
