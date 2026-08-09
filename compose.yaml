@@ -1,13 +1,14 @@
 services:
-  home-bar:
-    image: ghcr.io/mtaanquist/home-bar-system:latest
-    container_name: home-bar
+  barkeep:
+    image: ghcr.io/mtaanquist/barkeep:latest
+    container_name: barkeep
     restart: unless-stopped
     init: true
     ports:
       # Everything is served on this one port. Only this machine can reach it,
-      # so put a reverse proxy in front to expose the bar.
-      - "127.0.0.1:21000:3000"
+      # so put a reverse proxy in front to expose the bar. Change the first
+      # number if something else on the machine already uses 3000.
+      - "127.0.0.1:3000:3000"
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads

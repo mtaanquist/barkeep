@@ -1,7 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
-import type { Drink, Order } from "../types";
+import { useGuestMenu } from "../hooks/useGuestMenu";
+import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
 import { ArrowLeft } from "lucide-react";
 import PastOrders from "../components/PastOrders";
@@ -17,11 +18,14 @@ const PastOrdersPage: React.FC = () => {
     setViewingRecipe,
     setLoading,
     setError,
-    setOrders,
     apiCall,
   } = useApp();
   const t = useTranslation(language);
   const navigate = useNavigate();
+
+  // Loads the menu and the orders. Opening this page directly, or refreshing
+  // it, would otherwise show an empty list.
+  const { refreshOrders } = useGuestMenu();
 
   // Compute the current active order for this customer
   const customerOrder = orders.find(
@@ -51,9 +55,7 @@ const PastOrdersPage: React.FC = () => {
         }),
       });
 
-      // Refresh orders after placing order
-      const updatedOrders = await apiCall<Order[]>(`/orders/bar/${currentBar!.id}`);
-      setOrders(updatedOrders);
+      await refreshOrders();
 
       // Navigate back to customer interface to see the new order
       navigate("/customer");

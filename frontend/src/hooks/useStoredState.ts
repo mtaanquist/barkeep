@@ -2,6 +2,10 @@ import { useCallback, useState } from "react";
 
 // Everything this app saves in the browser starts with this, so signing out
 // can clear its own things without touching anything else on the site.
+//
+// Deliberately still the old name. Changing it would sign everyone out on
+// upgrade and leave their old settings behind, which nobody would thank us
+// for mid-party. Nobody sees it.
 export const STORAGE_PREFIX = "homeBarSystem_";
 
 /** Blank values are removed rather than saved, so nothing is left behind. */

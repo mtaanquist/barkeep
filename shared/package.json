@@ -1,5 +1,5 @@
 {
-  "name": "@home-bar/shared",
+  "name": "@barkeep/shared",
   "private": true,
   "type": "module",
   "types": "types.d.ts"

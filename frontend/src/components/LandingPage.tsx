@@ -76,7 +76,7 @@ const LandingPage: React.FC = () => {
   const getSubtitle = () => {
     switch (mode) {
       case "create":
-        return "Set up your home bar system";
+        return "Set up your bar";
       case "login":
         return "Choose your login type";
       default:
@@ -92,9 +92,9 @@ const LandingPage: React.FC = () => {
         <div className="flex-1 flex items-center justify-center p-12">
           <div className="max-w-lg text-center text-white">
             <h1 className="text-6xl font-bold mb-6">🍸</h1>
-            <h2 className="text-4xl font-bold mb-4">Home Bar System</h2>
+            <h2 className="text-4xl font-bold mb-4">Barkeep</h2>
             <p className="text-xl opacity-90 mb-8">
-              A modern ordering system for your home bar. Create drinks, manage
+              Drinks on tap for your guests. Add what you are pouring, manage
               orders, and serve your guests with style.
             </p>
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -150,7 +150,7 @@ const LandingPage: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-md transition-colors duration-300">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
-              🍸 Home Bar
+              🍸 Barkeep
             </h1>
             <p className="text-gray-600 dark:text-gray-300">{getSubtitle()}</p>
           </div>

@@ -126,7 +126,7 @@ describe("migrations", () => {
 describe("noticing an edited migration", () => {
   /** A folder holding just the migrations a test writes into it. */
   const migrationFolder = (files: Record<string, string>): string => {
-    const dir = makeTempDir("home-bar-migrations-");
+    const dir = makeTempDir("barkeep-migrations-");
     for (const [name, sql] of Object.entries(files)) {
       fs.writeFileSync(path.join(dir, name), sql);
     }
@@ -223,7 +223,7 @@ describe("catching up a database that was changed by hand", () => {
 
   it("applies the rest of a migration whose column already exists", () => {
     const db = makeEmptyDatabase();
-    const dir = makeTempDir("home-bar-migrations-");
+    const dir = makeTempDir("barkeep-migrations-");
 
     write(
       dir,
@@ -244,7 +244,7 @@ describe("catching up a database that was changed by hand", () => {
 
   it("stops rather than skip a migration that cannot be run again safely", () => {
     const db = makeEmptyDatabase();
-    const dir = makeTempDir("home-bar-migrations-");
+    const dir = makeTempDir("barkeep-migrations-");
 
     // No "if not exists", so running this a second time is not harmless.
     write(
