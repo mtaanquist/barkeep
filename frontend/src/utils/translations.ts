@@ -154,6 +154,7 @@ export interface TranslationMap {
   howToOrderInstructions: string;
   surpriseMe: string;
   yourRandomDrink: string;
+  barChoseForYou: string;
   baseSpirit: string;
   orderThis: string;
   tryAnother: string;
@@ -351,6 +352,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
       'Browse the available drinks below and click "Order" to place your order. You can only have one active order at a time. Your order status will update in real-time.',
     surpriseMe: "Surprise me",
     yourRandomDrink: "Your Random Drink",
+    barChoseForYou: "the bar chose for you",
     baseSpirit: "Base Spirit",
     orderThis: "Order this!",
     tryAnother: "Try another",
@@ -546,6 +548,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
       'Browse the available drinks below and click "Order" to place your order. You can only have one active order at a time. Your order status will update in real-time.',
     surpriseMe: "Overrask mig",
     yourRandomDrink: "Your Random Drink",
+    barChoseForYou: "baren har valgt til dig",
     baseSpirit: "Base Spirit",
     orderThis: "Bestil denne!",
     tryAnother: "Prøv en anden",

@@ -299,3 +299,50 @@ describe("past orders, as a panel over the menu", () => {
     expect(history).toHaveTextContent(/once your current drink has been/i);
   });
 });
+
+describe("the surprise me reveal", () => {
+  const roll = async () => {
+    await showMenu();
+    await userEvent.click(screen.getByRole("button", { name: /Surprise me/ }));
+    return screen.getByRole("dialog", { name: "Surprise me" });
+  };
+
+  it("says who chose, and puts ordering below the second go", async () => {
+    const reveal = await roll();
+
+    expect(reveal).toHaveTextContent(/the bar chose for you/i);
+
+    // Turning the suggestion down is expected, not a corner case, so it is
+    // a button of its own between ordering and backing out.
+    const labels = within(reveal)
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim());
+
+    expect(labels).toHaveLength(3);
+    expect(labels[0]).toMatch(/^Order /);
+    expect(labels[1]).toMatch(/Try another/);
+    expect(labels[2]).toMatch(/Cancel/);
+  });
+
+  // The panel and its buttons stay put across a re-roll, so the third go is
+  // as quick to tap as the first.
+  it("swaps the drink without changing anything around it", async () => {
+    const reveal = await roll();
+    const first = within(reveal).getByRole("heading").textContent;
+
+    await userEvent.click(
+      within(reveal).getByRole("button", { name: /Try another/ })
+    );
+
+    const again = screen.getByRole("dialog", { name: "Surprise me" });
+    expect(within(again).getByRole("heading").textContent).not.toBe(first);
+
+    const labels = within(again)
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim());
+
+    expect(labels).toHaveLength(3);
+    expect(labels[1]).toMatch(/Try another/);
+    expect(labels[2]).toMatch(/Cancel/);
+  });
+});
