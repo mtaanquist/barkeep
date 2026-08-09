@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  body { margin:0; background:#8b8b86; }
+  button, input, textarea, select { font-family: inherit; }
+  a { color:#101214; }
+  a:hover { color:#000; }
+</style>
+</helmet>
+
+<section style="padding:56px; display:flex; flex-direction:column; gap:22px; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; color:#101214; width:max-content;">
+
+  <header style="display:flex; flex-direction:column; gap:8px; max-width:900px;">
+    <div style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.16em; text-transform:uppercase; color:#33383D;">Barkeep · the way in, and the ways it breaks</div>
+    <h1 style="margin:0; font-weight:700; font-size:32px; line-height:1.12; letter-spacing:-0.02em;">A sign above a door, not a hero.</h1>
+    <p style="margin:0; font-size:14px; line-height:1.55; color:#2b2b26; max-width:82ch; text-wrap:pretty;">The gradient goes. Barkeep's landing is the one screen with room for a statement, so the statement should be the thing the product actually is — <strong style="font-weight:600;">a bar sign</strong>: an ink field, the word set enormous, a hairline rule, and nothing else competing. It costs nothing, it renders identically in both colour schemes, and it tells a guest they're somewhere with a menu rather than somewhere with a signup flow. Everything downstream inherits that restraint: the errors are quiet, the empty state is honest, and the QR arrival does exactly one thing.</p>
+  </header>
+
+  <!-- ==================== LANDING ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">Landing · 1280 and 390</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">Two panels at 1280, split 44/56: the sign on the left, the work on the right. <strong style="font-weight:600;">The sign panel is ink-filled in both schemes</strong> — light mode does not lighten it — which is the single gesture that makes the landing feel authored rather than generated, and it costs one colour. The right panel leads with the bar list, because returning to a bar you've used is the common case and creating one is the rare one; <em>Opret en ny bar</em> is a full-width outline button under a rule, not a link, and not a peer of the list. Language sits top-right of the right panel as a plain two-item segmented control — at this point in the product there are no other settings to bury it under, and a guest who needs Danish needs it <em>now</em>, not after signing in. At 390 the sign becomes a 200px band at the top: same type, same rule, cropped rather than redesigned.</p>
+    </div>
+    <div style="background:#E9EAEA; padding:24px; display:flex; gap:24px; align-items:flex-start;">
+
+      <div style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">LIGHT · 1280 × 620</span>
+        <div style="width:1280px; height:620px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex;">
+          <div style="width:563px; flex:none; background:#101214; color:#FFFFFF; padding:44px 40px; display:flex; flex-direction:column;">
+            <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.18em; opacity:0.65;">BARKEEP</span>
+            <span style="flex:1;"></span>
+            <span style="font-weight:700; font-size:76px; line-height:0.95; letter-spacing:-0.035em;">Baren er<br>åben.</span>
+            <span style="height:1px; background:rgba(255,255,255,0.28); margin:26px 0 18px;"></span>
+            <span style="font-weight:400; font-size:17px; line-height:1.5; opacity:0.75; max-width:38ch; text-wrap:pretty;">Vælg en bar, skriv dit fornavn, og bestil fra telefonen. Ingen konto, ingen app.</span>
+          </div>
+          <div style="flex:1; min-width:0; padding:36px 40px; display:flex; flex-direction:column; gap:18px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="flex:1;"></span>
+              <div style="display:flex; border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+                <span style="height:44px; padding:0 16px; display:flex; align-items:center; background:var(--text); color:var(--text-inverse); font-weight:600; font-size:14px; line-height:1;">Dansk</span>
+                <span style="height:44px; padding:0 16px; display:flex; align-items:center; color:var(--text-muted); font-weight:600; font-size:14px; line-height:1; border-left:1px solid var(--border);">English</span>
+              </div>
+            </div>
+            <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">VÆLG EN BAR</span>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <button style="height:76px; border:1px solid var(--border-strong); border-radius:3px; background:var(--surface-raised); padding:0 18px; display:flex; align-items:center; gap:14px; cursor:pointer; text-align:left;">
+                <span style="flex:1; display:flex; flex-direction:column; gap:3px;"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span><span style="font-weight:400; font-size:14px; line-height:1.35; color:var(--text-muted);">42 drinks · åben nu</span></span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><path d="m9 18 6-6-6-6"></path></svg>
+              </button>
+              <button style="height:76px; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); padding:0 18px; display:flex; align-items:center; gap:14px; cursor:pointer; text-align:left;">
+                <span style="flex:1; display:flex; flex-direction:column; gap:3px;"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Havestuen</span><span style="font-weight:400; font-size:14px; line-height:1.35; color:var(--text-muted);">18 drinks · lukket</span></span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><path d="m9 18 6-6-6-6"></path></svg>
+              </button>
+            </div>
+            <span style="flex:1;"></span>
+            <div style="border-top:1px solid var(--border); padding-top:18px; display:flex; flex-direction:column; gap:10px;">
+              <button style="height:64px; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:17px; line-height:1.2; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Opret en ny bar</button>
+              <span style="font-weight:400; font-size:13px; line-height:1.5; color:var(--text-muted);">Er du gæst? Scan værtens QR-kode — så springer du det hele over.</span>
+            </div>
+          </div>
+        </div>
+        <div style="width:1280px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: The bar is open. · Pick a bar, type your first name, and order from your phone. No account, no app. · PICK A BAR · 42 drinks · open now · closed · Create a new bar · Are you a guest? Scan your host's QR code — that skips all of this.</div>
+      </div>
+
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">DARK · 390</span>
+        <div style="width:390px; height:620px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:200px; flex:none; background:#101214; color:#FFFFFF; padding:18px; display:flex; flex-direction:column;">
+            <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.18em; opacity:0.65;">BARKEEP</span>
+            <span style="flex:1;"></span>
+            <span style="font-weight:700; font-size:44px; line-height:0.95; letter-spacing:-0.03em;">Baren er<br>åben.</span>
+            <span style="height:1px; background:rgba(255,255,255,0.28); margin-top:14px;"></span>
+          </div>
+          <div style="flex:1; padding:16px; display:flex; flex-direction:column; gap:12px; overflow:hidden;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="flex:1; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">VÆLG EN BAR</span>
+              <div style="display:flex; border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+                <span style="height:40px; padding:0 12px; display:flex; align-items:center; background:var(--text); color:var(--text-inverse); font-weight:600; font-size:13px; line-height:1;">DA</span>
+                <span style="height:40px; padding:0 12px; display:flex; align-items:center; color:var(--text-muted); font-weight:600; font-size:13px; line-height:1; border-left:1px solid var(--border);">EN</span>
+              </div>
+            </div>
+            <button style="height:76px; border:1px solid var(--border-strong); border-radius:3px; background:var(--surface-raised); padding:0 16px; display:flex; align-items:center; gap:12px; cursor:pointer; text-align:left;">
+              <span style="flex:1; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font-weight:700; font-size:19px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span><span style="font-weight:400; font-size:14px; line-height:1.35; color:var(--text-muted);">42 drinks · åben nu</span></span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><path d="m9 18 6-6-6-6"></path></svg>
+            </button>
+            <button style="height:76px; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); padding:0 16px; display:flex; align-items:center; gap:12px; cursor:pointer; text-align:left;">
+              <span style="flex:1; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font-weight:700; font-size:19px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Havestuen</span><span style="font-weight:400; font-size:14px; line-height:1.35; color:var(--text-muted);">18 drinks · lukket</span></span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><path d="m9 18 6-6-6-6"></path></svg>
+            </button>
+            <span style="flex:1;"></span>
+            <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; flex-direction:column; gap:10px;">
+              <button style="height:64px; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:17px; line-height:1.2; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Opret en ny bar</button>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">The sign band is cropped, not rebuilt — 44px type instead of 76px, same rule, same corner mark.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LOGIN + CREATE ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">Login · one screen, two doors — and Create bar</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;"><strong style="font-weight:600;">Not a tab pair.</strong> Ninety-odd percent of the people on this screen are guests, and a 50/50 tab makes them read and choose before they can type. So the guest path <em>is</em> the screen — one field, one button, autofocused — and the bartender path is a single muted line under the rule that swaps the panel in place. The bar's name is the title, large, so a guest who scanned the wrong code notices here rather than after ordering. <strong style="font-weight:600;">Create bar</strong> is the same panel geometry with four fields; the two password fields sit under their own mono kicker with a plain-language line about what each one unlocks, because “bartender password” and “guest password” are meaningless side by side without it. The guest password is optional and says so — most house parties don't want one.</p>
+    </div>
+    <div style="background:#E9EAEA; padding:24px; display:flex; gap:20px; align-items:flex-start;">
+
+      <div style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">LIGHT · 390 · GUEST (DEFAULT)</span>
+        <div style="width:390px; height:600px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+            <button style="width:48px; height:48px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></button>
+            <span style="flex:1; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">BARKEEP</span>
+          </div>
+          <div style="flex:1; padding:24px 16px 16px; display:flex; flex-direction:column; gap:16px;">
+            <span style="font-weight:700; font-size:32px; line-height:1.05; letter-spacing:-0.025em;">Hos Astrid<br>&amp; Mikkel</span>
+            <span style="font-weight:400; font-size:17px; line-height:1.5; color:var(--text-muted);">Skriv dit fornavn, så ved bartenderen, hvem drinken er til.</span>
+            <label style="display:flex; flex-direction:column; gap:6px; padding-top:4px;">
+              <span style="font-weight:600; font-size:14px; line-height:1.25;">Fornavn</span>
+              <span style="height:64px; display:flex; align-items:center; padding:0 16px; border:2px solid var(--border-strong); border-radius:3px; background:var(--surface-raised); font-weight:400; font-size:19px; line-height:1.3;">Kasper<span style="width:2px; height:24px; background:var(--text); margin-left:2px;"></span></span>
+            </label>
+            <button style="height:64px; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font-weight:700; font-size:19px; line-height:1.2; letter-spacing:-0.01em; cursor:pointer;">Se menuen</button>
+            <span style="flex:1;"></span>
+            <div style="border-top:1px solid var(--border); padding-top:16px;">
+              <button style="height:48px; padding:0 12px; margin-left:-12px; border:none; background:transparent; color:var(--text-muted); font-weight:600; font-size:15px; line-height:1.2; display:flex; align-items:center; gap:8px; cursor:pointer;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect width="18" height="11" x="3" y="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Jeg er bartender</button>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: Type your first name, so the bartender knows who the drink is for. · First name · See the menu · I'm the bartender.</div>
+      </div>
+
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--danger:#E0685C; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">DARK · 390 · BARTENDER, WRONG PASSWORD</span>
+        <div style="width:390px; height:600px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+            <button style="width:48px; height:48px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg></button>
+            <span style="flex:1; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">BARKEEP</span>
+          </div>
+          <div style="flex:1; padding:24px 16px 16px; display:flex; flex-direction:column; gap:16px;">
+            <span style="font-weight:700; font-size:32px; line-height:1.05; letter-spacing:-0.025em; color:var(--text);">Hos Astrid<br>&amp; Mikkel</span>
+            <span style="font-weight:400; font-size:17px; line-height:1.5; color:var(--text-muted);">Log ind som bartender for at styre køen.</span>
+            <label style="display:flex; flex-direction:column; gap:6px; padding-top:4px;">
+              <span style="font-weight:600; font-size:14px; line-height:1.25; color:var(--text);">Adgangskode</span>
+              <span style="height:64px; display:flex; align-items:center; padding:0 16px; border:2px solid var(--danger); border-radius:3px; background:var(--surface-raised); font-weight:400; font-size:19px; line-height:1.3; color:var(--text); letter-spacing:0.2em;">••••••</span>
+              <span style="display:flex; align-items:center; gap:8px; font-weight:400; font-size:14px; line-height:1.4; color:var(--danger);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>Forkert adgangskode. Prøv igen.</span>
+            </label>
+            <button style="height:64px; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font-weight:700; font-size:19px; line-height:1.2; letter-spacing:-0.01em; cursor:pointer;">Log ind</button>
+            <span style="flex:1;"></span>
+            <div style="border-top:1px solid var(--border); padding-top:16px;">
+              <button style="height:48px; padding:0 12px; margin-left:-12px; border:none; background:transparent; color:var(--text-muted); font-weight:600; font-size:15px; line-height:1.2; display:flex; align-items:center; gap:8px; cursor:pointer;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>Jeg er gæst</button>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">The error is bound to the field, not a banner: <strong style="font-weight:600;">2px danger border plus one line beneath</strong>. No shake, no toast, no count of attempts — this is a house party password written on a fridge.</div>
+      </div>
+
+      <div style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">LIGHT · 460 · CREATE BAR</span>
+        <div style="width:460px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+            <button style="height:48px; padding:0 14px 0 10px; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.2; display:flex; align-items:center; gap:6px; cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="m15 18-6-6 6-6"></path></svg>Tilbage</button>
+            <h3 style="margin:0; flex:1; font-weight:700; font-size:21px; line-height:1.15; letter-spacing:-0.015em;">Opret en bar</h3>
+          </div>
+          <div style="padding:18px; display:flex; flex-direction:column; gap:14px;">
+            <label style="display:flex; flex-direction:column; gap:6px;"><span style="font-weight:600; font-size:14px; line-height:1.25;">Barens navn</span><span style="height:56px; display:flex; align-items:center; padding:0 14px; border:1px solid var(--border-strong); border-radius:3px; font-weight:400; font-size:17px; line-height:1.3;">Hos Astrid &amp; Mikkel</span><span style="font-weight:400; font-size:13px; line-height:1.45; color:var(--text-muted);">Det er det, gæsterne ser øverst i menuen.</span></label>
+            <label style="display:flex; flex-direction:column; gap:6px;"><span style="font-weight:600; font-size:14px; line-height:1.25;">Sprog</span><span style="height:56px; display:flex; align-items:center; justify-content:space-between; padding:0 14px; border:1px solid var(--border); border-radius:3px; font-weight:400; font-size:17px; line-height:1.3;">Dansk <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><path d="m6 9 6 6 6-6"></path></svg></span></label>
+            <div style="height:1px; background:var(--border); margin:2px 0;"></div>
+            <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">ADGANGSKODER</span>
+            <label style="display:flex; flex-direction:column; gap:6px;"><span style="font-weight:600; font-size:14px; line-height:1.25;">Bartender</span><span style="height:56px; display:flex; align-items:center; padding:0 14px; border:1px solid var(--border-strong); border-radius:3px; font-weight:400; font-size:17px; line-height:1.3; letter-spacing:0.2em;">••••••••</span><span style="font-weight:400; font-size:13px; line-height:1.45; color:var(--text-muted);">Giver adgang til køen, menuen og indstillingerne.</span></label>
+            <label style="display:flex; flex-direction:column; gap:6px;"><span style="display:flex; align-items:baseline; gap:8px;"><span style="font-weight:600; font-size:14px; line-height:1.25;">Gæst</span><span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">VALGFRI</span></span><span style="height:56px; display:flex; align-items:center; padding:0 14px; border:1px solid var(--border); border-radius:3px; font-weight:400; font-size:17px; line-height:1.3; color:var(--text-muted);">Ingen — alle med koden kan bestille</span><span style="font-weight:400; font-size:13px; line-height:1.45; color:var(--text-muted);">Sæt kun én, hvis festen ikke er privat.</span></label>
+          </div>
+          <div style="border-top:1px solid var(--border); height:64px; display:flex; align-items:center; gap:12px; padding:0 18px;">
+            <button style="height:56px; padding:0 14px; border:none; background:transparent; color:var(--text-muted); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér</button>
+            <span style="flex:1;"></span>
+            <button style="height:56px; padding:0 22px; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font-weight:700; font-size:17px; line-height:1.2; cursor:pointer;">Opret baren</button>
+          </div>
+        </div>
+        <div style="width:460px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: Create a bar · Bar name · That's what guests see at the top of the menu. · Language · PASSWORDS · Bartender · Unlocks the queue, the menu and the settings. · Guest · OPTIONAL · None — anyone with the code can order · Only set one if the party isn't private. · Create the bar.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== QR ARRIVAL ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">The QR arrival · the most important twelve seconds in the product</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">Someone standing in a dim kitchen has just pointed a camera at a card and tapped a notification. They have <strong style="font-weight:600;">no idea what this is</strong>. So the arrival screen answers three questions in the order they're asked — <em>where am I</em> (the bar's name, biggest thing on screen, on the ink field so it reads as the same sign from the landing), <em>what is this</em> (one sentence), <em>what do I do</em> (one field, already focused, keyboard already up). Nothing else: no tour, no permissions, no cookie notice, no "welcome to Barkeep". The name field is pre-filled from <code style="font-family:ui-monospace,Menlo,monospace;">localStorage</code> if they've been to any bar before, in which case the button is the only thing they touch. <strong style="font-weight:600;">And the menu is already loading behind it</strong> — the sheet is 78% height, the top of the drinks list visible above it, so the promise is visible before the form is done.</p>
+    </div>
+    <div style="background:#E9EAEA; padding:24px; display:flex; gap:20px; align-items:flex-start;">
+
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--photo:repeating-linear-gradient(90deg,#26292C 0 8px,#22262A 8px 16px); display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">DARK · 390 · FIRST RUN, STRAIGHT OFF THE CAMERA</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+          <div style="padding:12px 16px; border-bottom:1px solid var(--border); opacity:0.3;"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span></div>
+          <div style="padding:12px 16px; display:flex; gap:12px; opacity:0.3;">
+            <span style="flex:1; height:150px; border:1px solid var(--border); border-radius:3px; background:var(--photo);"></span>
+            <span style="flex:1; height:150px; border:1px solid var(--border); border-radius:3px; background:var(--photo);"></span>
+          </div>
+          <div style="position:absolute; inset:0; background:rgba(0,0,0,0.55);"></div>
+          <div style="position:absolute; left:0; right:0; bottom:0; height:562px; background:#101214; color:#FFFFFF; border-radius:3px 3px 0 0; display:flex; flex-direction:column; padding:22px 18px 18px; box-shadow:0 -20px 50px rgba(0,0,0,0.7);">
+            <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.18em; opacity:0.6;">BARKEEP</span>
+            <span style="height:1px; background:rgba(255,255,255,0.22); margin:14px 0 20px;"></span>
+            <span style="font-weight:700; font-size:40px; line-height:1; letter-spacing:-0.03em;">Hos Astrid<br>&amp; Mikkel</span>
+            <span style="font-weight:400; font-size:17px; line-height:1.5; opacity:0.72; margin-top:14px; text-wrap:pretty;">Du er ved baren. Vælg en drink, så laver Astrid den — du får besked, når den er klar.</span>
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:24px;">
+              <span style="font-weight:600; font-size:14px; line-height:1.25; opacity:0.72;">Hvad hedder du?</span>
+              <span style="height:64px; display:flex; align-items:center; padding:0 16px; border:2px solid #FFFFFF; border-radius:3px; background:rgba(255,255,255,0.06); font-weight:400; font-size:19px; line-height:1.3; color:#FFFFFF;"><span style="opacity:0.45;">Fornavn</span><span style="width:2px; height:24px; background:#FFFFFF; margin-left:1px;"></span></span>
+              <span style="font-weight:400; font-size:13px; line-height:1.45; opacity:0.55;">Kun fornavn — det står på din bestilling.</span>
+            </div>
+            <button style="height:64px; margin-top:18px; border:none; border-radius:3px; background:#FFFFFF; color:#101214; font-weight:700; font-size:19px; line-height:1.2; letter-spacing:-0.01em; cursor:pointer;">Se menuen</button>
+            <span style="flex:1;"></span>
+            <span style="font-weight:400; font-size:13px; line-height:1.5; opacity:0.5;">Ingen konto. Ingen app. Din telefon husker dig resten af aftenen.</span>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: You're at the bar. Pick a drink and Astrid will make it — you'll be told when it's ready. · What's your name? · First name · First name only — it goes on your order. · See the menu · No account. No app. Your phone remembers you for the rest of the night.</div>
+      </div>
+
+      <div style="width:400px; display:flex; flex-direction:column; gap:10px;">
+        <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">WHY THE SHEET IS INK, NOT SURFACE</span>
+        <p style="margin:0; font-weight:400; font-size:13px; line-height:1.6; color:#2b2b26; text-wrap:pretty;">Every other sheet in the guest app (recipe, filters) is a normal surface. This one is the <strong style="font-weight:600;">same ink field as the landing sign</strong>, and it is the only guest surface that ever is. That does two things: it makes arrival feel like a threshold rather than a form, and it means a returning guest can tell at a glance — before reading anything — whether they're being asked to identify themselves or just look at a recipe.</p>
+        <p style="margin:0; font-weight:400; font-size:13px; line-height:1.6; color:#2b2b26; text-wrap:pretty;">It also solves dark mode for free. The sheet is ink in both schemes, so the arrival looks identical at 3pm setup and 1am in a dark room, and there is no scheme in which white text on white photo can happen.</p>
+        <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165; padding-top:8px;">WHAT WE DELIBERATELY DIDN'T ADD</span>
+        <div style="border:1px solid #cfcfc7; background:#fff; padding:12px 14px; display:flex; flex-direction:column; gap:8px; font-weight:400; font-size:12.5px; line-height:1.5;">
+          <span>· No onboarding carousel. The menu <em>is</em> the explanation.</span>
+          <span>· No notification permission prompt. The dock is the notification, and it doesn't need permission.</span>
+          <span>· No “continue as guest / sign up”. There is no account to make.</span>
+          <span>· No bar-picker fallback. If the QR resolved, the bar is known; if it didn't, that's the error state below.</span>
+        </div>
+      </div>
+
+      <div style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF;--photo:repeating-linear-gradient(90deg,#DFE1E2 0 8px,#D5D8DA 8px 16px); display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">LIGHT · 390 · PAST ORDERS</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+            <button style="height:48px; padding:0 14px 0 10px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.2; display:flex; align-items:center; gap:6px; cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="m15 18-6-6 6-6"></path></svg>Menu</button>
+            <h3 style="margin:0; flex:1; font-weight:700; font-size:21px; line-height:1.15; letter-spacing:-0.015em; min-width:0;">Tidligere bestillinger</h3>
+          </div>
+          <div style="flex:1; padding:12px 16px; display:flex; flex-direction:column; gap:10px;">
+            <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">I AFTEN · 3</span>
+            <div style="border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; gap:12px; padding:12px 14px;">
+              <span style="width:52px; height:52px; flex:none; border-radius:3px; background:var(--photo); border:1px solid var(--border);"></span>
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;"><span style="font-weight:700; font-size:17px; line-height:1.25; letter-spacing:-0.01em;">Paper Plane</span><span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">21:48 · afhentet</span></span>
+              <button style="height:52px; padding:0 16px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Igen</button>
+            </div>
+            <div style="border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; gap:12px; padding:12px 14px;">
+              <span style="width:52px; height:52px; flex:none; border-radius:3px; background:var(--surface-sunken); border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; font:500 8px/1.2 ui-monospace,Menlo,monospace; color:var(--text-muted); text-align:center;">INTET<br>FOTO</span>
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;"><span style="font-weight:700; font-size:17px; line-height:1.25; letter-spacing:-0.01em;">Hyldeblomst-spritz</span><span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">21:12 · afhentet</span></span>
+              <button style="height:52px; padding:0 16px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Igen</button>
+            </div>
+            <div style="border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; gap:12px; padding:12px 14px;">
+              <span style="width:52px; height:52px; flex:none; border-radius:3px; background:var(--photo); border:1px solid var(--border); filter:grayscale(1); opacity:0.5;"></span>
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;"><span style="font-weight:700; font-size:17px; line-height:1.25; letter-spacing:-0.01em; color:var(--text-muted);">Mojito</span><span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">20:55 · afvist — løbet tør for mynte</span></span>
+            </div>
+            <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted); padding-top:8px;">TIDLIGERE FESTER</span>
+            <div style="border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; gap:12px; padding:12px 14px;">
+              <span style="width:52px; height:52px; flex:none; border-radius:3px; background:var(--photo); border:1px solid var(--border);"></span>
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;"><span style="font-weight:700; font-size:17px; line-height:1.25; letter-spacing:-0.01em;">Negroni Sbagliato</span><span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">14. juni · afhentet</span></span>
+              <button style="height:52px; padding:0 16px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Igen</button>
+            </div>
+            <span style="flex:1;"></span>
+            <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; flex-direction:column; gap:8px;">
+              <span style="font-weight:400; font-size:14px; line-height:1.45; color:var(--text-muted);">Du er her som <strong style="font-weight:600; color:var(--text);">Kasper</strong>.</span>
+              <button style="height:48px; align-self:flex-start; padding:0 14px; border:1px solid var(--border); border-radius:3px; background:transparent; color:var(--text-muted); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Det er ikke mig</button>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: TONIGHT · 3 · picked up · rejected — out of mint · EARLIER PARTIES · 14 June · Again. Grouping by night rather than a flat list is what makes “Igen” safe: <strong style="font-weight:600;">a drink from June may not be on tonight's menu</strong>, so those rows check availability on tap and fall back to the empty-menu message rather than failing silently.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ERRORS ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">When it goes wrong · three severities, three shapes</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">Severity is carried by <strong style="font-weight:600;">how much of the screen the message takes</strong>, not by colour. A full screen means the app cannot continue. A banner under the header means it is degraded but usable — <em>this one is not danger-coloured</em>, because a dropped websocket at a house party resolves itself nine times in ten and painting it red teaches guests to ignore red. An empty state means nothing is wrong at all. Danger colour is reserved for the two places where something is genuinely lost: a rejected order, and a destructive confirm.</p>
+    </div>
+    <div style="background:#E9EAEA; padding:24px; display:flex; gap:20px; align-items:flex-start;">
+
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">DARK · 390 · FULL-SCREEN — BAR NOT FOUND</span>
+        <div style="width:390px; height:520px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column; padding:24px 20px; justify-content:center; gap:16px;">
+          <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.18em; color:var(--text-muted);">BARKEEP</span>
+          <span style="font-weight:700; font-size:32px; line-height:1.08; letter-spacing:-0.025em; color:var(--text); text-wrap:pretty;">Den bar findes ikke længere.</span>
+          <span style="font-weight:400; font-size:17px; line-height:1.5; color:var(--text-muted); text-wrap:pretty;">Koden er måske fra en fest, der er slut. Spørg værten om en ny — eller vælg en bar fra listen.</span>
+          <div style="display:flex; flex-direction:column; gap:10px; padding-top:6px;">
+            <button style="height:64px; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font-weight:700; font-size:17px; line-height:1.2; cursor:pointer;">Vælg en bar</button>
+            <button style="height:56px; border:1px solid var(--border); border-radius:3px; background:transparent; color:var(--text-muted); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Prøv igen</button>
+          </div>
+          <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted); padding-top:8px;">FEJL 404 · B/ASTRID-MIKKEL</span>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: That bar doesn't exist any more. · The code might be from a party that's over. Ask your host for a new one — or pick a bar from the list. · Pick a bar · Try again. The error code is <strong style="font-weight:600;">mono, muted, at the bottom</strong> — useful to the one person who'll ask you about it, invisible to everyone else.</div>
+      </div>
+
+      <div style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF;--photo:repeating-linear-gradient(90deg,#DFE1E2 0 8px,#D5D8DA 8px 16px); display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">LIGHT · 390 · CONNECTION LOST — DEGRADED, NOT BROKEN</span>
+        <div style="width:390px; height:520px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; display:flex; flex-direction:column; gap:2px;"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Hos Astrid &amp; Mikkel</span><span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span></span>
+            <span style="width:48px; height:48px; flex:none; border:1px solid var(--border); border-radius:3px;"></span>
+          </div>
+          <div style="background:var(--surface-sunken); border-bottom:1px solid var(--border); padding:12px 16px; display:flex; align-items:center; gap:10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><path d="M12 20h.01"></path><path d="M8.5 16.429a5 5 0 0 1 7 0"></path><path d="M5 12.859a10 10 0 0 1 5.17-2.69"></path><path d="M19 12.859a10 10 0 0 0-2.007-1.523"></path><path d="M2 8.82a15 15 0 0 1 4.177-2.643"></path><path d="M22 8.82a15 15 0 0 0-11.288-3.764"></path><path d="m2 2 20 20"></path></svg>
+            <span style="flex:1; font-weight:400; font-size:14px; line-height:1.45; color:var(--text-muted);">Mister forbindelsen — vi prøver igen.</span>
+            <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">3 S</span>
+          </div>
+          <div style="flex:1; padding:12px 16px; display:flex; flex-direction:column; gap:12px;">
+            <article style="border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+              <div style="height:120px; background:var(--photo);"></div>
+              <div style="padding:12px 14px; border-top:1px solid var(--border);"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Negroni Sbagliato</span></div>
+            </article>
+          </div>
+          <div style="flex:none; border-top:1px solid var(--border-strong); background:var(--surface-raised);">
+            <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--disabled-fg,#C9CCCE);"></span><span style="flex:1; height:6px; background:var(--disabled-fg,#C9CCCE);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span></div>
+            <div style="height:62px; display:flex; align-items:center; gap:12px; padding:0 16px;">
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;"><span style="font-weight:700; font-size:17px; line-height:1.2; letter-spacing:-0.01em;">Negroni Sbagliato</span><span style="font-weight:400; font-size:13px; line-height:1.35; color:var(--text-muted);">Sidst set 22:41 · genopretter…</span></span>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: Losing the connection — we're trying again. · Last seen 22:41 · reconnecting… The <strong style="font-weight:600;">dock's track goes grey and stops animating</strong> rather than continuing to imply progress it can't see, and the status line becomes a timestamp. Retry countdown is mono on the right. Order buttons stay enabled — the POST queues.</div>
+      </div>
+
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">DARK · 390 · MENU IS EMPTY — NOTHING IS WRONG</span>
+        <div style="width:390px; height:520px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; display:flex; flex-direction:column; gap:2px;"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span><span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span></span>
+            <span style="width:48px; height:48px; flex:none; border:1px solid var(--border); border-radius:3px;"></span>
+          </div>
+          <div style="flex:1; padding:24px 20px; display:flex; flex-direction:column; justify-content:center; gap:14px;">
+            <span style="width:56px; height:56px; border:1px dashed var(--border-strong); border-radius:3px; display:flex; align-items:center; justify-content:center; color:var(--text-muted);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8"></path><path d="M12 11v11"></path><path d="m19 3-7 8-7-8Z"></path></svg></span>
+            <span style="font-weight:700; font-size:28px; line-height:1.1; letter-spacing:-0.02em; color:var(--text); text-wrap:pretty;">Menuen er ikke klar endnu.</span>
+            <span style="font-weight:400; font-size:17px; line-height:1.5; color:var(--text-muted); text-wrap:pretty;">Astrid er ved at sætte baren op. Bliv på siden — drinksene dukker op af sig selv.</span>
+            <div style="display:flex; align-items:center; gap:10px; padding-top:4px;">
+              <span style="width:8px; height:8px; border-radius:9999px; background:#5FB865;"></span>
+              <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">LYTTER EFTER NYE DRINKS</span>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: The menu isn't ready yet. · Astrid is still setting up the bar. Stay on this page — the drinks will appear on their own. · LISTENING FOR NEW DRINKS. <strong style="font-weight:600;">No refresh button</strong>: the socket is already open, and offering a refresh would suggest it isn't. The live dot is the same green as the queue's, doing the same job.</div>
+      </div>
+    </div>
+    <div style="padding:14px 24px; border-top:1px solid #dedcd4; display:grid; grid-template-columns:repeat(3,1fr); gap:16px; font-weight:400; font-size:12.5px; line-height:1.55; color:#2b2b26;">
+      <div><strong style="font-weight:600;">Full screen</strong> — the app cannot continue. Bar deleted, bad code, server unreachable on first load. Always offers two ways out, one of them <em>Vælg en bar</em>, never a dead end.</div>
+      <div><strong style="font-weight:600;">Banner</strong> — degraded. Shell-owned, one instance, directly under the header on every guest and admin screen. Muted, never danger-coloured, disappears silently on reconnect with no “back online” toast.</div>
+      <div><strong style="font-weight:600;">Empty</strong> — nothing is wrong. Icon at 56px in a dashed square, a sentence in the bar's own voice naming the host, and a live indicator instead of an action. Same shape reused for “no past orders” and a filter with no matches.</div>
+    </div>
+  </div>
+
+</section>
+
+</x-dc>
+</body>
+</html>
+
