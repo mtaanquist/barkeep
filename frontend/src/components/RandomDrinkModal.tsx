@@ -1,5 +1,5 @@
 import React from "react";
-import { Drink } from "../context/AppContext";
+import type { Drink } from "../types";
 import { translations } from "../utils/translations";
 
 interface RandomDrinkModalProps {
@@ -9,7 +9,8 @@ interface RandomDrinkModalProps {
   onTryAnother: () => void;
   onCancel: () => void;
   loading: boolean;
-  customerOrder: any;
+  /** The guest may only have one drink on the go at a time. */
+  hasOrderInProgress: boolean;
   t: (key: keyof typeof translations.en) => string;
 }
 
@@ -20,7 +21,7 @@ const RandomDrinkModal: React.FC<RandomDrinkModalProps> = ({
   onTryAnother,
   onCancel,
   loading,
-  customerOrder,
+  hasOrderInProgress,
   t,
 }) => {
   if (!visible || !drink) return null;
@@ -34,11 +35,18 @@ const RandomDrinkModal: React.FC<RandomDrinkModalProps> = ({
             {drink.title}
           </h3>
           {drink.image_url && (
-            <img
-              src={drink.image_url}
-              alt={drink.title}
-              className="mx-auto mb-2 rounded-lg max-h-40 object-cover"
-            />
+            <div className="mx-auto mb-2 rounded-lg overflow-hidden max-h-40 aspect-video relative">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img
+                  src={drink.image_url}
+                  alt={drink.title}
+                  className="w-full h-full object-contain"
+                  style={{
+                    transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,
+                  }}
+                />
+              </div>
+            </div>
           )}
           <div className="text-sm text-gray-700 mb-2">
             {drink.base_spirit && (
@@ -51,7 +59,7 @@ const RandomDrinkModal: React.FC<RandomDrinkModalProps> = ({
         <div className="flex flex-col gap-2">
           <button
             onClick={onOrder}
-            disabled={!!customerOrder || loading}
+            disabled={hasOrderInProgress || loading}
             className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? t("loading") : t("orderThis")}

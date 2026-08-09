@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
+import type { Bar, SignedIn } from "../types";
 import LoginForm from "./LoginForm";
+import { ACTIVITY_KEY } from "../hooks/useSessionManager";
 
 const QRRedirect: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,11 +35,11 @@ const QRRedirect: React.FC = () => {
 
       try {
         setLoading(true);
-        const bar = await apiCall(`/bars/${id}`);
+        const bar = await apiCall<Bar>(`/bars/${id}`);
         
         // Set the bar and language in context
         setCurrentBar(bar);
-        setLanguage(bar.language as "en" | "da");
+        setLanguage(bar.language);
         
         if (token) {
           // If there's a token, this is a QR code access - show guest name form
@@ -75,30 +77,26 @@ const QRRedirect: React.FC = () => {
     setError(null);
 
     try {
-      const response = await apiCall(`/bars/${id}/guest-token-login`, {
-        method: "POST",
-        body: JSON.stringify({
-          token,
-          customerName: guestName.trim(),
-        }),
-      });
+      const response = await apiCall<SignedIn>(
+        `/bars/${id}/guest-token-login`,
+        {
+          method: "POST",
+          body: JSON.stringify({ token, customerName: guestName.trim() }),
+        }
+      );
 
       // Update app context with authentication info
       setCustomerName(guestName.trim());
       setUserType("guest");
       
       // Update session activity timestamp
-      localStorage.setItem("homeBarSystem_lastActivity", Date.now().toString());
+      localStorage.setItem(ACTIVITY_KEY, Date.now().toString());
       
       // The current bar should already be set from the earlier fetchBarInfo call,
       // but let's make sure it has the latest info
-      if (response.barId && response.barName && response.language) {
-        setCurrentBar({
-          id: response.barId,
-          name: response.barName,
-          language: response.language
-        });
-        setLanguage(response.language as "en" | "da");
+      if (response.bar) {
+        setCurrentBar(response.bar);
+        setLanguage(response.bar.language);
       }
 
       // Navigate to customer interface

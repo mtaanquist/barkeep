@@ -1,0 +1,36 @@
+services:
+  barkeep:
+    image: ghcr.io/mtaanquist/barkeep:latest
+    container_name: barkeep
+    restart: unless-stopped
+    init: true
+    ports:
+      # Everything is served on this one port. Only this machine can reach it,
+      # so put a reverse proxy in front to expose the bar. Change the first
+      # number if something else on the machine already uses 3000.
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    environment:
+      TZ: Europe/Copenhagen
+      # Run as a normal user instead of root. File ownership is fixed on start.
+      # PUID: 1000
+      # PGID: 1000
+      # Set this if the web address guests use differs from the one the bar
+      # is reached on. QR codes use it.
+      # PUBLIC_URL: https://bar.example.com
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)throw 0;process.exit(0)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+# If the reverse proxy is moved into its own container, remove the ports block
+# above and share a network with it instead. See the README.

@@ -1,0 +1,9 @@
+# Builds the image from this checkout instead of pulling the published one.
+#   docker compose -f compose.yaml -f compose.dev.yaml up --build
+services:
+  barkeep:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: barkeep:local
+    pull_policy: build

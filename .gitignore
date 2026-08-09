@@ -23,6 +23,9 @@ data/
 # Uploads
 uploads/
 
+# Copies of production data taken for local inspection. Never commit.
+.inspect/
+
 # Logs
 logs/
 *.log
@@ -50,6 +53,3 @@ coverage/
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-# Docker
-.dockerignore

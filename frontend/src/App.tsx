@@ -7,8 +7,9 @@ import DrinkForm from "./components/DrinkForm";
 import RecipeView from "./components/RecipeView";
 import ErrorDisplay from "./components/ErrorDisplay";
 import QRRedirect from "./components/QRRedirect";
-import { AppProvider, useApp } from "./context/AppContext";
-import { WebSocketProvider } from "./context/WebSocketContext";
+import { AppProvider } from "./context/AppContext";
+import { useApp } from "./hooks/useApp";
+import { LiveUpdatesProvider } from "./context/LiveUpdatesContext";
 import PastOrdersPage from "./pages/PastOrdersPage";
 
 const AppContent: React.FC = () => {
@@ -42,7 +43,10 @@ const AppContent: React.FC = () => {
   // Drink form modal
   if (editingDrink !== null) {
     return (
-      <DrinkForm drink={editingDrink} onClose={() => setEditingDrink(null)} />
+      <DrinkForm
+        drink={editingDrink === "new" ? null : editingDrink}
+        onClose={() => setEditingDrink(null)}
+      />
     );
   }
 
@@ -95,9 +99,9 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <AppProvider>
-        <WebSocketProvider>
+        <LiveUpdatesProvider>
           <AppContent />
-        </WebSocketProvider>
+        </LiveUpdatesProvider>
       </AppProvider>
     </BrowserRouter>
   );

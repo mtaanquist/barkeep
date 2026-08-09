@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  Coffee,
-  Check,
-  User,
   Calendar,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Coffee,
+  User,
 } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
+import type { OrderStatus } from "../types";
+import { statusCard, statusIcon } from "../utils/orderStatus";
 import { useTranslation } from "../utils/translations";
 
 const OrdersTab: React.FC = () => {
@@ -24,8 +26,18 @@ const OrdersTab: React.FC = () => {
   } = useApp();
 
   const t = useTranslation(language);
+  
+  // Track whether to show recipes for all orders
+  const [showRecipes, setShowRecipes] = useState(false);
 
-  const handleUpdateOrderStatus = async (orderId: number, status: string) => {
+  const toggleRecipes = () => {
+    setShowRecipes((prev) => !prev);
+  };
+
+  const handleUpdateOrderStatus = async (
+    orderId: number,
+    status: OrderStatus
+  ) => {
     setLoading(true);
     try {
       await apiCall(`/orders/${orderId}/status`, {
@@ -42,7 +54,7 @@ const OrdersTab: React.FC = () => {
           order.id === orderId
             ? {
                 ...order,
-                status: status as any,
+                status,
                 updated_at: new Date().toISOString(),
               }
             : order
@@ -52,40 +64,6 @@ const OrdersTab: React.FC = () => {
       setError(err instanceof Error ? err.message : "Failed to update order");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "new":
-        return <Clock className="w-5 h-5 text-yellow-500" />;
-      case "accepted":
-        return <CheckCircle className="w-5 h-5 text-blue-500" />;
-      case "rejected":
-        return <XCircle className="w-5 h-5 text-red-500" />;
-      case "ready":
-        return <Coffee className="w-5 h-5 text-green-500" />;
-      case "processed":
-        return <Check className="w-5 h-5 text-gray-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "new":
-        return "bg-yellow-50 border-yellow-200";
-      case "accepted":
-        return "bg-blue-50 border-blue-200";
-      case "rejected":
-        return "bg-red-50 border-red-200";
-      case "ready":
-        return "bg-green-50 border-green-200";
-      case "processed":
-        return "bg-gray-50 border-gray-200";
-      default:
-        return "bg-white border-gray-200";
     }
   };
 
@@ -121,9 +99,29 @@ const OrdersTab: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-800">
               {t("pendingOrders")}
             </h3>
-            <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-              {pendingOrders.length} active
-            </span>
+            <div className="flex items-center space-x-3">
+              <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                {pendingOrders.length} active
+              </span>
+              {pendingOrders.length > 0 && pendingOrders.some(order => order.drink_recipe) && (
+                <button
+                  onClick={toggleRecipes}
+                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors text-sm font-medium"
+                >
+                  {showRecipes ? (
+                    <>
+                      <ChevronUp className="w-4 h-4" />
+                      <span>Hide Recipes</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4" />
+                      <span>Show Recipes</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -140,11 +138,11 @@ const OrdersTab: React.FC = () => {
             pendingOrders.map((order) => (
               <div
                 key={order.id}
-                className={`p-4 ${getStatusColor(order.status)}`}
+                className={`p-4 ${statusCard(order.status)}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    {getStatusIcon(order.status)}
+                    {statusIcon(order.status)}
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <User className="w-4 h-4 text-gray-500" />
@@ -216,6 +214,18 @@ const OrdersTab: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Recipe Display */}
+                {order.drink_recipe && showRecipes && (
+                  <div className="mt-3 border-t pt-3">
+                    <div className="p-3 bg-white rounded-lg border border-gray-200">
+                      <h4 className="font-semibold text-gray-700 mb-2">Recipe:</h4>
+                      <div className="text-sm text-gray-600 whitespace-pre-wrap">
+                        {order.drink_recipe}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))
           )}

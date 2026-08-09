@@ -1,12 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Plus, QrCode } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
+import type {
+  Analytics,
+  BarQrCode,
+  Drink,
+  Order,
+} from "../types";
 import { useTranslation } from "../utils/translations";
 import { useSessionManager } from "../hooks/useSessionManager";
+import { useLiveUpdates } from "../hooks/useLiveUpdates";
+import { ConnectionLost } from "./ConnectionLost";
 import OrdersTab from "./OrdersTab";
 import MenuTab from "./MenuTab";
 import AnalyticsTab from "./AnalyticsTab";
 import CategoriesTab from "./CategoriesTab";
+import SettingsTab from "./SettingsTab";
 
 const BartenderDashboard: React.FC = () => {
   const {
@@ -24,6 +33,13 @@ const BartenderDashboard: React.FC = () => {
 
   const t = useTranslation(language);
   const { clearSession } = useSessionManager();
+  const { connectionError, reconnect } = useLiveUpdates();
+  const [noticeDismissed, setNoticeDismissed] = useState(false);
+
+  // Show the notice again if updates drop out a second time.
+  useEffect(() => {
+    if (!connectionError) setNoticeDismissed(false);
+  }, [connectionError]);
   
   // QR code modal state
   const [showQRModal, setShowQRModal] = useState(false);
@@ -34,36 +50,34 @@ const BartenderDashboard: React.FC = () => {
   } | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
 
-  // Data fetching functions
-  const fetchDrinks = async () => {
-    if (!currentBar) return;
-    try {
-      const data = await apiCall(`/drinks/bar/${currentBar.id}`);
-      setDrinks(data);
-    } catch (err) {
-      console.error("Error fetching drinks:", err);
-    }
-  };
+  const barId = currentBar?.id;
 
-  const fetchOrders = async () => {
-    if (!currentBar) return;
+  const fetchDrinks = useCallback(async () => {
+    if (!barId) return;
     try {
-      const data = await apiCall(`/orders/bar/${currentBar.id}`);
-      setOrders(data);
+      setDrinks(await apiCall<Drink[]>(`/drinks/bar/${barId}`));
     } catch (err) {
-      console.error("Error fetching orders:", err);
+      console.error("Could not load the drinks:", err);
     }
-  };
+  }, [barId, apiCall, setDrinks]);
 
-  const fetchAnalytics = async () => {
-    if (!currentBar) return;
+  const fetchOrders = useCallback(async () => {
+    if (!barId) return;
     try {
-      const data = await apiCall(`/orders/bar/${currentBar.id}/analytics`);
-      setAnalytics(data);
+      setOrders(await apiCall<Order[]>(`/orders/bar/${barId}`));
     } catch (err) {
-      console.error("Error fetching analytics:", err);
+      console.error("Could not load the orders:", err);
     }
-  };
+  }, [barId, apiCall, setOrders]);
+
+  const fetchAnalytics = useCallback(async () => {
+    if (!barId) return;
+    try {
+      setAnalytics(await apiCall<Analytics>(`/orders/bar/${barId}/analytics`));
+    } catch (err) {
+      console.error("Could not load the reports:", err);
+    }
+  }, [barId, apiCall, setAnalytics]);
 
   // Generate QR code
   const handleGenerateQR = async () => {
@@ -71,7 +85,7 @@ const BartenderDashboard: React.FC = () => {
     
     setQrLoading(true);
     try {
-      const data = await apiCall(`/bars/${currentBar.id}/qrcode`);
+      const data = await apiCall<BarQrCode>(`/bars/${currentBar.id}/qrcode`);
       setQrData(data);
       setShowQRModal(true);
     } catch (err) {
@@ -81,14 +95,11 @@ const BartenderDashboard: React.FC = () => {
     }
   };
 
-  // Initial data fetch
   useEffect(() => {
-    if (currentBar) {
-      fetchDrinks();
-      fetchOrders();
-      fetchAnalytics();
-    }
-  }, [currentBar]);
+    fetchDrinks();
+    fetchOrders();
+    fetchAnalytics();
+  }, [fetchDrinks, fetchOrders, fetchAnalytics]);
 
   const pendingOrders = orders.filter((order) =>
     ["new", "accepted", "ready"].includes(order.status)
@@ -96,6 +107,13 @@ const BartenderDashboard: React.FC = () => {
 
   return (
     <div className="dashboard-container min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      {connectionError && !noticeDismissed && (
+        <ConnectionLost
+          onRetry={reconnect}
+          onDismiss={() => setNoticeDismissed(true)}
+        />
+      )}
+      
       {/* Header */}
       <div className="dashboard-header bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -177,6 +195,16 @@ const BartenderDashboard: React.FC = () => {
             >
               Categories
             </button>
+            <button
+              onClick={() => setCurrentTab("settings")}
+              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-200 ${
+                currentTab === "settings"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              {t("settings")}
+            </button>
           </nav>
         </div>
       </div>
@@ -187,13 +215,14 @@ const BartenderDashboard: React.FC = () => {
         {currentTab === "menu" && <MenuTab />}
         {currentTab === "analytics" && <AnalyticsTab />}
         {currentTab === "categories" && <CategoriesTab />}
+        {currentTab === "settings" && <SettingsTab />}
       </div>
 
       {/* Floating Action Button for Mobile */}
       {currentTab === "menu" && (
         <div className="fixed bottom-6 right-6 lg:hidden">
           <button
-            onClick={() => setEditingDrink({})}
+            onClick={() => setEditingDrink("new")}
             className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-6 h-6" />

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { RefreshCw, Plus } from "lucide-react";
-import { useApp, Bar } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
+import type { Bar } from "../types";
 import { useTranslation } from "../utils/translations";
 
 interface BarSelectorProps {
@@ -18,22 +19,21 @@ const BarSelector: React.FC<BarSelectorProps> = ({
   const [availableBars, setAvailableBars] = useState<Bar[]>([]);
   const [loadingBars, setLoadingBars] = useState(false);
 
-  const fetchBars = async () => {
+  const fetchBars = useCallback(async () => {
     setLoadingBars(true);
     try {
-      const data = await apiCall("/bars");
-      setAvailableBars(data);
+      setAvailableBars(await apiCall<Bar[]>("/bars"));
     } catch (err) {
-      console.error("Error fetching bars:", err);
+      console.error("Could not load the bars:", err);
       setAvailableBars([]);
     } finally {
       setLoadingBars(false);
     }
-  };
+  }, [apiCall]);
 
   useEffect(() => {
     fetchBars();
-  }, []);
+  }, [fetchBars]);
 
   return (
     <div className="space-y-4">

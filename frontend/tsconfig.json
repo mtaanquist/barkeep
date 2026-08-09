@@ -10,6 +10,10 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
+
+    /* The API shapes, shared with the server. Types only, so nothing is
+       bundled and the build tool never has to resolve this. */
+    "paths": { "@shared/*": ["../shared/*"] },
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",

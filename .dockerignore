@@ -1,0 +1,28 @@
+**/node_modules
+**/dist
+**/build
+
+# Never bake a local database or uploaded images into the image
+data
+uploads
+.inspect
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.sqlite
+
+.git
+.github
+**/.env
+**/.env.*
+**/*.log
+**/.DS_Store
+**/.vscode
+**/.idea
+
+# Tests are not needed to build the image.
+frontend/tests
+
+compose.yaml
+compose.dev.yaml
+README.md

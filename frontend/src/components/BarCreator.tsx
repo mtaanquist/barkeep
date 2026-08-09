@@ -1,5 +1,6 @@
 import React from "react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
+import type { Bar } from "../types";
 import { useTranslation } from "../utils/translations";
 
 interface BarCreatorProps {
@@ -33,7 +34,7 @@ const BarCreator: React.FC<BarCreatorProps> = ({ onBack, onSuccess }) => {
     setError(null);
 
     try {
-      const data = await apiCall("/bars", {
+      const data = await apiCall<Bar>("/bars", {
         method: "POST",
         body: JSON.stringify({
           name: barForm.name,
@@ -43,12 +44,8 @@ const BarCreator: React.FC<BarCreatorProps> = ({ onBack, onSuccess }) => {
         }),
       });
 
-      setCurrentBar({
-        id: data.id,
-        name: data.name,
-        language: data.language,
-      });
-      setLanguage(data.language as "en" | "da");
+      setCurrentBar(data);
+      setLanguage(data.language);
       setUserType("bartender");
 
       onSuccess();
