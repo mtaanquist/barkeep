@@ -110,7 +110,9 @@ describe("ordering a drink", () => {
 
     await showMenu();
 
-    const card = (await screen.findByText("Your Order")).closest("div.rounded-lg");
+    // Found the way a screen reader would, so restyling the card cannot
+    // break this and losing the label can.
+    const card = await screen.findByRole("region", { name: "Your Order" });
     expect(card).toHaveTextContent("Negroni");
     expect(card).toHaveTextContent("Ready");
   });
