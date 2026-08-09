@@ -55,7 +55,7 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      - "127.0.0.1:21000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
@@ -71,6 +71,10 @@ docker compose up -d
 The port is bound to `127.0.0.1`, so only the machine itself can reach the bar.
 That is deliberate: put a reverse proxy in front to open it up. See
 [Putting a proxy in front](#putting-a-proxy-in-front) below.
+
+Change the first number if something else on the machine already uses 3000, and
+point the proxy at whatever you chose. The second number is the port inside the
+container and is better left alone.
 
 Two folders need to survive an upgrade:
 
@@ -123,7 +127,7 @@ If the proxy runs on the same machine, point it at the published port:
 
 ```caddyfile
 bar.example.com {
-	reverse_proxy localhost:21000
+	reverse_proxy localhost:3000
 }
 ```
 
