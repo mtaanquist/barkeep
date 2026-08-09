@@ -63,6 +63,14 @@ export interface TranslationMap {
   barSettings: string;
   barInformation: string;
   autoAccept: string;
+  autoAcceptHelp: string;
+  sectionTheBar: string;
+  barNameHelp: string;
+  saveSettings: string;
+  savingSettings: string;
+  settingsSaved: string;
+  englishName: string;
+  danishName: string;
   imageHelp: string;
   barNotFound: string;
   goHome: string;
@@ -263,6 +271,15 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     barSettings: "Bar settings",
     barInformation: "About this bar",
     autoAccept: "Take orders automatically",
+    autoAcceptHelp:
+      "Orders go straight to the queue as accepted, so nobody has to tap twice on a busy night.",
+    sectionTheBar: "the bar",
+    barNameHelp: "Shown at the top of the guest menu and on the QR page.",
+    saveSettings: "Save settings",
+    savingSettings: "Saving…",
+    settingsSaved: "Saved.",
+    englishName: "English",
+    danishName: "Danish",
     imageHelp: "PNG or JPG, up to 5 MB.",
     barNotFound: "Bar not found",
     goHome: "Go to the front page",
@@ -272,7 +289,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     bartenderLogin: "Bartender Login",
     guestLogin: "Guest Login",
     createBar: "Create New Bar",
-    barName: "Bar Name",
+    barName: "Bar name",
     bartenderPassword: "Bartender Password",
     guestPassword: "Guest Password",
     language: "Language",
@@ -329,7 +346,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     orPasteLink: "or paste a link to one",
     uploading: "Sending the picture",
     drinkTitle: "Drink Title",
-    drinkImage: "Image URL",
+    drinkImage: "Photo",
     uploadImage: "Upload Image",
     or: "or",
     recipe: "Recipe (Markdown)",
@@ -464,6 +481,15 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     barSettings: "Barens indstillinger",
     barInformation: "Om baren",
     autoAccept: "Tag imod bestillinger automatisk",
+    autoAcceptHelp:
+      "Bestillinger går direkte i køen som accepteret, så ingen skal trykke to gange på en travl aften.",
+    sectionTheBar: "baren",
+    barNameHelp: "Vises øverst på gæsternes menu og på QR-siden.",
+    saveSettings: "Gem indstillinger",
+    savingSettings: "Gemmer…",
+    settingsSaved: "Gemt.",
+    englishName: "Engelsk",
+    danishName: "Dansk",
     imageHelp: "PNG eller JPG, op til 5 MB.",
     barNotFound: "Baren blev ikke fundet",
     goHome: "Gå til forsiden",
@@ -530,7 +556,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     orPasteLink: "eller indsæt et link til et",
     uploading: "Sender billedet",
     drinkTitle: "Drink titel",
-    drinkImage: "Billede URL",
+    drinkImage: "Foto",
     uploadImage: "Upload billede",
     or: "eller",
     recipe: "Opskrift (Markdown)",

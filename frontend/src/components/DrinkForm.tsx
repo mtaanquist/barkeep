@@ -10,24 +10,12 @@ import "@uiw/react-markdown-preview/markdown.css";
 import LazyMDEditor from "./LazyMDEditor";
 import DrinkImageField, { type DrinkImage } from "./drinkForm/DrinkImageField";
 import Switch from "./bartender/Switch";
+import Field from "./Field";
 
 type T = (key: keyof typeof translations.en) => string;
 
 const INPUT =
   "h-14 px-3.5 rounded-md border border-border bg-surface-raised text-body focus:outline-none focus:border-border-strong focus:shadow-focus";
-
-/** A labelled field, stacked. */
-const Field: React.FC<{
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}> = ({ label, hint, children }) => (
-  <label className="flex flex-col gap-1.5">
-    <span className="text-label">{label}</span>
-    {children}
-    {hint && <span className="text-body text-text-muted">{hint}</span>}
-  </label>
-);
 
 /** A switch with what it does written next to it. */
 const ToggleRow: React.FC<{
@@ -129,10 +117,11 @@ export const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onDone }) => {
     } satisfies DrinkImage,
   }));
 
-  // Everything is open when there is already a drink to read.
-  const [open, setOpen] = useState({
-    recipe: isEditing,
-    placement: isEditing,
+  // Folded away only where there is no room for it: on a wide screen the
+  // recipe sits in its own column, so there is nothing to save by hiding it.
+  const [open, setOpen] = useState(() => {
+    const wide = window.matchMedia("(min-width: 80rem)").matches;
+    return { recipe: isEditing || wide, placement: isEditing || wide };
   });
 
   const update = (patch: Partial<typeof form>) =>
@@ -227,7 +216,7 @@ export const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onDone }) => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-160 bg-surface border border-border rounded-md overflow-hidden"
+      className="max-w-160 xl:max-w-none bg-surface border border-border rounded-md overflow-hidden"
     >
       {/* The way out is a labelled step back, not a cross. */}
       <div className="px-5 py-3.5 border-b border-border flex items-center gap-3.5">
@@ -248,129 +237,138 @@ export const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onDone }) => {
         </h2>
       </div>
 
-      <Section
-        kicker={t("sectionGuestSees")}
-        marker={t("oneRequiredSection")}
-        open
-        onOpen={() => {}}
-      >
-        <Field label={t("drinkName")}>
-          <input
-            type="text"
-            value={form.title}
-            onChange={(e) => update({ title: e.target.value })}
-            placeholder={t("drinkNamePlaceholder")}
-            className={INPUT}
-            required
-          />
-        </Field>
+      {/* The recipe is the one field that grows, so on a wide screen it
+          takes a column of its own and the short fields keep their 640 —
+          which is the width they are legible at, wide screen or not. */}
+      <div className="xl:flex xl:items-stretch">
+        <div className="xl:w-160 xl:shrink-0 xl:border-r xl:border-border">
+          <Section
+            kicker={t("sectionGuestSees")}
+            marker={t("oneRequiredSection")}
+            open
+            onOpen={() => {}}
+          >
+            <Field label={t("drinkName")}>
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => update({ title: e.target.value })}
+                placeholder={t("drinkNamePlaceholder")}
+                className={INPUT}
+                required
+              />
+            </Field>
 
-        <Field label={t("guestDescription")} hint={t("guestDescriptionHelp")}>
-          <textarea
-            value={form.guestDescription}
-            onChange={(e) => update({ guestDescription: e.target.value })}
-            rows={3}
-            placeholder={t("guestDescriptionPrompt")}
-            className="min-h-21 p-3.5 rounded-md border border-border bg-surface-raised text-body resize-y focus:outline-none focus:border-border-strong focus:shadow-focus"
-          />
-        </Field>
-
-        <DrinkImageField
-          value={form.image}
-          onChange={(image) => update({ image })}
-          loading={loading}
-          setLoading={setLoading}
-          t={t}
-        />
-      </Section>
-
-      <div className="h-px bg-border" />
-
-      <Section
-        kicker={t("sectionRecipe")}
-        marker={t("oneRequiredSection")}
-        open={open.recipe}
-        onOpen={() => setOpen((prev) => ({ ...prev, recipe: true }))}
-      >
-        <LazyMDEditor
-          value={form.recipe}
-          onChange={(value) => update({ recipe: value || "" })}
-          height={300}
-          textareaProps={{
-            placeholder:
-              "## Ingredients\n- 3 cl …\n\n## Method\n1. …",
-          }}
-        />
-
-        <ToggleRow
-          on={form.showRecipeToGuests}
-          onChange={(showRecipeToGuests) => update({ showRecipeToGuests })}
-          title={t("showRecipeToGuests")}
-          help={t("showRecipeHelp")}
-        />
-      </Section>
-
-      <div className="h-px bg-border" />
-
-      <Section
-        kicker={t("sectionPlacement")}
-        marker={t("optionalSection")}
-        open={open.placement}
-        onOpen={() => setOpen((prev) => ({ ...prev, placement: true }))}
-      >
-        <div className="grid sm:grid-cols-2 gap-3">
-          <Field label={t("categories")}>
-            <select
-              value={form.categoryId}
-              onChange={(e) => update({ categoryId: e.target.value })}
-              className={INPUT}
+            <Field
+              label={t("guestDescription")}
+              hint={t("guestDescriptionHelp")}
             >
-              <option value="">{t("noCategory")}</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+              <textarea
+                value={form.guestDescription}
+                onChange={(e) => update({ guestDescription: e.target.value })}
+                rows={3}
+                placeholder={t("guestDescriptionPrompt")}
+                className="min-h-21 p-3.5 rounded-md border border-border bg-surface-raised text-body resize-y focus:outline-none focus:border-border-strong focus:shadow-focus"
+              />
+            </Field>
 
-          <Field label={t("baseSpirit")}>
-            <select
-              value={form.baseSpirit}
-              onChange={(e) => update({ baseSpirit: e.target.value })}
-              className={INPUT}
-            >
-              <option value="">{t("selectBaseSpirit")}</option>
-              {BASE_SPIRITS.map((spirit) => (
-                <option key={spirit} value={spirit}>
-                  {spirit}
-                </option>
-              ))}
-            </select>
-          </Field>
+            <DrinkImageField
+              value={form.image}
+              onChange={(image) => update({ image })}
+              loading={loading}
+              setLoading={setLoading}
+              t={t}
+            />
+          </Section>
+
+          <div className="h-px bg-border" />
+
+          <Section
+            kicker={t("sectionPlacement")}
+            marker={t("optionalSection")}
+            open={open.placement}
+            onOpen={() => setOpen((prev) => ({ ...prev, placement: true }))}
+          >
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Field label={t("categories")}>
+                <select
+                  value={form.categoryId}
+                  onChange={(e) => update({ categoryId: e.target.value })}
+                  className={INPUT}
+                >
+                  <option value="">{t("noCategory")}</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label={t("baseSpirit")}>
+                <select
+                  value={form.baseSpirit}
+                  onChange={(e) => update({ baseSpirit: e.target.value })}
+                  className={INPUT}
+                >
+                  <option value="">{t("selectBaseSpirit")}</option>
+                  {BASE_SPIRITS.map((spirit) => (
+                    <option key={spirit} value={spirit}>
+                      {spirit}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+
+            <ToggleRow
+              on={form.inStock}
+              onChange={(inStock) => update({ inStock })}
+              title={t("inStock")}
+              help={t("inStockHelp")}
+            />
+
+            {/* Down here, where a hand on the way to Save cannot reach it. */}
+            {isEditing && (
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={loading}
+                  className="h-11 px-3.5 -ml-3.5 rounded-md text-label text-danger transition-colors duration-(--duration-instant) hover:bg-status-rejected-bg disabled:opacity-50 cursor-pointer"
+                >
+                  {t("deleteThisDrink")}
+                </button>
+              </div>
+            )}
+          </Section>
         </div>
 
-        <ToggleRow
-          on={form.inStock}
-          onChange={(inStock) => update({ inStock })}
-          title={t("inStock")}
-          help={t("inStockHelp")}
-        />
+        <div className="flex-1 min-w-0 border-t border-border xl:border-t-0">
+          <Section
+            kicker={t("sectionRecipe")}
+            marker={t("oneRequiredSection")}
+            open={open.recipe}
+            onOpen={() => setOpen((prev) => ({ ...prev, recipe: true }))}
+          >
+            <LazyMDEditor
+              value={form.recipe}
+              onChange={(value) => update({ recipe: value || "" })}
+              height={300}
+              textareaProps={{
+                placeholder: "## Ingredients\n- 3 cl …\n\n## Method\n1. …",
+              }}
+            />
 
-        {/* Down here, where a hand on the way to Save cannot reach it. */}
-        {isEditing && (
-          <div className="pt-1">
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={loading}
-              className="h-11 px-3.5 -ml-3.5 rounded-md text-label text-danger transition-colors duration-(--duration-instant) hover:bg-status-rejected-bg disabled:opacity-50 cursor-pointer"
-            >
-              {t("deleteThisDrink")}
-            </button>
-          </div>
-        )}
-      </Section>
+            <ToggleRow
+              on={form.showRecipeToGuests}
+              onChange={(showRecipeToGuests) => update({ showRecipeToGuests })}
+              title={t("showRecipeToGuests")}
+              help={t("showRecipeHelp")}
+            />
+          </Section>
+        </div>
+      </div>
 
       <div className="lg:sticky lg:bottom-0 px-5 py-3 border-t border-border bg-surface-sunken flex items-center gap-3">
         <button

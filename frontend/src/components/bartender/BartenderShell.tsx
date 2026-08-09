@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3,
-  Globe,
   Grid2x2,
   List,
+  LogOut,
   QrCode,
   Settings,
 } from "lucide-react";
@@ -180,12 +180,14 @@ const BartenderShell: React.FC = () => {
             <QrCode className="w-4.5 h-4.5 shrink-0" />
             {t("generateQR")}
           </button>
+          {/* The language is a bar setting, not a thing to sign out with —
+              it lives under Settings. */}
           <button
             onClick={clearSession}
             className="h-11 px-3 flex items-center gap-2.5 rounded-md text-label text-text-muted transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
           >
-            <Globe className="w-4 h-4 shrink-0" />
-            {language === "da" ? "Dansk" : "English"} · {t("logout")}
+            <LogOut className="w-4 h-4 shrink-0" />
+            {t("logout")}
           </button>
         </div>
       </nav>

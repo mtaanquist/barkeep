@@ -1,8 +1,12 @@
 import React, { useState } from "react";
-import { Settings, Save } from "lucide-react";
 import { useApp } from "../hooks/useApp";
-import type { Bar } from "../types";
+import type { Bar, Language } from "../types";
 import { useTranslation } from "../utils/translations";
+import Field from "./Field";
+import Switch from "./bartender/Switch";
+
+const INPUT =
+  "h-14 px-3.5 rounded-md border border-border bg-surface-raised text-body focus:outline-none focus:border-border-strong focus:shadow-focus";
 
 const SettingsTab: React.FC = () => {
   const {
@@ -10,117 +14,128 @@ const SettingsTab: React.FC = () => {
     language,
     loading,
     setCurrentBar,
+    setLanguage,
     setLoading,
     setError,
     apiCall,
   } = useApp();
 
   const t = useTranslation(language);
-  
-  const [skipApproval, setSkipApproval] = useState(
-    currentBar?.skip_approval === 1
-  );
-  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSaveSettings = async () => {
+  const [form, setForm] = useState({
+    name: currentBar?.name ?? "",
+    language: (currentBar?.language ?? "en") as Language,
+    skipApproval: currentBar?.skip_approval === 1,
+  });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const update = (patch: Partial<typeof form>) => {
+    setForm((prev) => ({ ...prev, ...patch }));
+    setSaved(false);
+  };
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!currentBar) return;
-    
-    setIsSaving(true);
+
+    setSaving(true);
     setLoading(true);
-    
+
     try {
-      const updatedBar = await apiCall<Bar>(`/bars/${currentBar.id}`, {
+      const bar = await apiCall<Bar>(`/bars/${currentBar.id}`, {
         method: "PUT",
         body: JSON.stringify({
-          skipApproval,
+          name: form.name.trim(),
+          language: form.language,
+          skipApproval: form.skipApproval,
         }),
       });
-      
-      // Update the current bar in the context
-      setCurrentBar(updatedBar);
-      setSkipApproval(updatedBar.skip_approval === 1);
-      
-      // Show success message (you could add a toast notification here)
-      alert("Settings saved successfully!");
+
+      setCurrentBar(bar);
+      // The app reads in whatever the bar is set to, so this takes effect
+      // on the screen you are looking at.
+      setLanguage(bar.language);
+      setSaved(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save settings");
     } finally {
-      setIsSaving(false);
+      setSaving(false);
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-surface-raised rounded-md border border-border">
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center space-x-2">
-            <Settings className="w-5 h-5 text-text-muted" />
-            <h3 className="text-lg font-semibold text-text">
-              {t("barSettings")}
-            </h3>
-          </div>
+    <form onSubmit={save} className="max-w-160">
+      <div className="bg-surface border border-border rounded-md overflow-hidden">
+        <div className="px-5 py-4 border-b border-border">
+          <h2 className="text-heading">{t("barSettings")}</h2>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Skip Approval Setting */}
-          <div className="flex items-start space-x-3">
-            <div className="flex items-center h-6">
-              <input
-                id="skip-approval"
-                type="checkbox"
-                checked={skipApproval}
-                onChange={(e) => setSkipApproval(e.target.checked)}
-                className="w-4 h-4 text-text-muted bg-surface-sunken border-border rounded focus:ring-2"
-              />
-            </div>
-            <div className="flex-1">
-              <label
-                htmlFor="skip-approval"
-                className="font-medium text-text cursor-pointer"
-              >
-                {t("autoAccept")}
-              </label>
-              <p className="text-sm text-text-muted mt-1">
-                When enabled, new drink orders will be automatically accepted and skip the manual approval step. 
-                Customers can still cancel their orders until they are marked as processed.
-              </p>
-            </div>
-          </div>
+        <div className="px-5 py-4.5 flex flex-col gap-4">
+          <span className="font-mono text-caption uppercase text-text-muted">
+            {t("sectionTheBar")}
+          </span>
 
-          {/* {t("barInformation")} */}
-          <div className="pt-6 border-t border-border">
-            <h4 className="text-sm font-semibold text-text mb-3">
-              {t("barInformation")}
-            </h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-text-muted">{t("barName")}</span>
-                <span className="font-medium text-text">{currentBar?.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-muted">{t("language")}</span>
-                <span className="font-medium text-text">
-                  {currentBar?.language === "en" ? "English" : "Danish"}
-                </span>
-              </div>
-            </div>
-          </div>
+          <Field label={t("barName")} hint={t("barNameHelp")}>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => update({ name: e.target.value })}
+              className={INPUT}
+              required
+              minLength={2}
+            />
+          </Field>
 
-          {/* Save Button */}
-          <div className="pt-4">
-            <button
-              onClick={handleSaveSettings}
-              disabled={isSaving || loading}
-              className="flex items-center space-x-2 px-6 py-2 bg-text text-text-inverse rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          <Field label={t("language")}>
+            <select
+              value={form.language}
+              onChange={(e) => update({ language: e.target.value as Language })}
+              className={INPUT}
             >
-              <Save className="w-4 h-4" />
-              <span>{isSaving ? "Saving..." : "Save Settings"}</span>
-            </button>
-          </div>
+              <option value="en">{t("englishName")}</option>
+              <option value="da">{t("danishName")}</option>
+            </select>
+          </Field>
+
+          <label className="flex items-center gap-3 p-3 rounded-md border border-border cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.skipApproval}
+              onChange={(e) => update({ skipApproval: e.target.checked })}
+              className="sr-only"
+            />
+            <Switch on={form.skipApproval} />
+            <span className="flex-1 flex flex-col gap-0.5">
+              <span className="text-label">{t("autoAccept")}</span>
+              <span className="text-body text-text-muted">
+                {t("autoAcceptHelp")}
+              </span>
+            </span>
+          </label>
+        </div>
+
+        <div className="px-5 py-3 border-t border-border bg-surface-sunken flex items-center gap-3">
+          {saved && (
+            <p
+              role="status"
+              className="font-mono text-caption uppercase text-text-muted"
+            >
+              {t("settingsSaved")}
+            </p>
+          )}
+          <span className="flex-1" />
+          <button
+            type="submit"
+            disabled={saving || loading || form.name.trim().length < 2}
+            className="h-14 px-5 rounded-md bg-text text-text-inverse text-label transition-colors duration-(--duration-instant) hover:bg-neutral-800 disabled:bg-disabled-bg disabled:text-disabled-fg disabled:cursor-not-allowed cursor-pointer"
+          >
+            {saving ? t("savingSettings") : t("saveSettings")}
+          </button>
         </div>
       </div>
-    </div>
+    </form>
   );
 };
 
