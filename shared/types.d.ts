@@ -88,6 +88,26 @@ export interface Favourite {
   created_at: string;
 }
 
+/** How busy the bar has been, for the reports tab. */
+export interface OrderAnalytics {
+  totalOrders: number;
+  ordersToday: number;
+  recentOrders: number;
+  popularDrinks: Array<{ drink_title: string; order_count: number }>;
+  peakHours: Array<{ hour: string; count: number }>;
+  statusDistribution: Array<{ status: OrderStatus; count: number }>;
+  averageOrdersPerDay: number;
+  /** The window the numbers cover, e.g. "30 days". */
+  period: string;
+}
+
+/** What is on the menu, for the reports tab. */
+export interface DrinkAnalytics {
+  popularDrinks: Array<{ drink_title: string; order_count: number }>;
+  totalDrinks: number;
+  inStockDrinks: number;
+}
+
 /** What the server pushes to browsers watching a bar. */
 export type LiveUpdate =
   | { type: "new_order"; order: Order; timestamp: string }

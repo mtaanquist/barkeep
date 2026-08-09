@@ -83,7 +83,15 @@ The server is TypeScript, built with `npm run build` and run from `dist/`.
 
 The shapes the API sends live in `shared/types.d.ts` and are imported by both
 halves, so changing one without the other is a build error. It holds types only
-and disappears when built, which is why neither half has to bundle it.
+and disappears when built, which is why neither half has to bundle it. Both
+Dockerfile build stages need `COPY shared ../shared` for that to resolve.
+
+The pages get them through `frontend/src/types.ts`, which is also where a couple
+are re-named to suit the pages. Nothing in `frontend/src` should write out an
+API shape by hand — that is how the two sides drifted apart before.
+
+SQLite has no boolean, so flags arrive as `0` or `1`. Type them as `Flag` and
+compare with `=== 1`; do not pretend they are booleans.
 
 Routes share a few pieces rather than repeating them: `route()` turns a thrown
 error into the right reply, `HttpError` carries the status, `findBar`/`findDrink`

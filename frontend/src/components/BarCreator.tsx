@@ -43,12 +43,8 @@ const BarCreator: React.FC<BarCreatorProps> = ({ onBack, onSuccess }) => {
         }),
       });
 
-      setCurrentBar({
-        id: data.id,
-        name: data.name,
-        language: data.language,
-      });
-      setLanguage(data.language as "en" | "da");
+      setCurrentBar(data);
+      setLanguage(data.language);
       setUserType("bartender");
 
       onSuccess();

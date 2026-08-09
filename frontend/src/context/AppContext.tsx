@@ -6,78 +6,48 @@ import React, {
   ReactNode,
 } from "react";
 
-// Types
-export interface Bar {
-  id: number;
+import type {
+  Analytics,
+  Bar,
+  Category,
+  Drink,
+  Language,
+  Order,
+  UserType,
+} from "../types";
+
+/** The bartender's tabs, in the order they appear. */
+export type Tab =
+  | "orders"
+  | "menu"
+  | "analytics"
+  | "categories"
+  | "settings";
+
+/** The two sign-in forms hold the same handful of fields throughout. */
+type BarForm = {
   name: string;
-  language: string;
-  skip_approval?: boolean;
-}
+  bartenderPassword: string;
+  guestPassword: string;
+  language: Language;
+};
 
-export interface Category {
-  id: number;
-  bar_id: number;
-  name: string;
-  created_at: string;
-}
-
-export interface Drink {
-  id: number;
-  bar_id: number;
-  title: string;
-  image_url?: string;
-  recipe: string;
-  in_stock: boolean;
-  created_at: string;
-  base_spirit?: string;
-  guest_description?: string;
-  show_recipe_to_guests?: boolean;
-  is_favourite?: boolean; // Added for favourite status
-  category_id?: number;
-  category_name?: string;
-  image_crop_x?: number;
-  image_crop_y?: number;
-  image_crop_zoom?: number;
-}
-
-export interface Order {
-  id: number;
-  bar_id: number;
-  customer_name: string;
-  drink_id: number;
-  drink_title: string;
-  drink_recipe?: string; // Recipe from drinks table, available for bartenders
-  status: "new" | "accepted" | "rejected" | "ready" | "processed";
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Analytics {
-  totalOrders: number;
-  ordersToday: number;
-  popularDrinks: Array<{ drink_title: string; order_count: number }>;
-  peakHours: Array<{ hour: string; count: number }>;
-}
+type LoginForm = { password: string; name: string };
 
 interface AppContextType {
   // App state
-  userType: "bartender" | "guest" | null;
+  userType: UserType | null;
   currentBar: Bar | null;
   customerName: string;
-  language: "en" | "da";
+  language: Language;
 
   // Loading and error states
   loading: boolean;
   error: string | null;
 
   // Form states
-  barForm: {
-    name: string;
-    bartenderPassword: string;
-    guestPassword: string;
-    language: "en" | "da";
-  };
-  loginForm: { password: string; name: string };
+  barForm: BarForm;
+  loginForm: LoginForm;
 
   // Data states
   drinks: Drink[];
@@ -89,26 +59,17 @@ interface AppContextType {
   editingDrink: Drink | {} | null;
   viewingRecipe: Drink | null;
   showPassword: boolean;
-  currentTab: "orders" | "menu" | "analytics" | "categories" | "settings";
+  currentTab: Tab;
 
   // Setters
-  setUserType: (type: "bartender" | "guest" | null) => void;
+  setUserType: (type: UserType | null) => void;
   setCurrentBar: (bar: Bar | null) => void;
   setCustomerName: (name: string) => void;
-  setLanguage: (lang: "en" | "da") => void;
+  setLanguage: (lang: Language) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  setBarForm: React.Dispatch<
-    React.SetStateAction<{
-      name: string;
-      bartenderPassword: string;
-      guestPassword: string;
-      language: "en" | "da";
-    }>
-  >;
-  setLoginForm: React.Dispatch<
-    React.SetStateAction<{ password: string; name: string }>
-  >;
+  setBarForm: React.Dispatch<React.SetStateAction<BarForm>>;
+  setLoginForm: React.Dispatch<React.SetStateAction<LoginForm>>;
   setDrinks: React.Dispatch<React.SetStateAction<Drink[]>>;
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   setAnalytics: React.Dispatch<React.SetStateAction<Analytics | null>>;
@@ -116,7 +77,7 @@ interface AppContextType {
   setEditingDrink: (drink: Drink | {} | null) => void;
   setViewingRecipe: (drink: Drink | null) => void;
   setShowPassword: (show: boolean) => void;
-  setCurrentTab: (tab: "orders" | "menu" | "analytics" | "categories" | "settings") => void;
+  setCurrentTab: (tab: Tab) => void;
 
   // API helper
   apiCall: (endpoint: string, options?: RequestInit) => Promise<any>;
@@ -164,7 +125,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   // App state with initial values from localStorage
-  const [userType, setUserTypeState] = useState<"bartender" | "guest" | null>(
+  const [userType, setUserTypeState] = useState<UserType | null>(
     () => loadFromStorage(STORAGE_KEYS.userType, null)
   );
 
@@ -176,16 +137,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     loadFromStorage(STORAGE_KEYS.customerName, "")
   );
 
-  const [language, setLanguageState] = useState<"en" | "da">(() =>
+  const [language, setLanguageState] = useState<Language>(() =>
     loadFromStorage(STORAGE_KEYS.language, "en")
   );
 
-  const [currentTab, setCurrentTabState] = useState<
-    "orders" | "menu" | "analytics" | "categories" | "settings"
-  >(() => loadFromStorage(STORAGE_KEYS.currentTab, "orders"));
+  const [currentTab, setCurrentTabState] = useState<Tab>(() =>
+    loadFromStorage(STORAGE_KEYS.currentTab, "orders")
+  );
 
   // Wrapper functions that save to storage
-  const setUserType = (type: "bartender" | "guest" | null) => {
+  const setUserType = (type: UserType | null) => {
     setUserTypeState(type);
     if (type === null) {
       localStorage.removeItem(STORAGE_KEYS.userType);
@@ -212,12 +173,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const setLanguage = (lang: "en" | "da") => {
+  const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     saveToStorage(STORAGE_KEYS.language, lang);
   };
 
-  const setCurrentTab = (tab: "orders" | "menu" | "analytics" | "categories" | "settings") => {
+  const setCurrentTab = (tab: Tab) => {
     setCurrentTabState(tab);
     saveToStorage(STORAGE_KEYS.currentTab, tab);
   };
@@ -231,7 +192,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     name: "",
     bartenderPassword: "",
     guestPassword: "",
-    language: "en" as "en" | "da",
+    language: "en" as Language,
   });
   const [loginForm, setLoginForm] = useState({ password: "", name: "" });
 

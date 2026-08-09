@@ -1,5 +1,5 @@
 import React from "react";
-import { Drink } from "../context/AppContext";
+import type { Drink } from "../types";
 import { translations } from "../utils/translations";
 
 interface RandomDrinkModalProps {

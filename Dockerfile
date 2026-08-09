@@ -10,6 +10,8 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 COPY frontend/ ./
+# The API shapes, shared with the server. Types only, so nothing is bundled.
+COPY shared ../shared
 RUN npm run build
 
 # ---- Install server packages ----------------------------------------------

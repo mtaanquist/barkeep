@@ -1,6 +1,6 @@
 import React from "react";
 import { Star } from "lucide-react";
-import { Drink } from "../context/AppContext";
+import type { Drink } from "../types";
 import { translations } from "../utils/translations";
 
 interface DrinkCardProps {

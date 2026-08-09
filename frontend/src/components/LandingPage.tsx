@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useApp, Bar } from "../context/AppContext";
+import { useApp } from "../context/AppContext";
+import type { Bar } from "../types";
 import { useTranslation } from "../utils/translations";
 import BarSelector from "./BarSelector";
 import BarCreator from "./BarCreator";
@@ -16,7 +17,7 @@ const LandingPage: React.FC = () => {
   const handleSelectBar = (bar: Bar) => {
     setSelectedBar(bar);
     setCurrentBar(bar);
-    setLanguage(bar.language as "en" | "da");
+    setLanguage(bar.language);
     setMode("login");
   };
 

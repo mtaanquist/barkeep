@@ -38,7 +38,7 @@ const QRRedirect: React.FC = () => {
         
         // Set the bar and language in context
         setCurrentBar(bar);
-        setLanguage(bar.language as "en" | "da");
+        setLanguage(bar.language);
         
         if (token) {
           // If there's a token, this is a QR code access - show guest name form
@@ -93,13 +93,9 @@ const QRRedirect: React.FC = () => {
       
       // The current bar should already be set from the earlier fetchBarInfo call,
       // but let's make sure it has the latest info
-      if (response.barId && response.barName && response.language) {
-        setCurrentBar({
-          id: response.barId,
-          name: response.barName,
-          language: response.language
-        });
-        setLanguage(response.language as "en" | "da");
+      if (response.bar) {
+        setCurrentBar(response.bar);
+        setLanguage(response.bar.language);
       }
 
       // Navigate to customer interface

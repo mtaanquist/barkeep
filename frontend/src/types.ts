@@ -1,0 +1,23 @@
+// What the pages get back from the API. The shapes live in shared/types.d.ts
+// next to the server, so changing one side without the other is a build error.
+//
+// A few things are re-named here to match how the pages talk about them.
+
+export type {
+  Bar,
+  Category,
+  Flag,
+  Language,
+  LiveUpdate,
+  OrderStatus,
+  UserType,
+} from "@shared/types";
+
+export type {
+  // The pages always list drinks with their category filled in, and with the
+  // favourite marked when the bar knows who is asking.
+  DrinkForGuest as Drink,
+  // Orders carry the recipe too, which only the bartender's pages show.
+  OrderForBartender as Order,
+  OrderAnalytics as Analytics,
+} from "@shared/types";

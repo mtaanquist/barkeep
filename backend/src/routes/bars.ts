@@ -100,12 +100,9 @@ export default function createBarRoutes({
         language
       );
 
-      res.status(201).json({
-        id: Number(lastInsertRowid),
-        name,
-        language,
-        message: "Bar created successfully",
-      });
+      // The whole bar goes back, settings and all, so the pages can hold on to
+      // it as-is.
+      res.status(201).json(publicBar(findBar(db, Number(lastInsertRowid))));
     })
   );
 

@@ -1,6 +1,11 @@
 import express, { type Router } from "express";
 
-import type { Order, OrderForBartender } from "../../../shared/types.js";
+import type {
+  Order,
+  OrderAnalytics,
+  OrderForBartender,
+  OrderStatus,
+} from "../../../shared/types.js";
 import {
   HttpError,
   idParam,
@@ -217,7 +222,7 @@ export default function createOrderRoutes(db: Db): Router {
           since
         )?.avg_per_day ?? 0;
 
-      res.json({
+      const report = {
         totalOrders: count(
           db,
           "SELECT COUNT(*) AS n FROM orders WHERE bar_id = ?",
@@ -244,7 +249,7 @@ export default function createOrderRoutes(db: Db): Router {
           barId
         ),
         peakHours,
-        statusDistribution: all<{ status: string; count: number }>(
+        statusDistribution: all<{ status: OrderStatus; count: number }>(
           db,
           `SELECT status, COUNT(*) AS count FROM orders
            WHERE bar_id = ? AND created_at >= datetime('now', ?)
@@ -254,7 +259,9 @@ export default function createOrderRoutes(db: Db): Router {
         ),
         averageOrdersPerDay: Math.round(averagePerDay * 10) / 10,
         period: `${days} days`,
-      });
+      } satisfies OrderAnalytics;
+
+      res.json(report);
     })
   );
 

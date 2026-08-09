@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { RefreshCw, Plus } from "lucide-react";
-import { useApp, Bar } from "../context/AppContext";
+import { useApp } from "../context/AppContext";
+import type { Bar } from "../types";
 import { useTranslation } from "../utils/translations";
 
 interface BarSelectorProps {

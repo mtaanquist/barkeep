@@ -51,7 +51,7 @@ const MenuTab: React.FC = () => {
 
       setDrinks((prev) =>
         prev.map((drink) =>
-          drink.id === id ? { ...drink, in_stock: !drink.in_stock } : drink
+          drink.id === id ? { ...drink, in_stock: drink.in_stock ? 0 : 1 } : drink
         )
       );
     } catch (err) {
@@ -187,7 +187,7 @@ const MenuTab: React.FC = () => {
                 {/* Recipe Preview */}
                 <div className="mb-4 line-clamp-2 prose max-w-none prose-p:text-gray-800 prose-li:text-gray-800 prose-strong:text-gray-900 prose-em:text-gray-700">
                   <LazyMarkdownViewer
-                    source={drink.recipe}
+                    source={drink.recipe ?? ""}
                     style={{ background: "none", padding: 0, margin: 0 }}
                   />
                 </div>

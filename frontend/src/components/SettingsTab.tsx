@@ -12,7 +12,9 @@ const SettingsTab: React.FC = () => {
     apiCall,
   } = useApp();
   
-  const [skipApproval, setSkipApproval] = useState(currentBar?.skip_approval || false);
+  const [skipApproval, setSkipApproval] = useState(
+    currentBar?.skip_approval === 1
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveSettings = async () => {
@@ -31,7 +33,7 @@ const SettingsTab: React.FC = () => {
       
       // Update the current bar in the context
       setCurrentBar(updatedBar);
-      setSkipApproval(updatedBar.skip_approval || false);
+      setSkipApproval(updatedBar.skip_approval === 1);
       
       // Show success message (you could add a toast notification here)
       alert("Settings saved successfully!");

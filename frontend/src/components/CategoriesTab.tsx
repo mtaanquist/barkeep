@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit3, Trash2, Tag } from "lucide-react";
-import { useApp, Category } from "../context/AppContext";
+import { useApp } from "../context/AppContext";
+import type { Category } from "../types";
 import { useTranslation } from "../utils/translations";
 
 const CategoriesTab: React.FC = () => {

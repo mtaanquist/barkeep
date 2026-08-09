@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { X, Clock, Users, ChefHat } from "lucide-react";
-import { useApp, Drink } from "../context/AppContext";
+import { useApp } from "../context/AppContext";
+import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
 import { LazyMarkdownViewer } from "./LazyMDEditor";
 
@@ -14,7 +15,9 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
   const t = useTranslation(language);
 
   // Extract difficulty, prep time, and servings from recipe if present
-  const extractMetadata = (recipe: string) => {
+  const extractMetadata = (recipe: string | null) => {
+    if (!recipe) return { difficulty: null, prepTime: null, servings: null };
+
     const difficultyMatch = recipe.match(/difficulty:\s*(\w+)/i);
     const prepTimeMatch = recipe.match(
       /prep(?:\s+time)?:\s*(\d+(?:\s*-\s*\d+)?)\s*(?:min|minutes?)/i
@@ -151,7 +154,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
           {/* Ensure the markdown container uses a readable color and prose styling */}
           <div className="prose prose-sm text-gray-800 max-w-none">
             <LazyMarkdownViewer
-              source={drink.recipe}
+              source={drink.recipe ?? ""}
               style={{
                 // Force readable text color for markdown output
                 ["--color-fg-default" as any]: "#222",
