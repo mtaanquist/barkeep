@@ -20,6 +20,10 @@ Every visible string needs both English and Danish — see
 `frontend/src/utils/translations.ts`. Flag Danish wording for review rather than
 guessing at it.
 
+**Danish captions capitalise the first letter only.** "Se opskrift", not "Se
+Opskrift" — title case is an English habit and looks like a typo in Danish.
+Proper nouns and acronyms keep their capitals: Negroni Sbagliato, PNG, QR.
+
 ## Shape of the thing
 
 One container serves everything on one port: the API at `/api`, live updates at

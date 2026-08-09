@@ -27,6 +27,15 @@ export interface Bar {
   name: string;
   language: Language;
   skip_approval: Flag;
+  /** Last orders: the bar serves what is in, but takes nothing new. */
+  orders_closed: Flag;
+  /** How many drinks one guest may have on the go at once. */
+  max_active_orders: number;
+  /**
+   * When the bar stops taking orders on its own, as a full moment rather
+   * than a time of day. Empty means only the switch above decides.
+   */
+  last_orders_at: string | null;
   created_at: string;
 }
 

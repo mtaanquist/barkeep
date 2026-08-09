@@ -1,17 +1,23 @@
 import React, { useState } from "react";
-import {
-  Calendar,
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Clock,
-  Coffee,
-  User,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Coffee, X } from "lucide-react";
 import { useApp } from "../hooks/useApp";
 import type { OrderStatus } from "../types";
-import { statusCard, statusIcon } from "../utils/orderStatus";
+import { statusPill, statusRail } from "../utils/orderStatus";
 import { useTranslation } from "../utils/translations";
+
+/** Rightmost, always the same size and place, so it can be hit without looking. */
+const PRIMARY =
+  "h-14 w-full lg:w-auto lg:min-w-55 px-4 rounded-md bg-text text-text-inverse text-label " +
+  "transition-colors duration-(--duration-instant) hover:bg-neutral-800 " +
+  "disabled:bg-disabled-bg disabled:text-disabled-fg disabled:cursor-not-allowed cursor-pointer";
+
+/** A different shape and size to the primary, and set apart from it. */
+const REJECT =
+  "h-14 w-14 shrink-0 flex items-center justify-center rounded-md border border-border text-danger " +
+  "transition-colors duration-(--duration-instant) hover:bg-danger hover:text-danger-contrast " +
+  "disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer";
+
+const PANEL = "bg-surface-raised rounded-md border border-border";
 
 const OrdersTab: React.FC = () => {
   const {
@@ -26,7 +32,7 @@ const OrdersTab: React.FC = () => {
   } = useApp();
 
   const t = useTranslation(language);
-  
+
   // Track whether to show recipes for all orders
   const [showRecipes, setShowRecipes] = useState(false);
 
@@ -67,9 +73,15 @@ const OrdersTab: React.FC = () => {
     }
   };
 
-  const pendingOrders = orders.filter((order) =>
-    ["new", "accepted", "ready"].includes(order.status)
-  );
+  // Oldest first, always, so the list never reorders under a working hand.
+  const pendingOrders = orders
+    .filter((order) => ["new", "accepted", "ready"].includes(order.status))
+    .sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+
+  const readyCount = orders.filter((order) => order.status === "ready").length;
 
   const recentOrders = orders
     .filter((order) => order.status === "processed")
@@ -90,180 +102,179 @@ const OrdersTab: React.FC = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  /** The one thing to do next for an order at this step. */
+  const nextStep = (status: OrderStatus) => {
+    if (status === "new") return { to: "accepted" as const, label: t("acceptOrder") };
+    if (status === "accepted") return { to: "ready" as const, label: t("markReady") };
+    if (status === "ready")
+      return { to: "processed" as const, label: t("markProcessed") };
+    return null;
+  };
+
   return (
     <div className="space-y-6">
       {/* Pending Orders */}
-      <div className="bg-white rounded-lg shadow-sm border">
-        <div className="p-4 border-b">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-800">
-              {t("pendingOrders")}
-            </h3>
-            <div className="flex items-center space-x-3">
-              <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-                {pendingOrders.length} active
-              </span>
-              {pendingOrders.length > 0 && pendingOrders.some(order => order.drink_recipe) && (
-                <button
-                  onClick={toggleRecipes}
-                  className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors text-sm font-medium"
+      <div className={PANEL}>
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-heading">{t("pendingOrders")}</h3>
+            <div className="flex items-center gap-4">
+              {/* Goes the signal colour only when a drink is waiting to be collected. */}
+              <span
+                className={`inline-flex items-center gap-2 h-8 pl-2.5 pr-3 rounded-full text-label ${
+                  readyCount > 0
+                    ? "bg-accent text-accent-contrast"
+                    : "bg-text text-text-inverse"
+                }`}
+              >
+                <span
+                  className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full font-mono text-caption ${
+                    readyCount > 0
+                      ? "bg-accent-contrast text-accent"
+                      : "bg-text-inverse text-text"
+                  }`}
                 >
-                  {showRecipes ? (
-                    <>
-                      <ChevronUp className="w-4 h-4" />
-                      <span>Hide Recipes</span>
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDown className="w-4 h-4" />
-                      <span>Show Recipes</span>
-                    </>
-                  )}
-                </button>
-              )}
+                  {pendingOrders.length}
+                </span>
+                {t("activeCount")}
+              </span>
+              {pendingOrders.length > 0 &&
+                pendingOrders.some((order) => order.drink_recipe) && (
+                  <button
+                    onClick={toggleRecipes}
+                    className="flex items-center gap-2 h-11 px-3 rounded-md text-label text-text-muted transition-colors duration-(--duration-instant) hover:bg-surface-sunken hover:text-text cursor-pointer"
+                  >
+                    {showRecipes ? (
+                      <>
+                        <ChevronUp className="w-4 h-4" />
+                        <span>{t("hideRecipes")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4" />
+                        <span>{t("showRecipes")}</span>
+                      </>
+                    )}
+                  </button>
+                )}
             </div>
           </div>
         </div>
 
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-border">
           {pendingOrders.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-text-muted">
               <Coffee className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-lg font-medium">{t("noPendingOrders")}</p>
-              <p className="text-sm">
-                New orders will appear here in real-time
+              <p className="text-heading text-text">{t("noPendingOrders")}</p>
+              <p className="text-body">
+                {t("ordersArriveHere")}
               </p>
             </div>
           ) : (
-            pendingOrders.map((order) => (
-              <div
-                key={order.id}
-                className={`p-4 ${statusCard(order.status)}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    {statusIcon(order.status)}
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <User className="w-4 h-4 text-gray-500" />
-                        <span className="font-semibold text-gray-800">
-                          {order.customer_name}
+            pendingOrders.map((order) => {
+              const step = nextStep(order.status);
+
+              return (
+                <div
+                  key={order.id}
+                  className={`flex items-stretch ${
+                    order.status === "ready" ? "bg-accent/[0.06]" : ""
+                  }`}
+                >
+                  {/* Repeats the step as a shape, for reading down the list at a glance. */}
+                  <div
+                    className={`w-1 shrink-0 ${statusRail(order.status)}`}
+                    aria-hidden="true"
+                  />
+
+                  <div className="flex-1 min-w-0 p-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-mono text-caption uppercase text-text-muted">
+                          {order.customer_name} · {formatTime(order.created_at)}
+                        </p>
+                        <p className="text-heading mt-1 break-words">
+                          {order.drink_title}
+                        </p>
+                      </div>
+
+                      <div className="lg:w-60 shrink-0">
+                        <span className={statusPill(order.status)}>
+                          {t(order.status)}
                         </span>
                       </div>
-                      <div className="text-lg font-medium text-gray-900 mt-1">
-                        {order.drink_title}
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="w-3 h-3" />
-                          <span>{formatTime(order.created_at)}</span>
-                        </div>
-                        <span className="capitalize">
-                          Status: {t(order.status)}
-                        </span>
+
+                      {/* Fixed width whether or not there is a reject button,
+                          so the action and the status stay in their columns
+                          instead of sliding about from row to row. */}
+                      <div className="flex items-center justify-end gap-5 lg:w-74 shrink-0">
+                        {order.status === "new" && (
+                          <button
+                            onClick={() => {
+                              if (!window.confirm(t("confirmReject"))) return;
+                              handleUpdateOrderStatus(order.id, "rejected");
+                            }}
+                            disabled={loading}
+                            title={t("rejectOrder")}
+                            aria-label={t("rejectOrder")}
+                            className={REJECT}
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        )}
+
+                        {step && (
+                          <button
+                            onClick={() =>
+                              handleUpdateOrderStatus(order.id, step.to)
+                            }
+                            disabled={loading}
+                            className={PRIMARY}
+                          >
+                            {step.label}
+                          </button>
+                        )}
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    {order.status === "new" && (
-                      <>
-                        <button
-                          onClick={() =>
-                            handleUpdateOrderStatus(order.id, "accepted")
-                          }
-                          disabled={loading}
-                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 text-sm font-medium"
-                        >
-                          {t("acceptOrder")}
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleUpdateOrderStatus(order.id, "rejected")
-                          }
-                          disabled={loading}
-                          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 text-sm font-medium"
-                        >
-                          {t("rejectOrder")}
-                        </button>
-                      </>
-                    )}
-
-                    {order.status === "accepted" && (
-                      <button
-                        onClick={() =>
-                          handleUpdateOrderStatus(order.id, "ready")
-                        }
-                        disabled={loading}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm font-medium"
-                      >
-                        {t("markReady")}
-                      </button>
-                    )}
-
-                    {order.status === "ready" && (
-                      <button
-                        onClick={() =>
-                          handleUpdateOrderStatus(order.id, "processed")
-                        }
-                        disabled={loading}
-                        className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 text-sm font-medium"
-                      >
-                        {t("markProcessed")}
-                      </button>
+                    {/* Recipe Display */}
+                    {order.drink_recipe && showRecipes && (
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <h4 className="font-mono text-caption uppercase text-text-muted mb-2">
+                          {t("recipe")}
+                        </h4>
+                        <div className="text-body text-text-muted whitespace-pre-wrap">
+                          {order.drink_recipe}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
-
-                {/* Recipe Display */}
-                {order.drink_recipe && showRecipes && (
-                  <div className="mt-3 border-t pt-3">
-                    <div className="p-3 bg-white rounded-lg border border-gray-200">
-                      <h4 className="font-semibold text-gray-700 mb-2">Recipe:</h4>
-                      <div className="text-sm text-gray-600 whitespace-pre-wrap">
-                        {order.drink_recipe}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
 
       {/* Recent Completed Orders */}
       {recentOrders.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border">
-          <div className="p-4 border-b">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Recent Completed Orders
-            </h3>
+        <div className={PANEL}>
+          <div className="p-4 border-b border-border">
+            <h3 className="text-heading">{t("recentlyCompleted")}</h3>
           </div>
 
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-border">
             {recentOrders.map((order) => (
-              <div key={order.id} className="p-4 hover:bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <Check className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium text-gray-800">
-                          {order.customer_name}
-                        </span>
-                        <span className="text-gray-600">•</span>
-                        <span className="text-gray-600">
-                          {order.drink_title}
-                        </span>
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        Completed at {formatTime(order.updated_at)} on{" "}
-                        {formatDate(order.updated_at)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div
+                key={order.id}
+                className="p-4 transition-colors duration-(--duration-instant) hover:bg-surface-sunken"
+              >
+                <p className="text-body text-text">
+                  {order.customer_name} · {order.drink_title}
+                </p>
+                <p className="font-mono text-caption uppercase text-text-muted mt-1">
+                  {formatTime(order.updated_at)} · {formatDate(order.updated_at)}
+                </p>
               </div>
             ))}
           </div>
@@ -272,55 +283,36 @@ const OrdersTab: React.FC = () => {
 
       {/* Order Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Clock className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {orders.filter((o) => o.status === "new").length}
-              </p>
-            </div>
-          </div>
+        <div className={`${PANEL} p-4`}>
+          <p className="font-mono text-caption uppercase text-text-muted">
+            {t("new")}
+          </p>
+          <p className="font-mono text-display mt-2">
+            {orders.filter((o) => o.status === "new").length}
+          </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Coffee className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">Ready</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {orders.filter((o) => o.status === "ready").length}
-              </p>
-            </div>
-          </div>
+        <div className={`${PANEL} p-4`}>
+          <p className="font-mono text-caption uppercase text-text-muted">
+            {t("ready")}
+          </p>
+          <p className="font-mono text-display mt-2">{readyCount}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Check className="w-6 h-6 text-blue-600" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600">
-                Completed Today
-              </p>
-              <p className="text-2xl font-bold text-gray-900">
-                {
-                  orders.filter(
-                    (o) =>
-                      o.status === "processed" &&
-                      new Date(o.updated_at).toDateString() ===
-                        new Date().toDateString()
-                  ).length
-                }
-              </p>
-            </div>
-          </div>
+        <div className={`${PANEL} p-4`}>
+          <p className="font-mono text-caption uppercase text-text-muted">
+            {t("completedToday")}
+          </p>
+          <p className="font-mono text-display mt-2">
+            {
+              orders.filter(
+                (o) =>
+                  o.status === "processed" &&
+                  new Date(o.updated_at).toDateString() ===
+                    new Date().toDateString()
+              ).length
+            }
+          </p>
         </div>
       </div>
     </div>

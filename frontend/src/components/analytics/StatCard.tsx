@@ -18,13 +18,13 @@ const StatCard: React.FC<StatCardProps> = ({
   value,
   small = false,
 }) => (
-  <div className="bg-white rounded-lg shadow-sm border p-6">
+  <div className="bg-surface-raised rounded-md border p-6">
     <div className="flex items-center">
-      <div className={`p-3 rounded-lg ${tint}`}>{icon}</div>
+      <div className={`p-3 rounded-md ${tint}`}>{icon}</div>
       <div className="ml-4 min-w-0">
-        <p className="text-sm font-medium text-gray-600">{label}</p>
+        <p className="text-sm font-medium text-text-muted">{label}</p>
         <p
-          className={`font-bold text-gray-900 ${
+          className={`font-bold text-text ${
             small ? "text-lg truncate" : "text-2xl"
           }`}
         >

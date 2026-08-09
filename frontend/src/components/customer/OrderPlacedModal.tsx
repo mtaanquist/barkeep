@@ -7,17 +7,24 @@ interface OrderPlacedModalProps {
 }
 
 const OrderPlacedModal: React.FC<OrderPlacedModalProps> = ({ onClose, t }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
-      <div className="text-3xl mb-2">🎉</div>
-      <h2 className="text-lg font-bold mb-2">{t("orderPlaced")}</h2>
-      <p className="mb-4 text-gray-600">Your order has been placed!</p>
-      <button
-        onClick={onClose}
-        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-      >
-        OK
-      </button>
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("orderPlaced")}
+      className="w-full max-w-sm bg-surface-raised border border-border rounded-lg shadow-float overflow-hidden"
+    >
+      <div className="p-5">
+        <h2 className="text-display">{t("orderPlaced")}</h2>
+      </div>
+      <div className="px-5 pb-4 pt-0 border-t border-border flex justify-end">
+        <button
+          onClick={onClose}
+          className="mt-4 h-14 px-5 rounded-md bg-text text-text-inverse text-label transition-colors duration-(--duration-instant) hover:bg-neutral-800 cursor-pointer"
+        >
+          {t("close")}
+        </button>
+      </div>
     </div>
   </div>
 );

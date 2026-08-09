@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  body { margin:0; background:#8b8b86; }
+  button, input, textarea, select { font-family: inherit; }
+  a { color:#101214; }
+  a:hover { color:#000; }
+</style>
+</helmet>
+
+<section style="padding:56px; display:flex; flex-direction:column; gap:22px; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; color:#101214; width:max-content;">
+
+  <header style="display:flex; flex-direction:column; gap:8px; max-width:900px;">
+    <div style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.16em; text-transform:uppercase; color:#33383D;">Barkeep · Front of house · the guest shell</div>
+    <h1 style="margin:0; font-weight:700; font-size:32px; line-height:1.12; letter-spacing:-0.02em;">Your drink follows you.</h1>
+    <p style="margin:0; font-size:14px; line-height:1.55; color:#2b2b26; max-width:82ch; text-wrap:pretty;">One shell, three surfaces, and a <strong style="font-weight:600;">dock</strong> that carries the live order across all of them. The guest side has exactly one thing it must never fail to say — <em>din drink er klar</em> — so the dock is the fixed point and everything else is arranged around it: history slides over the menu, the recipe slides over the menu, and both stop short of the dock. Nothing in the guest app is allowed to cover it.</p>
+  </header>
+
+  <!-- ==================== RULES ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">Four rules</h2>
+    </div>
+    <div style="padding:20px 24px; display:grid; grid-template-columns:repeat(4,1fr); gap:20px;">
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">01 · THE DOCK IS THE APP</span>
+        <p style="margin:0; font-weight:400; font-size:13px; line-height:1.55; color:#2b2b26; text-wrap:pretty;">The in-progress order lives in a fixed strip at the bottom of the viewport, on every screen, at every width. It is not a card inside the menu that scrolls away. Reading a recipe, scrolling history, six screens deep — the dock is there, and it is what turns yellow.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">02 · OVER, NEVER INSTEAD</span>
+        <p style="margin:0; font-weight:400; font-size:13px; line-height:1.55; color:#2b2b26; text-wrap:pretty;">History and recipes are overlays with the menu alive behind them. A guest who scanned a QR code 40 seconds ago has no mental model to lose their place in, so we never take the place away.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">03 · CHIPS FILTER, CHROME NAVIGATES</span>
+        <p style="margin:0; font-weight:400; font-size:13px; line-height:1.55; color:#2b2b26; text-wrap:pretty;">Pill-shaped, in the content column, ink-filled when on → changes the list under it. Square 3px, in the header or dock, always with an icon and a labelled way back → changes the surface. A filter never appears in the chrome; navigation is never a pill.</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">04 · ONE FILL, ONE MEANING</span>
+        <p style="margin:0; font-weight:400; font-size:13px; line-height:1.55; color:#2b2b26; text-wrap:pretty;">Accent yellow means <em>ready, go and get it</em> — and only that. Ink fill means <em>this is the action</em>. Everything else is a hairline. The dock going yellow is therefore legible from a metre away, out of focus, in a dark room.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 390 · SHELL + DOCK ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">390 · the shell, and the dock in its three sizes</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">Header is one line of identity, one line of welcome, and <strong style="font-weight:600;">one square icon button</strong> — history. The old logout link beside it is gone (see the last section). Under it, the connection banner slot; under that, the filter rail, which is the menu's own and belongs to the content, not the chrome. The dock sits at the foot: <strong style="font-weight:600;">absent</strong> when there is no order, a <strong style="font-weight:600;">68px strip</strong> while it is being made, and <strong style="font-weight:600;">expanded and yellow</strong> when it is ready — the only unprompted state change in the guest app. Tapping the strip expands it to the full status card; tapping again collapses. Ready ignores that and expands itself.</p>
+    </div>
+    <div style="background:#E9EAEA; padding:24px; display:flex; gap:20px; align-items:flex-start;">
+
+      <!-- A · no order -->
+      <div style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF;--accent:#E0B400;--photo:repeating-linear-gradient(90deg,#DFE1E2 0 8px,#D5D8DA 8px 16px); display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">LIGHT · NO ORDER · DOCK ABSENT</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:12px 16px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;">
+              <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span>
+              <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+            </span>
+            <button style="width:48px; height:48px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text-muted); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M14 8H8"></path><path d="M16 12H8"></path><path d="M13 16H8"></path></svg></button>
+          </div>
+          <div style="padding:10px 0 10px 16px; border-bottom:1px solid var(--border); display:flex; gap:8px; overflow:hidden;">
+            <button style="height:44px; padding:0 14px; flex:none; border:1px solid var(--border-strong); border-radius:9999px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:14px; line-height:1; display:flex; align-items:center; gap:7px; cursor:pointer;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line></svg>Filtrér</button>
+            <button style="height:44px; padding:0 16px; flex:none; border:1px solid var(--text); border-radius:9999px; background:var(--text); color:var(--text-inverse); font-weight:600; font-size:14px; line-height:1; cursor:pointer;">Alle 42</button>
+            <button style="height:44px; padding:0 16px; flex:none; border:1px solid var(--border); border-radius:9999px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:14px; line-height:1; cursor:pointer;">Klassikere 12</button>
+          </div>
+          <div style="flex:1; padding:12px 16px; display:flex; flex-direction:column; gap:12px; overflow:hidden;">
+            <article style="border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+              <div style="height:150px; background:var(--photo);"></div>
+              <div style="padding:12px 14px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px;">
+                <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Negroni Sbagliato</span>
+                <span style="font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Campari, rød vermouth og prosecco.</span>
+              </div>
+              <div style="display:flex; border-top:1px solid var(--border);">
+                <button style="width:118px; height:64px; border:none; border-right:1px solid var(--border); background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Se opskrift</button>
+                <button style="flex:1; height:64px; border:none; background:var(--text); color:var(--text-inverse); font-weight:700; font-size:17px; line-height:1.2; cursor:pointer;">Bestil</button>
+              </div>
+            </article>
+            <article style="border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+              <div style="height:96px; background:var(--surface-sunken); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px;"><span style="font-weight:700; font-size:24px; line-height:1.05; letter-spacing:-0.02em; color:var(--border);">Hyldeblomst</span></div>
+              <div style="padding:12px 14px; display:flex; flex-direction:column; gap:6px;">
+                <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Hyldeblomst-spritz</span>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">No order, no dock — the menu gets the whole viewport. The header's one icon is history; identity and leaving are not in the chrome at all.</div>
+      </div>
+
+      <!-- B · dock collapsed -->
+      <div style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF;--accent:#E0B400;--photo:repeating-linear-gradient(90deg,#DFE1E2 0 8px,#D5D8DA 8px 16px);--disabled-bg:#EDEEEF;--disabled-fg:#5C6165; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">LIGHT · IN PROGRESS · DOCK COLLAPSED</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:12px 16px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;">
+              <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span>
+              <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+            </span>
+            <button style="width:48px; height:48px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text-muted); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M14 8H8"></path><path d="M16 12H8"></path><path d="M13 16H8"></path></svg></button>
+          </div>
+          <div style="padding:10px 0 10px 16px; border-bottom:1px solid var(--border); display:flex; gap:8px; overflow:hidden;">
+            <button style="height:44px; padding:0 14px; flex:none; border:1px solid var(--border-strong); border-radius:9999px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:14px; line-height:1; display:flex; align-items:center; gap:7px; cursor:pointer;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line></svg>Filtrér</button>
+            <button style="height:44px; padding:0 16px; flex:none; border:1px solid var(--text); border-radius:9999px; background:var(--text); color:var(--text-inverse); font-weight:600; font-size:14px; line-height:1; cursor:pointer;">Alle 42</button>
+            <button style="height:44px; padding:0 16px; flex:none; border:1px solid var(--border); border-radius:9999px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:14px; line-height:1; cursor:pointer;">Klassikere 12</button>
+          </div>
+          <div style="flex:1; padding:12px 16px; display:flex; flex-direction:column; gap:12px; overflow:hidden;">
+            <div style="border:1px solid var(--border); border-radius:3px; padding:12px 14px; background:var(--surface-sunken); display:flex; align-items:center; gap:10px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+              <span style="flex:1; font-weight:400; font-size:14px; line-height:1.45; color:var(--text-muted);">Du kan bestille igen, når din drink er hentet.</span>
+            </div>
+            <article style="border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+              <div style="height:130px; background:var(--photo); opacity:0.55;"></div>
+              <div style="padding:12px 14px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px;">
+                <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Espresso Martini</span>
+              </div>
+              <div style="display:flex; border-top:1px solid var(--border);">
+                <button style="width:118px; height:64px; border:none; border-right:1px solid var(--border); background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Se opskrift</button>
+                <button disabled="disabled" style="flex:1; height:64px; border:none; background:var(--disabled-bg); color:var(--disabled-fg); font-weight:600; font-size:17px; line-height:1.2;">Bestil</button>
+              </div>
+            </article>
+            <article style="border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+              <div style="height:130px; background:var(--photo); opacity:0.55;"></div>
+              <div style="padding:12px 14px; border-top:1px solid var(--border);"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Gin &amp; Tonic</span></div>
+            </article>
+          </div>
+          <div style="flex:none; border-top:1px solid var(--border-strong); background:var(--surface-raised);">
+            <div style="display:flex; gap:3px; padding:0;">
+              <span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span>
+            </div>
+            <div style="height:62px; display:flex; align-items:center; gap:12px; padding:0 16px;">
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;">
+                <span style="font-weight:700; font-size:17px; line-height:1.2; letter-spacing:-0.01em; color:var(--text);">Negroni Sbagliato</span>
+                <span style="font-weight:400; font-size:13px; line-height:1.35; color:var(--text-muted);">Astrid er i gang med din drink.</span>
+              </span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><path d="m18 15-6-6-6 6"></path></svg>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">68px: the four-segment track becomes the dock's top edge, so progress is readable without expanding. The one-order rule is stated once, quietly, above the disabled cards — not as an alert.</div>
+      </div>
+
+      <!-- C · ready -->
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--accent:#F2C90A;--photo:repeating-linear-gradient(90deg,#26292C 0 8px,#22262A 8px 16px);--disabled-bg:#17191B;--disabled-fg:#8B9095; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">DARK · READY · DOCK EXPANDED ITSELF</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:12px 16px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;">
+              <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span>
+              <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+            </span>
+            <button style="width:48px; height:48px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text-muted); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M14 8H8"></path><path d="M16 12H8"></path><path d="M13 16H8"></path></svg></button>
+          </div>
+          <div style="padding:10px 0 10px 16px; border-bottom:1px solid var(--border); display:flex; gap:8px; overflow:hidden;">
+            <button style="height:44px; padding:0 14px; flex:none; border:1px solid var(--border-strong); border-radius:9999px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:14px; line-height:1; display:flex; align-items:center; gap:7px; cursor:pointer;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line></svg>Filtrér</button>
+            <button style="height:44px; padding:0 16px; flex:none; border:1px solid var(--text); border-radius:9999px; background:var(--text); color:var(--text-inverse); font-weight:600; font-size:14px; line-height:1; cursor:pointer;">Alle 42</button>
+            <button style="height:44px; padding:0 16px; flex:none; border:1px solid var(--border); border-radius:9999px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:14px; line-height:1; cursor:pointer;">Klassikere 12</button>
+          </div>
+          <div style="flex:1; padding:12px 16px; display:flex; flex-direction:column; gap:12px; overflow:hidden;">
+            <article style="border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column; opacity:0.5;">
+              <div style="height:110px; background:var(--photo);"></div>
+              <div style="padding:12px 14px; border-top:1px solid var(--border);"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Espresso Martini</span></div>
+            </article>
+            <article style="border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column; opacity:0.5;">
+              <div style="height:110px; background:var(--photo);"></div>
+              <div style="padding:12px 14px; border-top:1px solid var(--border);"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Gin &amp; Tonic</span></div>
+            </article>
+          </div>
+          <div style="flex:none; background:var(--accent); color:#101214; box-shadow:0 -18px 44px rgba(0,0,0,0.55);">
+            <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:#101214;"></span><span style="flex:1; height:6px; background:#101214;"></span><span style="flex:1; height:6px; background:#101214;"></span><span style="flex:1; height:6px; background:rgba(16,18,20,0.25);"></span></div>
+            <div style="padding:16px 16px 18px; display:flex; flex-direction:column; gap:10px;">
+              <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.16em;">KLAR · HENT DEN I BAREN</span>
+              <span style="font-weight:700; font-size:32px; line-height:1.05; letter-spacing:-0.02em;">Negroni Sbagliato</span>
+              <span style="font-weight:400; font-size:15px; line-height:1.45;">Astrid har stillet den frem til dig.</span>
+              <button style="height:56px; margin-top:2px; border:1px solid #101214; border-radius:3px; background:transparent; color:#101214; font-weight:700; font-size:17px; line-height:1.2; cursor:pointer;">Jeg har hentet den</button>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: READY · COLLECT AT THE BAR · Astrid has set it out for you · I've picked it up. The dock expands itself, takes accent fill, and the menu behind it dims to 50% — the guest has one job now and it isn't browsing.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 390 · HISTORY ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">390 · past orders — a panel over the menu, not a peer screen</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">Not a tab (there is nothing to be a tab beside — the menu is the app), and not a bottom sheet, because the filter drawer is already a bottom sheet and rule 03 says navigation must not borrow filtering's shape. It is a <strong style="font-weight:600;">full-height panel that slides in from the right</strong> with its own header: a labelled back — <em>Menu</em>, not a bare chevron — and the title <em>Tidligere bestillinger</em>, 22 characters, which fits at 21px in the 310px that remain. <strong style="font-weight:600;">It stops above the dock.</strong> Re-order is a per-row square button, ink outline, disabled with the same one-order rule as the menu — the row's own explanation sits under it rather than in an alert.</p>
+    </div>
+    <div style="background:#E9EAEA; padding:24px; display:flex; gap:20px; align-items:flex-start;">
+
+      <div style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF;--accent:#E0B400;--disabled-bg:#EDEEEF;--disabled-fg:#5C6165;--s-prc-fg:#5C6165;--photo:repeating-linear-gradient(90deg,#DFE1E2 0 8px,#D5D8DA 8px 16px); display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">LIGHT · HISTORY OPEN · ORDER IN PROGRESS</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+            <button style="height:48px; padding:0 14px 0 10px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.2; display:flex; align-items:center; gap:6px; cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="m15 18-6-6 6-6"></path></svg>Menu</button>
+            <h3 style="margin:0; flex:1; font-weight:700; font-size:21px; line-height:1.15; letter-spacing:-0.015em; color:var(--text); min-width:0;">Tidligere bestillinger</h3>
+          </div>
+          <div style="flex:1; padding:12px 16px; display:flex; flex-direction:column; gap:10px; overflow:hidden;">
+            <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">I AFTEN · 3</span>
+            <div style="border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; gap:12px; padding:12px 14px;">
+              <span style="width:52px; height:52px; flex:none; border-radius:3px; background:var(--photo); border:1px solid var(--border);"></span>
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;">
+                <span style="font-weight:700; font-size:17px; line-height:1.25; letter-spacing:-0.01em;">Paper Plane</span>
+                <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">21:48 · afhentet</span>
+              </span>
+              <button disabled="disabled" style="height:52px; padding:0 14px; flex:none; border:1px solid var(--disabled-bg); border-radius:3px; background:var(--disabled-bg); color:var(--disabled-fg); font-weight:600; font-size:15px; line-height:1.2;">Igen</button>
+            </div>
+            <div style="border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; gap:12px; padding:12px 14px;">
+              <span style="width:52px; height:52px; flex:none; border-radius:3px; background:var(--surface-sunken); border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; font:500 8px/1.2 ui-monospace,Menlo,monospace; color:var(--text-muted); text-align:center;">INTET<br>FOTO</span>
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;">
+                <span style="font-weight:700; font-size:17px; line-height:1.25; letter-spacing:-0.01em;">Hyldeblomst-spritz</span>
+                <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">21:12 · afhentet</span>
+              </span>
+              <button disabled="disabled" style="height:52px; padding:0 14px; flex:none; border:1px solid var(--disabled-bg); border-radius:3px; background:var(--disabled-bg); color:var(--disabled-fg); font-weight:600; font-size:15px; line-height:1.2;">Igen</button>
+            </div>
+            <div style="border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; gap:12px; padding:12px 14px;">
+              <span style="width:52px; height:52px; flex:none; border-radius:3px; background:var(--photo); border:1px solid var(--border); filter:grayscale(1); opacity:0.5;"></span>
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;">
+                <span style="font-weight:700; font-size:17px; line-height:1.25; letter-spacing:-0.01em; color:var(--text-muted);">Mojito</span>
+                <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">20:55 · afvist — løbet tør for mynte</span>
+              </span>
+            </div>
+            <div style="padding:2px 2px 0; font-weight:400; font-size:13px; line-height:1.45; color:var(--text-muted);">Du kan bestille igen, når din nuværende drink er hentet.</div>
+            <span style="flex:1;"></span>
+            <div style="border-top:1px solid var(--border); padding-top:14px; display:flex; flex-direction:column; gap:8px;">
+              <span style="font-weight:400; font-size:14px; line-height:1.45; color:var(--text-muted);">Du er her som <strong style="font-weight:600; color:var(--text);">Kasper</strong>.</span>
+              <button style="height:48px; align-self:flex-start; padding:0 14px; border:1px solid var(--border); border-radius:3px; background:transparent; color:var(--text-muted); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Det er ikke mig</button>
+            </div>
+          </div>
+          <div style="flex:none; border-top:1px solid var(--border-strong); background:var(--surface-raised);">
+            <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span></div>
+            <div style="height:62px; display:flex; align-items:center; gap:12px; padding:0 16px;">
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;">
+                <span style="font-weight:700; font-size:17px; line-height:1.2; letter-spacing:-0.01em; color:var(--text);">Negroni Sbagliato</span>
+                <span style="font-weight:400; font-size:13px; line-height:1.35; color:var(--text-muted);">Astrid er i gang med din drink.</span>
+              </span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><path d="m18 15-6-6-6 6"></path></svg>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: Menu · Past orders · TONIGHT · 3 · picked up · rejected — out of mint · Again · You're here as Kasper · Not me. The dock is present and identical — this is the screen where its absence used to be worst.</div>
+      </div>
+
+      <!-- not me dialog -->
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--danger:#E0685C; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">DARK · “NOT ME” CONFIRMS</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+          <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+            <button style="height:48px; padding:0 14px 0 10px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.2; display:flex; align-items:center; gap:6px; cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="m15 18-6-6 6-6"></path></svg>Menu</button>
+            <h3 style="margin:0; flex:1; font-weight:700; font-size:21px; line-height:1.15; letter-spacing:-0.015em; color:var(--text); min-width:0;">Tidligere bestillinger</h3>
+          </div>
+          <div style="flex:1; padding:12px 16px; display:flex; flex-direction:column; gap:10px; overflow:hidden; opacity:0.35;">
+            <div style="border:1px solid var(--border); border-radius:3px; height:78px;"></div>
+            <div style="border:1px solid var(--border); border-radius:3px; height:78px;"></div>
+          </div>
+          <div style="position:absolute; inset:0 0 68px 0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; padding:20px;">
+            <div style="width:100%; background:var(--surface-raised); border:1px solid var(--border-strong); border-radius:3px; padding:20px 18px 18px; display:flex; flex-direction:column; gap:12px;">
+              <span style="font-weight:700; font-size:24px; line-height:1.15; letter-spacing:-0.02em; color:var(--text);">Er det ikke dig?</span>
+              <span style="font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Så nulstiller vi telefonen til baren. Din bestilling i gang og dine tidligere bestillinger forsvinder herfra.</span>
+              <div style="display:flex; flex-direction:column; gap:10px; padding-top:2px;">
+                <button style="height:56px; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--danger); font-weight:700; font-size:17px; line-height:1.2; cursor:pointer;">Ja, start forfra</button>
+                <button style="height:56px; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font-weight:700; font-size:17px; line-height:1.2; cursor:pointer;">Bliv som Kasper</button>
+              </div>
+            </div>
+          </div>
+          <div style="flex:none; margin-top:auto; border-top:1px solid var(--border-strong); background:var(--surface-raised); position:relative; z-index:2;">
+            <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span></div>
+            <div style="height:62px; display:flex; align-items:center; gap:12px; padding:0 16px;">
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;">
+                <span style="font-weight:700; font-size:17px; line-height:1.2; letter-spacing:-0.01em; color:var(--text);">Negroni Sbagliato</span>
+                <span style="font-weight:400; font-size:13px; line-height:1.35; color:var(--text-muted);">Astrid er i gang med din drink.</span>
+              </span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><path d="m18 15-6-6-6 6"></path></svg>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: Not you? · We'll reset this phone for the bar. Your order in progress and your past orders disappear from here. · Yes, start over · Stay as Kasper. Note the backdrop stops at the dock, and the safe choice is the filled one.</div>
+      </div>
+
+      <div style="width:410px; display:flex; flex-direction:column; gap:10px;">
+        <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">“LOGOUT” — WHAT IT ACTUALLY IS</span>
+        <p style="margin:0; font-weight:400; font-size:13px; line-height:1.6; color:#2b2b26; text-wrap:pretty;">A guest typed a first name. There is no account, no password, nothing to protect. So <em>Log ud</em> is answering a question nobody asked, in the language of a bank, next to the thing they actually wanted.</p>
+        <p style="margin:0; font-weight:400; font-size:13px; line-height:1.6; color:#2b2b26; text-wrap:pretty;">The real want is <strong style="font-weight:600;">“not me”</strong> — a phone handed to a friend, or a name typed wrong. That is rare, mildly destructive, and belongs at the bottom of a screen you have to deliberately open. Hence: no chrome presence at all, a muted outline button under a rule at the foot of past orders, and a dialog that names the consequence in guest language.</p>
+        <p style="margin:0; font-weight:400; font-size:13px; line-height:1.6; color:#2b2b26; text-wrap:pretty;"><strong style="font-weight:600;">“Leave this bar” is not a thing guests do.</strong> They walk away and the tab dies. Deliberately not designed — no exit, no goodbye screen. Bar-switching happens by scanning a different QR code, which already works.</p>
+        <p style="margin:0; font-weight:400; font-size:13px; line-height:1.6; color:#2b2b26; text-wrap:pretty;">Accident-proofing at 390: two taps deep, 48px, muted, no fill, and the destructive option in the dialog is the <em>outline</em> one while <em>Bliv som Kasper</em> takes the ink fill — the only place in the product where the safe choice is also the loud one.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 390 · RECIPE ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">390 · the recipe, over the menu</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">A sheet rising from the bottom to 88% height, the menu dimmed but legible above it, a drag handle and a 44px close. <strong style="font-weight:600;">With a photo</strong> it leads with the photo, cropped to a fixed 180px band, which is how user-uploaded photos of every aspect ratio stay deliberate. <strong style="font-weight:600;">Without one</strong> the drink's name is set at 32px on a sunken band of the same height — the layout doesn't change shape, so a bar with no photos looks designed rather than broken. Either way the sheet stops above the dock, and the Order button repeats at the sheet's foot so reading a recipe ends in the action it leads to.</p>
+    </div>
+    <div style="background:#E9EAEA; padding:24px; display:flex; gap:20px; align-items:flex-start;">
+
+      <!-- with photo -->
+      <div style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF;--photo:repeating-linear-gradient(90deg,#DFE1E2 0 8px,#D5D8DA 8px 16px); display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">LIGHT · WITH PHOTO</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+          <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:2px; opacity:0.4;">
+            <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Hos Astrid &amp; Mikkel</span><span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+          </div>
+          <div style="padding:10px 16px; border-bottom:1px solid var(--border); display:flex; gap:8px; opacity:0.4;"><span style="height:44px; padding:0 16px; border:1px solid var(--text); border-radius:9999px; background:var(--text); color:var(--text-inverse); font-weight:600; font-size:14px; line-height:44px;">Alle 42</span><span style="height:44px; padding:0 16px; border:1px solid var(--border); border-radius:9999px; font-weight:600; font-size:14px; line-height:44px;">Klassikere 12</span></div>
+          <div style="flex:1;"></div>
+          <div style="position:absolute; inset:0 0 68px 0; background:rgba(16,18,20,0.45);"></div>
+          <div style="position:absolute; left:0; right:0; bottom:68px; height:560px; background:var(--surface); border-top:1px solid var(--border-strong); border-radius:3px 3px 0 0; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 -20px 50px rgba(0,0,0,0.28);">
+            <div style="height:24px; flex:none; display:flex; align-items:center; justify-content:center;"><span style="width:36px; height:4px; border-radius:9999px; background:var(--border);"></span></div>
+            <div style="height:180px; flex:none; background:var(--photo); position:relative;">
+              <button style="position:absolute; top:10px; right:10px; width:44px; height:44px; border:1px solid var(--border); border-radius:3px; background:var(--surface); color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+            </div>
+            <div style="flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:12px; overflow:hidden;">
+              <span style="font-weight:700; font-size:28px; line-height:1.1; letter-spacing:-0.02em;">Negroni Sbagliato</span>
+              <span style="font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Campari, rød vermouth og prosecco. Serveres med appelsinskive.</span>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">INGREDIENSER</span>
+                <span style="font-weight:400; font-size:17px; line-height:1.6;">3 cl Campari<br>3 cl rød vermouth<br>6 cl prosecco</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">SÅDAN GØR DU</span>
+                <span style="font-weight:400; font-size:17px; line-height:1.6;">1. Fyld glasset med is.<br>2. Rør Campari og vermouth i.</span>
+              </div>
+            </div>
+            <div style="flex:none; border-top:1px solid var(--border); padding:12px 16px;">
+              <button style="width:100%; height:64px; border:none; border-radius:3px; background:var(--text); color:var(--text-inverse); font-weight:700; font-size:17px; line-height:1.2; cursor:pointer;">Bestil</button>
+            </div>
+          </div>
+          <div style="position:absolute; left:0; right:0; bottom:0; border-top:1px solid var(--border-strong); background:var(--surface-raised);">
+            <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span></div>
+            <div style="height:62px; display:flex; align-items:center; gap:12px; padding:0 16px;">
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;"><span style="font-weight:700; font-size:17px; line-height:1.2; letter-spacing:-0.01em;">Paper Plane</span><span style="font-weight:400; font-size:13px; line-height:1.35; color:var(--text-muted);">Sendt til baren.</span></span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><path d="m18 15-6-6-6 6"></path></svg>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">The backdrop covers the menu and stops at the dock's top edge. The dock is <em>never</em> behind an overlay.</div>
+      </div>
+
+      <!-- no photo -->
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">DARK · NO PHOTO</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+          <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:2px; opacity:0.4;">
+            <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span><span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+          </div>
+          <div style="flex:1;"></div>
+          <div style="position:absolute; inset:0 0 68px 0; background:rgba(0,0,0,0.6);"></div>
+          <div style="position:absolute; left:0; right:0; bottom:68px; height:560px; background:var(--surface-raised); border-top:1px solid var(--border-strong); border-radius:3px 3px 0 0; display:flex; flex-direction:column; overflow:hidden;">
+            <div style="height:24px; flex:none; display:flex; align-items:center; justify-content:center;"><span style="width:36px; height:4px; border-radius:9999px; background:var(--border-strong);"></span></div>
+            <div style="height:180px; flex:none; background:var(--surface-sunken); border-bottom:1px solid var(--border); display:flex; align-items:flex-end; padding:16px; position:relative;">
+              <span style="font-weight:700; font-size:32px; line-height:1.05; letter-spacing:-0.02em; color:var(--text); max-width:250px;">Hyldeblomst-spritz med agurk</span>
+              <button style="position:absolute; top:10px; right:10px; width:44px; height:44px; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+            </div>
+            <div style="flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:12px; overflow:hidden;">
+              <span style="font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Hyldeblomstsirup, agurk, citronmelisse og danskvand.</span>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">INGREDIENSER</span>
+                <span style="font-weight:400; font-size:17px; line-height:1.6; color:var(--text);">4 cl hyldeblomstsirup<br>Danskvand<br>3 skiver agurk</span>
+              </div>
+            </div>
+            <div style="flex:none; border-top:1px solid var(--border); padding:12px 16px;">
+              <button style="width:100%; height:64px; border:none; border-radius:3px; background:var(--text); color:var(--text-inverse); font-weight:700; font-size:17px; line-height:1.2; cursor:pointer;">Bestil</button>
+            </div>
+          </div>
+          <div style="position:absolute; left:0; right:0; bottom:0; border-top:1px solid var(--border-strong); background:var(--surface-raised);">
+            <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span></div>
+            <div style="height:62px; display:flex; align-items:center; gap:12px; padding:0 16px;">
+              <span style="flex:1; display:flex; flex-direction:column; gap:2px; min-width:0;"><span style="font-weight:700; font-size:17px; line-height:1.2; letter-spacing:-0.01em; color:var(--text);">Paper Plane</span><span style="font-weight:400; font-size:13px; line-height:1.35; color:var(--text-muted);">Sendt til baren.</span></span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none; color:var(--text-muted);"><path d="m18 15-6-6-6 6"></path></svg>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">No photo: the name takes the band at 32px, bottom-aligned. Same height, same rhythm — nothing looks like it's missing.</div>
+      </div>
+
+      <!-- ready while recipe open -->
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--accent:#F2C90A; display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">DARK · READY, WHILE THE RECIPE IS OPEN</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+          <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:2px; opacity:0.3;">
+            <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span><span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+          </div>
+          <div style="flex:1;"></div>
+          <div style="position:absolute; inset:0 0 140px 0; background:rgba(0,0,0,0.6);"></div>
+          <div style="position:absolute; left:0; right:0; bottom:140px; height:492px; background:var(--surface-raised); border-top:1px solid var(--border-strong); border-radius:3px 3px 0 0; display:flex; flex-direction:column; overflow:hidden;">
+            <div style="height:24px; flex:none; display:flex; align-items:center; justify-content:center;"><span style="width:36px; height:4px; border-radius:9999px; background:var(--border-strong);"></span></div>
+            <div style="height:120px; flex:none; background:var(--surface-sunken); border-bottom:1px solid var(--border); display:flex; align-items:flex-end; padding:14px; position:relative;">
+              <span style="font-weight:700; font-size:28px; line-height:1.05; letter-spacing:-0.02em; color:var(--text);">Espresso Martini</span>
+              <button style="position:absolute; top:8px; right:8px; width:44px; height:44px; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+            </div>
+            <div style="flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:8px; overflow:hidden;">
+              <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">INGREDIENSER</span>
+              <span style="font-weight:400; font-size:17px; line-height:1.6; color:var(--text);">4 cl vodka<br>2 cl espresso<br>1 cl kaffelikør</span>
+            </div>
+          </div>
+          <div style="position:absolute; left:0; right:0; bottom:0; background:var(--accent); color:#101214; box-shadow:0 -18px 44px rgba(0,0,0,0.6);">
+            <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:#101214;"></span><span style="flex:1; height:6px; background:#101214;"></span><span style="flex:1; height:6px; background:#101214;"></span><span style="flex:1; height:6px; background:rgba(16,18,20,0.25);"></span></div>
+            <div style="padding:14px 16px 16px; display:flex; flex-direction:column; gap:8px;">
+              <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.16em;">KLAR · HENT DEN I BAREN</span>
+              <span style="font-weight:700; font-size:28px; line-height:1.05; letter-spacing:-0.02em;">Paper Plane</span>
+              <button style="height:56px; margin-top:2px; border:1px solid #101214; border-radius:3px; background:transparent; color:#101214; font-weight:700; font-size:17px; line-height:1.2; cursor:pointer;">Jeg har hentet den</button>
+            </div>
+          </div>
+        </div>
+        <div style="width:390px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">The dock <strong style="font-weight:600;">grows upward and pushes the sheet</strong> — it does not overlap it, close it, or navigate away. The recipe stays open and scrollable; the guest chose to read it. Motion: 220ms, height only, no slide-in from off-screen, because a moving object entering the frame reads as an ad.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 1280 ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">1280 · same shell, the dock becomes a column</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">At desktop the menu already has a 248px left nav for filters, so the dock moves to a <strong style="font-weight:600;">288px right column</strong> — sticky, full status card, always visible, no collapsed state needed. History opens as a panel over the grid from the right, stopping short of the dock column; the recipe is a centred dialog with the grid dimmed behind it. The filter nav on the left and the dock on the right make rule 03 spatial: <em>filters live left, your order lives right, and the middle is the menu.</em></p>
+    </div>
+    <div style="background:#E9EAEA; padding:24px; display:flex; flex-direction:column; gap:20px;">
+
+      <div style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF;--accent:#E0B400;--disabled-bg:#EDEEEF;--disabled-fg:#5C6165;--photo:repeating-linear-gradient(90deg,#DFE1E2 0 8px,#D5D8DA 8px 16px); display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">LIGHT · 1280 · MENU · ORDER IN PROGRESS</span>
+        <div style="width:1280px; height:620px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:14px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px;">
+            <span style="flex:1; display:flex; flex-direction:column; gap:2px;"><span style="font-weight:700; font-size:24px; line-height:1.15; letter-spacing:-0.02em;">Hos Astrid &amp; Mikkel</span><span style="font-weight:400; font-size:14px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span></span>
+            <button style="height:48px; padding:0 16px; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.2; display:flex; align-items:center; gap:9px; cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M14 8H8"></path><path d="M16 12H8"></path><path d="M13 16H8"></path></svg>Tidligere bestillinger</button>
+          </div>
+          <div style="flex:1; display:flex; min-height:0;">
+            <div style="width:248px; flex:none; border-right:1px solid var(--border); padding:16px; display:flex; flex-direction:column; gap:8px;">
+              <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted); padding-bottom:4px;">FILTRÉR</span>
+              <span style="height:44px; display:flex; align-items:center; padding:0 14px; border-radius:9999px; background:var(--text); color:var(--text-inverse); font-weight:600; font-size:15px; line-height:1;">Alle 42</span>
+              <span style="height:44px; display:flex; align-items:center; padding:0 14px; border-radius:9999px; border:1px solid var(--border); font-weight:600; font-size:15px; line-height:1;">Klassikere 12</span>
+              <span style="height:44px; display:flex; align-items:center; padding:0 14px; border-radius:9999px; border:1px solid var(--border); font-weight:600; font-size:15px; line-height:1;">Uden alkohol 9</span>
+              <span style="height:44px; display:flex; align-items:center; padding:0 14px; border-radius:9999px; border:1px solid var(--border); font-weight:600; font-size:15px; line-height:1;">Bobl 6</span>
+            </div>
+            <div style="flex:1; min-width:0; padding:16px; display:grid; grid-template-columns:repeat(3,1fr); gap:16px; align-content:start; overflow:hidden;">
+              <article style="border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;"><div style="height:140px; background:var(--photo); opacity:0.55;"></div><div style="padding:12px 14px; border-top:1px solid var(--border);"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Espresso Martini</span></div><div style="display:flex; border-top:1px solid var(--border); margin-top:auto;"><button style="width:110px; height:64px; border:none; border-right:1px solid var(--border); background:var(--surface-raised); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Se opskrift</button><button disabled="disabled" style="flex:1; height:64px; border:none; background:var(--disabled-bg); color:var(--disabled-fg); font-weight:600; font-size:17px; line-height:1.2;">Bestil</button></div></article>
+              <article style="border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;"><div style="height:140px; background:var(--surface-sunken); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 16px;"><span style="font-weight:700; font-size:22px; line-height:1.05; letter-spacing:-0.02em; color:var(--border);">Hyldeblomst</span></div><div style="padding:12px 14px;"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Hyldeblomst-spritz</span></div><div style="display:flex; border-top:1px solid var(--border); margin-top:auto;"><button disabled="disabled" style="flex:1; height:64px; border:none; background:var(--disabled-bg); color:var(--disabled-fg); font-weight:600; font-size:17px; line-height:1.2;">Bestil</button></div></article>
+              <article style="border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;"><div style="height:140px; background:var(--photo); opacity:0.55;"></div><div style="padding:12px 14px; border-top:1px solid var(--border);"><span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Gin &amp; Tonic</span></div><div style="display:flex; border-top:1px solid var(--border); margin-top:auto;"><button disabled="disabled" style="flex:1; height:64px; border:none; background:var(--disabled-bg); color:var(--disabled-fg); font-weight:600; font-size:17px; line-height:1.2;">Bestil</button></div></article>
+            </div>
+            <div style="width:288px; flex:none; border-left:1px solid var(--border); background:var(--surface-sunken); padding:16px; display:flex; flex-direction:column; gap:10px;">
+              <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">DIN BESTILLING</span>
+              <div style="background:var(--surface-raised); border:1px solid var(--border-strong); border-radius:3px; overflow:hidden;">
+                <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span><span style="flex:1; height:6px; background:var(--surface-sunken);"></span></div>
+                <div style="padding:14px 16px 16px; display:flex; flex-direction:column; gap:6px;">
+                  <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">LAVES NU</span>
+                  <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Negroni Sbagliato</span>
+                  <span style="font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Astrid er i gang med din drink.</span>
+                </div>
+              </div>
+              <span style="font-weight:400; font-size:13px; line-height:1.5; color:var(--text-muted);">Du kan bestille igen, når den er hentet.</span>
+            </div>
+          </div>
+        </div>
+        <div style="width:1280px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">At 1280 the history entry gets its full label — <em>Tidligere bestillinger</em>, 22 characters, square, icon-led, in the chrome. The chips on the left are pills, in the content. The two can never be confused because they never share a shape, a place, or a corner radius.</div>
+      </div>
+
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--accent:#F2C90A;--photo:repeating-linear-gradient(90deg,#26292C 0 8px,#22262A 8px 16px); display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">DARK · 1280 · HISTORY PANEL OVER THE MENU · ORDER READY</span>
+        <div style="width:1280px; height:560px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column; position:relative;">
+          <div style="padding:14px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px;">
+            <span style="flex:1; display:flex; flex-direction:column; gap:2px;"><span style="font-weight:700; font-size:24px; line-height:1.15; letter-spacing:-0.02em; color:var(--text);">Hos Astrid &amp; Mikkel</span><span style="font-weight:400; font-size:14px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span></span>
+            <button style="height:48px; padding:0 16px; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font-weight:600; font-size:15px; line-height:1.2; display:flex; align-items:center; gap:9px; cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M14 8H8"></path><path d="M16 12H8"></path><path d="M13 16H8"></path></svg>Tidligere bestillinger</button>
+          </div>
+          <div style="flex:1; display:flex; min-height:0; position:relative;">
+            <div style="flex:1; min-width:0; display:flex;">
+              <div style="width:248px; flex:none; border-right:1px solid var(--border); padding:16px; display:flex; flex-direction:column; gap:8px; opacity:0.3;">
+                <span style="height:44px; border-radius:9999px; background:var(--text);"></span><span style="height:44px; border-radius:9999px; border:1px solid var(--border);"></span><span style="height:44px; border-radius:9999px; border:1px solid var(--border);"></span>
+              </div>
+              <div style="flex:1; padding:16px; display:grid; grid-template-columns:repeat(3,1fr); gap:16px; align-content:start; opacity:0.3;">
+                <span style="height:200px; border:1px solid var(--border); border-radius:3px;"></span><span style="height:200px; border:1px solid var(--border); border-radius:3px;"></span><span style="height:200px; border:1px solid var(--border); border-radius:3px;"></span>
+              </div>
+              <div style="position:absolute; inset:0 288px 0 0; background:rgba(0,0,0,0.6);"></div>
+              <div style="position:absolute; top:0; bottom:0; right:288px; width:460px; background:var(--surface); border-left:1px solid var(--border-strong); display:flex; flex-direction:column; box-shadow:-24px 0 60px rgba(0,0,0,0.6);">
+                <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+                  <button style="height:48px; padding:0 14px 0 10px; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.2; display:flex; align-items:center; gap:6px; cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="m15 18-6-6 6-6"></path></svg>Menu</button>
+                  <h3 style="margin:0; flex:1; font-weight:700; font-size:21px; line-height:1.15; letter-spacing:-0.015em; color:var(--text);">Tidligere bestillinger</h3>
+                </div>
+                <div style="flex:1; padding:14px 18px; display:flex; flex-direction:column; gap:10px; overflow:hidden;">
+                  <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">I AFTEN · 3</span>
+                  <div style="border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; gap:12px; padding:12px 14px;"><span style="width:52px; height:52px; flex:none; border-radius:3px; background:var(--photo); border:1px solid var(--border);"></span><span style="flex:1; display:flex; flex-direction:column; gap:2px;"><span style="font-weight:700; font-size:17px; line-height:1.25; color:var(--text);">Paper Plane</span><span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">21:48 · afhentet</span></span><button style="height:52px; padding:0 16px; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Igen</button></div>
+                  <div style="border:1px solid var(--border); border-radius:3px; display:flex; align-items:center; gap:12px; padding:12px 14px;"><span style="width:52px; height:52px; flex:none; border-radius:3px; background:var(--surface-sunken); border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; font:500 8px/1.2 ui-monospace,Menlo,monospace; color:var(--text-muted); text-align:center;">INTET<br>FOTO</span><span style="flex:1; display:flex; flex-direction:column; gap:2px;"><span style="font-weight:700; font-size:17px; line-height:1.25; color:var(--text);">Hyldeblomst-spritz</span><span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">21:12 · afhentet</span></span><button style="height:52px; padding:0 16px; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Igen</button></div>
+                  <span style="flex:1;"></span>
+                  <div style="border-top:1px solid var(--border); padding-top:12px; display:flex; align-items:center; gap:12px;">
+                    <span style="flex:1; font-weight:400; font-size:14px; line-height:1.45; color:var(--text-muted);">Du er her som <strong style="font-weight:600; color:var(--text);">Kasper</strong>.</span>
+                    <button style="height:48px; padding:0 14px; border:1px solid var(--border); border-radius:3px; background:transparent; color:var(--text-muted); font-weight:600; font-size:15px; line-height:1.2; cursor:pointer;">Det er ikke mig</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="width:288px; flex:none; border-left:1px solid var(--border-strong); background:var(--accent); color:#101214; padding:16px; display:flex; flex-direction:column; gap:10px; position:relative; z-index:3;">
+              <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em;">DIN BESTILLING</span>
+              <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:#101214;"></span><span style="flex:1; height:6px; background:#101214;"></span><span style="flex:1; height:6px; background:#101214;"></span><span style="flex:1; height:6px; background:rgba(16,18,20,0.25);"></span></div>
+              <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.16em;">KLAR · HENT DEN I BAREN</span>
+              <span style="font-weight:700; font-size:28px; line-height:1.05; letter-spacing:-0.02em;">Negroni Sbagliato</span>
+              <span style="font-weight:400; font-size:15px; line-height:1.45;">Astrid har stillet den frem til dig.</span>
+              <button style="height:56px; margin-top:auto; border:1px solid #101214; border-radius:3px; background:transparent; color:#101214; font-weight:700; font-size:17px; line-height:1.2; cursor:pointer;">Jeg har hentet den</button>
+            </div>
+          </div>
+        </div>
+        <div style="width:1280px; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">The history panel's backdrop covers the grid and the filter nav, and <strong style="font-weight:600;">stops at the dock column</strong> — the same rule as 390, expressed horizontally instead of vertically. The dock goes yellow in place, edge to edge of its column, while the guest is mid-scroll through their history.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== LABELS + SPEC ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">Labels, and what changes in the screens we already have</h2>
+    </div>
+    <div style="padding:20px 24px; display:grid; grid-template-columns:1fr 1fr; gap:28px;">
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">EN / DA · THE ONES THAT STRAIN</span>
+        <div style="border:1px solid #cfcfc7; background:#fff;">
+          <div style="display:flex; gap:12px; padding:9px 12px; border-bottom:1px solid #E4E7E9; font:700 10px/1.4 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:#5C6165;"><span style="width:150px; flex:none;">ENGLISH</span><span style="width:180px; flex:none;">DANSK</span><span style="flex:1;">FITS BECAUSE</span></div>
+          <div style="display:flex; gap:12px; padding:9px 12px; border-bottom:1px solid #E4E7E9; font-weight:400; font-size:12.5px; line-height:1.5;"><span style="width:150px; flex:none;">Past orders</span><span style="width:180px; flex:none; font-weight:600;">Tidligere bestillinger</span><span style="flex:1;">Never in the 390 header — it's a 48px icon there. Full label appears only as the panel title (310px available) and the 1280 header button.</span></div>
+          <div style="display:flex; gap:12px; padding:9px 12px; border-bottom:1px solid #E4E7E9; font-weight:400; font-size:12.5px; line-height:1.5;"><span style="width:150px; flex:none;">Ready · collect at the bar</span><span style="width:180px; flex:none; font-weight:600;">Klar · hent den i baren</span><span style="flex:1;">Mono 11px kicker across the full dock width; wraps to two lines rather than shrinking.</span></div>
+          <div style="display:flex; gap:12px; padding:9px 12px; border-bottom:1px solid #E4E7E9; font-weight:400; font-size:12.5px; line-height:1.5;"><span style="width:150px; flex:none;">I've picked it up</span><span style="width:180px; flex:none; font-weight:600;">Jeg har hentet den</span><span style="flex:1;">Full-width 56px button inside the dock; length is free.</span></div>
+          <div style="display:flex; gap:12px; padding:9px 12px; border-bottom:1px solid #E4E7E9; font-weight:400; font-size:12.5px; line-height:1.5;"><span style="width:150px; flex:none;">Not me</span><span style="width:180px; flex:none; font-weight:600;">Det er ikke mig</span><span style="flex:1;">Auto-width button, left-aligned under a rule — nothing beside it to collide with.</span></div>
+          <div style="display:flex; gap:12px; padding:9px 12px; font-weight:400; font-size:12.5px; line-height:1.5;"><span style="width:150px; flex:none;">Again</span><span style="width:180px; flex:none; font-weight:600;">Igen</span><span style="flex:1;">Deliberately one word in both. The row is tight and the button repeats down the list; “Bestil igen” would push the drink name to two lines.</span></div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#5C6165;">RECONCILING THE GUEST MENU &amp; ORDER STATUS</span>
+        <div style="border:1px solid #cfcfc7; background:#fff;">
+          <div style="display:flex; gap:12px; padding:10px 12px; border-bottom:1px solid #E4E7E9; font-weight:400; font-size:12.5px; line-height:1.5;"><span style="width:120px; flex:none; font-weight:600; font-size:13px; line-height:1.4;">Guest menu</span><span style="flex:1;"><strong style="font-weight:600;">Revise the header.</strong> The two icon buttons become one (history); the logout icon is deleted outright. The status card that used to sit inline at the top of the list is removed — it is the dock now, and having both is two sources of truth. Filter rail, cards, and the disabled-Order treatment are untouched.</span></div>
+          <div style="display:flex; gap:12px; padding:10px 12px; border-bottom:1px solid #E4E7E9; font-weight:400; font-size:12.5px; line-height:1.5;"><span style="width:120px; flex:none; font-weight:600; font-size:13px; line-height:1.4;">Order status</span><span style="flex:1;"><strong style="font-weight:600;">Keep entirely, re-house it.</strong> All five states, the track, and the accepted→ready frame sequence survive as designed — they now render inside the dock rather than in the menu's flow, which means the “order placed” confirmation is the dock <em>appearing</em> (68px slide up, 220ms) rather than a card scrolling into view. Same idea, better home.</span></div>
+          <div style="display:flex; gap:12px; padding:10px 12px; font-weight:400; font-size:12.5px; line-height:1.5;"><span style="width:120px; flex:none; font-weight:600; font-size:13px; line-height:1.4;">Connection banner</span><span style="flex:1;"><strong style="font-weight:600;">Shell-owned, single instance.</strong> It lives directly under the header on every guest screen, so the drift where past orders had no banner cannot happen again. When the socket drops, the dock's status line changes to <em>Mister forbindelsen — vi prøver igen</em> and the track stops animating rather than lying.</span></div>
+        </div>
+        <div style="border:1px solid #B3261E; background:#FBEAE8; padding:12px 14px; font-weight:400; font-size:12.5px; line-height:1.55; color:#8C1D18; margin-top:4px;"><strong style="font-weight:600;">Deleted:</strong> the second past-orders header, the header logout link, the blank-backdrop recipe modal, and the inline status card in the menu. Four things replaced by two: the shell and the dock.</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</x-dc>
+</body>
+</html>
+

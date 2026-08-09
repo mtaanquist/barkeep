@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState, ReactNode } from "react";
 
-import { AppContext, type AppContextType, type Tab } from "../hooks/useApp";
+import { AppContext, type AppContextType } from "../hooks/useApp";
 import { apiCall } from "../utils/api";
 import { clearStoredState, useStoredState } from "../hooks/useStoredState";
 
@@ -27,10 +27,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   );
   const [customerName, setCustomerName] = useStoredState("customerName", "");
   const [language, setLanguage] = useStoredState<Language>("language", "en");
-  const [currentTab, setCurrentTab] = useStoredState<Tab>(
-    "currentTab",
-    "orders"
-  );
 
   // Loading and error states
   const [loading, setLoading] = useState(false);
@@ -52,9 +48,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [categories, setCategories] = useState<Category[]>([]);
 
   // UI states
-  const [editingDrink, setEditingDrink] = useState<Drink | "new" | null>(
-    null
-  );
   const [viewingRecipe, setViewingRecipe] = useState<Drink | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -64,7 +57,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     setCurrentBar(null);
     setCustomerName("");
     setLanguage("en");
-    setCurrentTab("menu");
     setBarForm({
       name: "",
       bartenderPassword: "",
@@ -74,7 +66,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     setLoginForm({ password: "", name: "" });
 
     clearStoredState();
-  }, [setUserType, setCurrentBar, setCustomerName, setLanguage, setCurrentTab]);
+  }, [setUserType, setCurrentBar, setCustomerName, setLanguage]);
 
   // Session validation effect
   useEffect(() => {
@@ -142,10 +134,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     categories,
 
     // UI states
-    editingDrink,
     viewingRecipe,
     showPassword,
-    currentTab,
 
     // Setters
     setUserType,
@@ -160,10 +150,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     setOrders,
     setAnalytics,
     setCategories,
-    setEditingDrink,
     setViewingRecipe,
     setShowPassword,
-    setCurrentTab,
 
     // API helper
     apiCall,

@@ -1,0 +1,305 @@
+/* ============================================================
+   Barkeep — Back Bar
+   Design tokens. Tailwind CSS v4. Custom properties only, no JS config.
+
+   HOW IT WORKS
+   1. Raw values live in :root as --bk-* variables.
+   2. A single @media (prefers-color-scheme: dark) block redefines the SAME
+      --bk-* names with dark values.
+   3. @theme maps role-named Tailwind tokens onto those variables.
+   Result: `bg-surface text-text border-border` is correct in both schemes.
+   No component ever needs a dark: variant or an !important override.
+
+   `@theme static` keeps every token in the output even when a utility for it
+   isn't used yet — the sheet is a contract, not a build artifact.
+   ============================================================ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- NEUTRAL RAMP (cool grey; 0 = paper, 950 = ink) ---- */
+  --bk-neutral-0:   #FFFFFF;
+  --bk-neutral-25:  #F7F8F8;
+  --bk-neutral-50:  #EDEEEF;
+  --bk-neutral-100: #E4E7E9;
+  --bk-neutral-200: #C9CCCE;
+  --bk-neutral-300: #ADB1B4;
+  --bk-neutral-400: #8B9095;
+  --bk-neutral-500: #6B7075;
+  --bk-neutral-600: #5C6165;
+  --bk-neutral-700: #4B5055;
+  --bk-neutral-800: #33383D;
+  --bk-neutral-900: #1E2124;
+  --bk-neutral-950: #141618;
+  --bk-neutral-1000:#0A0B0C;
+
+  /* ---- SEMANTIC SURFACES + INK (named by role) ---- */
+  --bk-surface:        #FFFFFF; /* the page a guest reads                    */
+  --bk-surface-raised: #FFFFFF; /* a ticket or card sitting on the page      */
+  --bk-surface-sunken: #E9EAEA; /* the rail/well a ticket sits IN            */
+  --bk-border:         #C9CCCE; /* default hairline                          */
+  --bk-border-strong:  #101214; /* a line that carries meaning (rail, focus) */
+  --bk-text:           #101214; /* drink names, numbers, everything primary  */
+  --bk-text-muted:     #4B5055; /* times, ingredients, secondary meta        */
+  --bk-text-inverse:   #FFFFFF; /* type on --bk-text or on a dark fill       */
+
+  /* ---- THE SIGN (added during implementation) ----
+     The landing panel is ink-filled in BOTH schemes, so it cannot use the
+     neutral ramp, which flips by index. Deliberately absent from the dark
+     block below. */
+  --bk-sign:    #0A0B0C;
+  --bk-sign-fg: #FFFFFF;
+
+  /* ---- ACCENT: the one high-vis signal colour in the product ---- */
+  --bk-accent:          #E0B400; /* "a body must move" — READY, and nothing else */
+  --bk-accent-hover:    #C79F00;
+  --bk-accent-contrast: #101214; /* ALWAYS ink on accent. Never white: 2.0:1. */
+
+  /* ---- ORDER STATUS (bg / border / fg triplets) ----
+     Colour is not the carrier here: shape, weight and rail position are.
+     Only READY and REJECTED are allowed a hue, and rejected's hue is never
+     a fill on the guest side. */
+  --bk-status-new-bg:            #F7F8F8;
+  --bk-status-new-border:        #101214;
+  --bk-status-new-fg:            #101214;   /* 17.5:1 */
+
+  --bk-status-accepted-bg:       #E4E7E9;
+  --bk-status-accepted-border:   #6B7075;
+  --bk-status-accepted-fg:       #33383D;   /* 9.6:1 */
+
+  --bk-status-rejected-bg:       #FBEAE8;
+  --bk-status-rejected-border:   #B3261E;
+  --bk-status-rejected-fg:       #8C1D18;   /* 7.8:1 */
+
+  --bk-status-ready-bg:          #E0B400;
+  --bk-status-ready-border:      #A88600;
+  --bk-status-ready-fg:          #101214;   /* 9.6:1 */
+
+  --bk-status-processed-bg:      #EDEEEF;
+  --bk-status-processed-border:  #C9CCCE;
+  --bk-status-processed-fg:      #5C6165;   /* 5.4:1 */
+
+  /* ---- DANGER (destructive intent: reject, delete, sign out) ----
+     Shares rejected's hue on purpose — one red in the product — but is a
+     separate role, because rejected is a state and danger is an action. */
+  --bk-danger:          #B3261E;
+  --bk-danger-hover:    #8C1D18;
+  --bk-danger-contrast: #FFFFFF; /* 6.5:1 */
+
+  /* ---- DISABLED (any control that is currently refusing input) ---- */
+  --bk-disabled-bg:     #EDEEEF;
+  --bk-disabled-border: #C9CCCE;
+  --bk-disabled-fg:     #5C6165; /* 5.4:1 — a disabled Order button still has to be readable in a dim room */
+
+  /* ---- OVERLAY + SKELETON ---- */
+  --bk-overlay:           rgb(16 18 20 / 0.45);
+  --bk-skeleton:          #E4E7E9;
+  --bk-skeleton-highlight:#F7F8F8;
+
+  /* ---- ELEVATION ----
+     One level. Borders do the work; the shadow only separates a floating
+     surface (sheet, toast) from the rail behind it. */
+  --bk-shadow-flat:  0 0 0 1px var(--bk-border);
+  --bk-shadow-float: 0 1px 2px rgb(16 18 20 / 0.10), 0 8px 24px rgb(16 18 20 / 0.10);
+  --bk-shadow-focus: 0 0 0 3px rgb(224 180 0 / 0.55);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Ramp inverts by index, so neutral-0 is still "furthest from ink". */
+    --bk-neutral-0:   #0A0B0C;
+    --bk-neutral-25:  #101214;
+    --bk-neutral-50:  #17191B;
+    --bk-neutral-100: #22262A;
+    --bk-neutral-200: #26292C;
+    --bk-neutral-300: #3D4247;
+    --bk-neutral-400: #6B7075;
+    --bk-neutral-500: #8B9095;
+    --bk-neutral-600: #A2A7AB;
+    --bk-neutral-700: #C6CBCF;
+    --bk-neutral-800: #DDDFE0;
+    --bk-neutral-900: #E9EAEA;
+    --bk-neutral-950: #F2F4F5;
+    --bk-neutral-1000:#FFFFFF;
+
+    --bk-surface:        #141618;
+    --bk-surface-raised: #1E2124; /* NOT inverted — see note 3 */
+    --bk-surface-sunken: #0A0B0C; /* NOT inverted — see note 3 */
+    --bk-border:         #26292C;
+    --bk-border-strong:  #3D4247; /* NOT inverted — see note 4 */
+    --bk-text:           #F2F4F5;
+    --bk-text-muted:     #A2A7AB;
+    --bk-text-inverse:   #0A0B0C;
+
+    --bk-accent:          #F2C90A; /* NOT inverted — see note 1 */
+    --bk-accent-hover:    #FFD92E;
+    --bk-accent-contrast: #101214; /* NOT inverted — see note 2 */
+
+    --bk-status-new-bg:           #1E2124;
+    --bk-status-new-border:       #F2F4F5;
+    --bk-status-new-fg:           #F2F4F5;  /* 14.7:1 */
+
+    --bk-status-accepted-bg:      #22262A;
+    --bk-status-accepted-border:  #6B7075;
+    --bk-status-accepted-fg:      #C6CBCF;  /* 9.2:1 */
+
+    --bk-status-rejected-bg:      #2A1614;
+    --bk-status-rejected-border:  #E0685C;
+    --bk-status-rejected-fg:      #F4AFA4;  /* 9.4:1 — see note 5 */
+
+    --bk-status-ready-bg:         #F2C90A;
+    --bk-status-ready-border:     #F2C90A;
+    --bk-status-ready-fg:         #101214;  /* 11.6:1 */
+
+    --bk-status-processed-bg:     #17191B;
+    --bk-status-processed-border: #26292C;
+    --bk-status-processed-fg:     #8B9095;  /* 5.5:1 */
+
+    --bk-danger:          #E0685C;
+    --bk-danger-hover:    #F08376;
+    --bk-danger-contrast: #101214; /* NOT inverted — see note 7 */
+
+    --bk-disabled-bg:     #17191B;
+    --bk-disabled-border: #26292C;
+    --bk-disabled-fg:     #8B9095; /* 5.5:1 */
+
+    --bk-overlay:           rgb(0 0 0 / 0.72); /* NOT inverted — see note 8 */
+    --bk-skeleton:          #22262A;
+    --bk-skeleton-highlight:#2C3135;
+
+    /* Shadows barely read on near-black; the float shadow gets deeper and is
+       backed up by a border. See note 6. */
+    --bk-shadow-flat:  0 0 0 1px var(--bk-border);
+    --bk-shadow-float: 0 0 0 1px var(--bk-border), 0 12px 32px rgb(0 0 0 / 0.60);
+    --bk-shadow-focus: 0 0 0 3px rgb(242 201 10 / 0.55);
+  }
+}
+
+@theme static {
+  /* ---------- COLOUR ---------- */
+  --color-neutral-0:    var(--bk-neutral-0);
+  --color-neutral-25:   var(--bk-neutral-25);
+  --color-neutral-50:   var(--bk-neutral-50);
+  --color-neutral-100:  var(--bk-neutral-100);
+  --color-neutral-200:  var(--bk-neutral-200);
+  --color-neutral-300:  var(--bk-neutral-300);
+  --color-neutral-400:  var(--bk-neutral-400);
+  --color-neutral-500:  var(--bk-neutral-500);
+  --color-neutral-600:  var(--bk-neutral-600);
+  --color-neutral-700:  var(--bk-neutral-700);
+  --color-neutral-800:  var(--bk-neutral-800);
+  --color-neutral-900:  var(--bk-neutral-900);
+  --color-neutral-950:  var(--bk-neutral-950);
+  --color-neutral-1000: var(--bk-neutral-1000);
+
+  --color-surface:         var(--bk-surface);
+  --color-surface-raised:  var(--bk-surface-raised);
+  --color-surface-sunken:  var(--bk-surface-sunken);
+  --color-border:          var(--bk-border);
+  --color-border-strong:   var(--bk-border-strong);
+  --color-text:            var(--bk-text);
+  --color-text-muted:      var(--bk-text-muted);
+  --color-text-inverse:    var(--bk-text-inverse);
+  --color-sign:            var(--bk-sign);
+  --color-sign-fg:         var(--bk-sign-fg);
+  --color-accent:          var(--bk-accent);
+  --color-accent-hover:    var(--bk-accent-hover);
+  --color-accent-contrast: var(--bk-accent-contrast);
+
+  --color-status-new-bg:            var(--bk-status-new-bg);
+  --color-status-new-border:        var(--bk-status-new-border);
+  --color-status-new-fg:            var(--bk-status-new-fg);
+  --color-status-accepted-bg:       var(--bk-status-accepted-bg);
+  --color-status-accepted-border:   var(--bk-status-accepted-border);
+  --color-status-accepted-fg:       var(--bk-status-accepted-fg);
+  --color-status-rejected-bg:       var(--bk-status-rejected-bg);
+  --color-status-rejected-border:   var(--bk-status-rejected-border);
+  --color-status-rejected-fg:       var(--bk-status-rejected-fg);
+  --color-status-ready-bg:          var(--bk-status-ready-bg);
+  --color-status-ready-border:      var(--bk-status-ready-border);
+  --color-status-ready-fg:          var(--bk-status-ready-fg);
+  --color-status-processed-bg:      var(--bk-status-processed-bg);
+  --color-status-processed-border:  var(--bk-status-processed-border);
+  --color-status-processed-fg:      var(--bk-status-processed-fg);
+
+  --color-danger:           var(--bk-danger);
+  --color-danger-hover:     var(--bk-danger-hover);
+  --color-danger-contrast:  var(--bk-danger-contrast);
+  --color-disabled-bg:      var(--bk-disabled-bg);
+  --color-disabled-border:  var(--bk-disabled-border);
+  --color-disabled-fg:      var(--bk-disabled-fg);
+  --color-overlay:          var(--bk-overlay);
+  --color-skeleton:         var(--bk-skeleton);
+  --color-skeleton-highlight: var(--bk-skeleton-highlight);
+
+  /* ---------- TYPE ----------
+     Two system stacks, zero network requests.
+     --font-sans  : drink names, UI, everything read as language.
+     --font-mono  : anything that is a number, a time, an id, or a status —
+                    so Danish and English columns align identically. */
+  --font-sans: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* display — screen titles, the drink name on a detail sheet */
+  --text-display: 1.75rem;              /* 28px */
+  --text-display--line-height: 1.1;
+  --text-display--font-weight: 700;
+  --text-display--letter-spacing: -0.02em;
+
+  /* heading — drink name on a card, ticket name on the rail */
+  --text-heading: 1.3125rem;            /* 21px */
+  --text-heading--line-height: 1.2;
+  --text-heading--font-weight: 700;
+  --text-heading--letter-spacing: -0.015em;
+
+  /* body — ingredients, descriptions, guest-facing prose */
+  --text-body: 0.9375rem;               /* 15px */
+  --text-body--line-height: 1.5;
+  --text-body--font-weight: 400;
+  --text-body--letter-spacing: 0em;
+
+  /* label — buttons, tabs, form labels. Never uppercased: Danish gets long. */
+  --text-label: 0.875rem;               /* 14px */
+  --text-label--line-height: 1.25;
+  --text-label--font-weight: 600;
+  --text-label--letter-spacing: -0.005em;
+
+  /* caption — mono. times, ticket ids, category, STATUS. Uppercased here is
+     safe because it is always a fixed short vocabulary. */
+  --text-caption: 0.6875rem;            /* 11px */
+  --text-caption--line-height: 1.45;
+  --text-caption--font-weight: 700;
+  --text-caption--letter-spacing: 0.12em;
+
+  /* ---------- SPACING (4px base) ---------- */
+  --spacing: 0.25rem;        /* p-1 = 4px, p-4 = 16px, p-14 = 56px */
+  --spacing-hit: 3.5rem;     /* 56px — minimum guest-side touch target */
+  --spacing-hit-lg: 4rem;    /* 64px — primary Order button, glass in hand */
+  --spacing-gutter: 1rem;    /* 16px — screen edge padding on phones */
+  --spacing-rail: 0.25rem;   /* 4px — the status bar down a ticket's left edge */
+
+  /* ---------- RADII ---------- */
+  --radius-none: 0px;
+  --radius-sm:   2px;   /* chips, inputs */
+  --radius-md:   3px;   /* THE radius: cards, tickets, buttons, sheets */
+  --radius-lg:   6px;   /* modal / bottom sheet only */
+  --radius-full: 9999px;/* avatar dot, count bubble */
+
+  /* ---------- BORDER WIDTHS ---------- */
+  --border-width-hair:   1px;  /* every default border */
+  --border-width-strong: 2px;  /* focus ring inner, selected tab underline */
+  --border-width-rail:   4px;  /* the ticket status bar */
+
+  /* ---------- SHADOWS ---------- */
+  --shadow-flat:  var(--bk-shadow-flat);
+  --shadow-float: var(--bk-shadow-float);
+  --shadow-focus: var(--bk-shadow-focus);
+
+  /* ---------- MOTION ----------
+     Server-pushed changes must be noticed but must not animate the rail into
+     unreadability while the bartender is mid-pour. */
+  --duration-instant: 90ms;   /* press / hover feedback */
+  --duration-quick:   160ms;  /* status change, chip swap, disable state */
+  --duration-enter:   240ms;  /* a new ticket arriving on the rail */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+}

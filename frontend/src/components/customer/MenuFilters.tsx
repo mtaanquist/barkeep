@@ -1,4 +1,5 @@
 import React from "react";
+import { Dices, SlidersHorizontal, Star, X } from "lucide-react";
 import type { Drink } from "../../types";
 import type { MenuFilter } from "../../hooks/useGuestMenu";
 import { translations } from "../../utils/translations";
@@ -15,6 +16,8 @@ interface FilterProps {
 
 interface SidebarProps extends FilterProps {
   favouriteCount: number;
+  /** Everything on the menu, for the count beside "all drinks". */
+  totalCount: number;
   canSurprise: boolean;
   onSurpriseMe: () => void;
 }
@@ -22,22 +25,25 @@ interface SidebarProps extends FilterProps {
 const isChosen = (filter: MenuFilter, type: string, value: string): boolean =>
   filter.type === type && "value" in filter && filter.value === value;
 
-const button = (chosen: boolean, chosenClass: string, hoverClass: string) =>
-  `w-full text-left px-3 py-2 rounded font-medium transition-colors ${
-    chosen ? chosenClass : `${hoverClass} text-gray-700`
+/** Chosen is a sunken row with a bar down its left edge, not a fill. */
+const row = (chosen: boolean) =>
+  `w-full h-14 flex items-center gap-2.5 text-left transition-colors duration-(--duration-instant) cursor-pointer ${
+    chosen
+      ? "bg-surface-sunken border-l-4 border-border-strong pl-2 pr-3"
+      : "px-3 hover:bg-surface-sunken"
   }`;
 
-const Divider: React.FC<{ label: string }> = ({ label }) => (
-  <>
-    <li className="py-2">
-      <hr className="border-gray-300" />
-    </li>
-    <li>
-      <div className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase">
-        {label}
-      </div>
-    </li>
-  </>
+/** The count sits to the right of every row, in the same column. */
+const Count: React.FC<{ n: number }> = ({ n }) => (
+  <span className="font-mono text-[0.8125rem] font-bold leading-none text-text-muted">
+    {n}
+  </span>
+);
+
+const GroupLabel: React.FC<{ label: string }> = ({ label }) => (
+  <li className="px-3 pt-4 pb-1.5 font-mono text-caption uppercase text-text-muted">
+    {label}
+  </li>
 );
 
 /** The menu down the side, on a wide screen. */
@@ -49,78 +55,87 @@ export const MenuSidebar: React.FC<SidebarProps> = ({
   filter,
   onFilter,
   favouriteCount,
+  totalCount,
   canSurprise,
   onSurpriseMe,
   t,
 }) => (
-  <nav className="hidden md:block w-48 sticky top-24 self-start">
-    <ul className="space-y-2">
-      <li>
+  <nav className="hidden lg:block w-62 shrink-0 self-stretch border-r border-border py-4 px-3">
+    <ul className="flex flex-col gap-1">
+      {/* Dashed, because it is the one thing here that is a bit of a game. */}
+      <li className="mb-1">
         <button
           onClick={onSurpriseMe}
           disabled={!canSurprise}
-          className="w-full flex items-center justify-center px-3 py-2 mb-2 bg-pink-600 text-white rounded font-bold text-base shadow hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full h-14 flex items-center justify-center gap-2.5 rounded-md border-2 border-dashed border-border-strong text-text transition-colors duration-(--duration-instant) hover:bg-surface-sunken disabled:border-disabled-border disabled:text-disabled-fg disabled:cursor-not-allowed cursor-pointer"
         >
-          🎲 {t("surpriseMe")}
+          <Dices className="w-5 h-5 shrink-0 text-text-muted" />
+          <span className="flex flex-col items-start">
+            <span className="font-bold text-base leading-tight tracking-tight">
+              {t("surpriseMe")}
+            </span>
+            <span className="font-mono text-[0.5625rem] font-bold tracking-[0.14em] uppercase text-text-muted">
+              {t("letTheBarChoose")}
+            </span>
+          </span>
         </button>
       </li>
 
       <li>
         <button
           onClick={() => onFilter({ type: "all" })}
-          className={button(
-            filter.type === "all",
-            "bg-blue-100 text-blue-700",
-            "hover:bg-gray-100"
-          )}
+          className={row(filter.type === "all")}
         >
-          📋 All Drinks
+          <span className="flex-1 font-semibold text-base">
+            {t("allDrinks")}
+          </span>
+          <Count n={totalCount} />
         </button>
       </li>
 
       {favouriteCount > 0 && (
         <li>
-          <a
-            href="#favourites"
-            className="block px-3 py-2 rounded hover:bg-yellow-100 text-yellow-700 font-medium"
-          >
-            ⭐ {t("favourites")} ({favouriteCount})
+          <a href="#favourites" className={row(false)}>
+            <span className="flex-1 flex items-center gap-2 font-semibold text-base">
+              <Star className="w-4 h-4 shrink-0 fill-current" />
+              {t("favourites")}
+            </span>
+            <Count n={favouriteCount} />
           </a>
         </li>
       )}
 
       {categories.length > 0 && (
         <>
-          <Divider label="Categories" />
+          <GroupLabel label={t("categories")} />
           {categories.map((category) => (
             <li key={category}>
               <button
                 onClick={() => onFilter({ type: "category", value: category })}
-                className={button(
-                  isChosen(filter, "category", category),
-                  "bg-green-100 text-green-700",
-                  "hover:bg-green-50"
-                )}
+                className={row(isChosen(filter, "category", category))}
               >
-                📁 {category} ({byCategory[category].length})
+                <span className="flex-1 font-semibold text-base truncate">
+                  {category}
+                </span>
+                <Count n={byCategory[category].length} />
               </button>
             </li>
           ))}
-          <Divider label="Base Spirits" />
         </>
       )}
+
+      {spirits.length > 0 && <GroupLabel label={t("baseSpirits")} />}
 
       {spirits.map((spirit) => (
         <li key={spirit}>
           <button
             onClick={() => onFilter({ type: "spirit", value: spirit })}
-            className={button(
-              isChosen(filter, "spirit", spirit),
-              "bg-blue-100 text-blue-700",
-              "hover:bg-blue-50"
-            )}
+            className={row(isChosen(filter, "spirit", spirit))}
           >
-            {spirit} ({bySpirit[spirit].length})
+            <span className="flex-1 font-semibold text-base truncate">
+              {spirit}
+            </span>
+            <Count n={bySpirit[spirit].length} />
           </button>
         </li>
       ))}
@@ -128,58 +143,191 @@ export const MenuSidebar: React.FC<SidebarProps> = ({
   </nav>
 );
 
-/** The same choices as a dropdown, on a phone. */
-export const MenuFilterSelect: React.FC<FilterProps> = ({
+interface ChipsProps extends FilterProps {
+  favouriteCount: number;
+  totalCount: number;
+}
+
+/** One chip: what it filters to, what it says, and how many there are. */
+interface Chip {
+  key: string;
+  label: string;
+  count: number;
+  filter: MenuFilter;
+}
+
+const keyOf = (filter: MenuFilter) =>
+  filter.type === "all" ? "all" : `${filter.type}:${filter.value}`;
+
+const chipsFor = ({
+  categories,
+  spirits,
+  byCategory,
+  bySpirit,
+  totalCount,
+  t,
+}: ChipsProps): Chip[] => [
+  {
+    key: "all",
+    label: t("allDrinks"),
+    count: totalCount,
+    filter: { type: "all" },
+  },
+  ...categories.map((category) => ({
+    key: `category:${category}`,
+    label: category,
+    count: byCategory[category].length,
+    filter: { type: "category" as const, value: category },
+  })),
+  ...spirits.map((spirit) => ({
+    key: `spirit:${spirit}`,
+    label: spirit,
+    count: bySpirit[spirit].length,
+    filter: { type: "spirit" as const, value: spirit },
+  })),
+];
+
+/**
+ * On a phone the side menu becomes a rail of chips that scrolls sideways.
+ * Every chip carries its count, so a guest sees what is on offer without
+ * opening anything; the leading button opens the full list when the rail
+ * is not enough.
+ *
+ * It rides in the header's own sticky block rather than at the top of the
+ * page, so it sits against the header instead of below a band of white.
+ */
+export const MenuChipRail: React.FC<
+  ChipsProps & { onOpenFilters: () => void }
+> = (props) => {
+  const { filter, onFilter, onOpenFilters, t } = props;
+
+  const chosen = keyOf(filter);
+  // Whichever is in force comes first, so it is never off the side.
+  const chips = chipsFor(props).sort(
+    (a, b) => Number(b.key === chosen) - Number(a.key === chosen)
+  );
+
+  return (
+    <div className="lg:hidden max-w-7xl mx-auto px-4 py-2.5 flex gap-2 overflow-x-auto">
+      <button
+        onClick={onOpenFilters}
+        className="h-11 pl-3.5 pr-4 shrink-0 flex items-center gap-1.5 rounded-full border border-border-strong bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+      >
+        <SlidersHorizontal className="w-4 h-4 shrink-0" />
+        {t("filterShort")}
+      </button>
+
+      {chips.map((chip) => (
+        <button
+          key={chip.key}
+          onClick={() => onFilter(chip.filter)}
+          aria-pressed={chip.key === chosen}
+          className={`h-11 px-4 shrink-0 rounded-full text-label whitespace-nowrap transition-colors duration-(--duration-instant) cursor-pointer ${
+            chip.key === chosen
+              ? "bg-text text-text-inverse"
+              : "bg-surface-raised border border-border hover:bg-surface-sunken"
+          }`}
+        >
+          {chip.label} {chip.count}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+/**
+ * The whole list, over the menu, with the menu left where it was. Kept out
+ * of the header on purpose: anything fixed inside it is trapped under the
+ * dock, which sits higher.
+ */
+export const FilterSheet: React.FC<FilterProps & { onClose: () => void }> = ({
   categories,
   spirits,
   byCategory,
   bySpirit,
   filter,
   onFilter,
+  onClose,
   t,
-}) => (
-  <div className="md:hidden mb-4 space-y-4">
-    <h2 className="text-lg font-bold text-blue-800 text-center py-2">
-      {t("availableDrinks")}
-    </h2>
+}) => {
+  React.useEffect(() => {
+    const close = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [onClose]);
 
-    <div className="px-4">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        Filter Drinks
-      </label>
-      <select
-        value={filter.type === "all" ? "all" : `${filter.type}:${filter.value}`}
-        onChange={(e) => {
-          const [type, ...rest] = e.target.value.split(":");
-          // Rejoined, because a category may have a colon in its name.
-          const value = rest.join(":");
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+      <button
+        type="button"
+        aria-label={t("close")}
+        onClick={onClose}
+        className="absolute inset-0 bg-overlay cursor-default"
+      />
 
-          onFilter(
-            type === "all"
-              ? { type: "all" }
-              : { type: type as "category" | "spirit", value }
-          );
-        }}
-        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("filterDrinks")}
+        className="relative max-h-[80vh] flex flex-col bg-surface border-t-2 border-border-strong rounded-t-lg"
       >
-        <option value="all">📋 All Drinks</option>
-        {categories.length > 0 && (
-          <optgroup label="Categories">
-            {categories.map((category) => (
-              <option key={category} value={`category:${category}`}>
-                📁 {category} ({byCategory[category].length})
-              </option>
-            ))}
-          </optgroup>
-        )}
-        <optgroup label="Base Spirits">
-          {spirits.map((spirit) => (
-            <option key={spirit} value={`spirit:${spirit}`}>
-              {spirit} ({bySpirit[spirit].length})
-            </option>
+        <div className="shrink-0 px-4 py-3 border-b border-border flex items-center gap-3">
+          <h2 className="flex-1 text-heading">{t("filterDrinks")}</h2>
+          <button
+            onClick={onClose}
+            aria-label={t("close")}
+            className="w-11 h-11 shrink-0 flex items-center justify-center rounded-md text-text-muted transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <ul className="flex-1 overflow-y-auto py-2">
+          <li>
+            <button
+              onClick={() => onFilter({ type: "all" })}
+              className={row(filter.type === "all")}
+            >
+              <span className="flex-1 font-semibold text-base">
+                {t("allDrinks")}
+              </span>
+            </button>
+          </li>
+
+          {categories.length > 0 && <GroupLabel label={t("categories")} />}
+          {categories.map((category) => (
+            <li key={category}>
+              <button
+                onClick={() => onFilter({ type: "category", value: category })}
+                className={row(isChosen(filter, "category", category))}
+              >
+                <span className="flex-1 font-semibold text-base truncate">
+                  {category}
+                </span>
+                <Count n={byCategory[category].length} />
+              </button>
+            </li>
           ))}
-        </optgroup>
-      </select>
+
+          {spirits.length > 0 && <GroupLabel label={t("baseSpirits")} />}
+          {spirits.map((spirit) => (
+            <li key={spirit}>
+              <button
+                onClick={() => onFilter({ type: "spirit", value: spirit })}
+                className={row(isChosen(filter, "spirit", spirit))}
+              >
+                <span className="flex-1 font-semibold text-base truncate">
+                  {spirit}
+                </span>
+                <Count n={bySpirit[spirit].length} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
-  </div>
-);
+  );
+};
+

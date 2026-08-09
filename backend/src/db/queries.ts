@@ -11,13 +11,22 @@ export type Db = DatabaseType.Database;
 export interface BarRow extends Bar {
   bartender_password_hash: string;
   guest_password_hash: string;
+  /** Empty means the bar still uses the original fixed QR link. */
+  guest_token: string | null;
 }
 
 /** The parts of a bar that are safe to send out. */
 export function publicBar(bar: BarRow): Bar {
-  const { bartender_password_hash, guest_password_hash, ...rest } = bar;
+  const {
+    bartender_password_hash,
+    guest_password_hash,
+    guest_token,
+    ...rest
+  } = bar;
   void bartender_password_hash;
   void guest_password_hash;
+  // The token is what a QR code carries. It never goes out with a bar.
+  void guest_token;
   return rest;
 }
 
