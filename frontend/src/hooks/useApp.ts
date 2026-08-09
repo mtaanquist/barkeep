@@ -42,7 +42,6 @@ export interface AppContextType {
   categories: Category[];
 
   // UI states
-  editingDrink: Drink | "new" | null;
   viewingRecipe: Drink | null;
   showPassword: boolean;
 
@@ -59,7 +58,6 @@ export interface AppContextType {
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   setAnalytics: React.Dispatch<React.SetStateAction<Analytics | null>>;
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
-  setEditingDrink: (drink: Drink | "new" | null) => void;
   setViewingRecipe: (drink: Drink | null) => void;
   setShowPassword: (show: boolean) => void;
 

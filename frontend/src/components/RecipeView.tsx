@@ -161,8 +161,11 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
             <LazyMarkdownViewer
               source={drink.recipe ?? ""}
               style={
-                // Keeps the markdown readable on a light background.
-                { "--color-fg-default": "#222" } as React.CSSProperties
+                // The editor ships its own near-black, which vanishes on a
+                // dark panel. Hand it the ink the rest of the app uses.
+                {
+                  "--color-fg-default": "var(--bk-text)",
+                } as React.CSSProperties
               }
             />
           </div>
@@ -176,9 +179,10 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
                 Created on {new Date(drink.created_at).toLocaleDateString()}
               </p>
               <p className="flex items-center mt-1">
+                {/* Running out is a state, not a fault, so it is not red. */}
                 <span
                   className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                    drink.in_stock ? "bg-surface-sunken0" : "bg-status-rejected-bg0"
+                    drink.in_stock ? "bg-text" : "bg-disabled-fg"
                   }`}
                 />
                 {drink.in_stock ? t("inStock") : t("outOfStock")}

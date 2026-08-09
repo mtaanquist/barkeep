@@ -98,7 +98,33 @@ export interface TranslationMap {
   totalOrders: string;
   ordersToday: string;
 
+  // The drink list
+  newDrink: string;
+  inTotal: string;
+  columnName: string;
+  columnCategory: string;
+  columnStock: string;
+  noPhoto: string;
+  confirmDeleteDrink: string;
+
   // Drink form
+  sectionGuestSees: string;
+  sectionRecipe: string;
+  sectionPlacement: string;
+  optionalSection: string;
+  oneRequiredSection: string;
+  drinkName: string;
+  drinkNamePlaceholder: string;
+  guestDescriptionPrompt: string;
+  saveDrink: string;
+  deleteThisDrink: string;
+  inStockHelp: string;
+  chooseImage: string;
+  imageFormats: string;
+  cropAgain: string;
+  removeImage: string;
+  orPasteLink: string;
+  uploading: string;
   drinkTitle: string;
   drinkImage: string;
   uploadImage: string;
@@ -249,26 +275,52 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     acceptOrder: "Accept",
     rejectOrder: "Reject",
     markReady: "Mark Ready",
-    drinkMenu: "Drink Menu",
-    addDrink: "Add Drink",
-    editDrink: "Edit Drink",
+    drinkMenu: "Drinks",
+    addDrink: "Add drink",
+    editDrink: "Edit drink",
     deleteDrink: "Delete",
     toggleStock: "Toggle Stock",
-    inStock: "In Stock",
-    outOfStock: "Out of Stock",
+    inStock: "In stock",
+    outOfStock: "Out of stock",
     analytics: "Analytics",
     popularDrinks: "Popular Drinks",
     peakHours: "Peak Hours",
     totalOrders: "Total Orders",
     ordersToday: "Orders Today",
 
+    // The drink list
+    newDrink: "New drink",
+    inTotal: "in total",
+    columnName: "name",
+    columnCategory: "category",
+    columnStock: "stock",
+    noPhoto: "no photo",
+    confirmDeleteDrink: "Delete this drink? It will go from the menu for good.",
+
     // Drink form
+    sectionGuestSees: "what the guest sees",
+    sectionRecipe: "recipe",
+    sectionPlacement: "where it lives",
+    optionalSection: "optional",
+    oneRequiredSection: "1 needed",
+    drinkName: "Name",
+    drinkNamePlaceholder: "e.g. Negroni Sbagliato",
+    guestDescriptionPrompt: "What is in it, and how does it taste?",
+    saveDrink: "Save drink",
+    deleteThisDrink: "Delete this drink",
+    inStockHelp: "Turn this off and the drink still shows, but cannot be ordered.",
+    chooseImage: "Choose a picture",
+    imageFormats: "JPG or PNG · cropped 3:2",
+    cropAgain: "Crop again",
+    removeImage: "Remove",
+    orPasteLink: "or paste a link to one",
+    uploading: "Sending the picture",
     drinkTitle: "Drink Title",
     drinkImage: "Image URL",
     uploadImage: "Upload Image",
     or: "or",
     recipe: "Recipe (Markdown)",
-    guestDescription: "Guest Description",
+    guestDescription: "Description for the guest",
     showRecipeToGuests: "Show Recipe to Guests",
     guestDescriptionHelp: "Optional description shown to guests instead of or alongside the recipe",
     showRecipeHelp: "When enabled, guests can see the full recipe. When disabled, they only see the guest description (if provided).",
@@ -412,25 +464,51 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     rejectOrder: "Afvis",
     markReady: "Markér Klar",
     drinkMenu: "Drinks",
-    addDrink: "Tilføj Drink",
-    editDrink: "Rediger Drink",
+    addDrink: "Tilføj drink",
+    editDrink: "Rediger drink",
     deleteDrink: "Slet",
     toggleStock: "Skift Lager",
-    inStock: "På Lager",
-    outOfStock: "Ikke på Lager",
+    inStock: "På lager",
+    outOfStock: "Udsolgt",
     analytics: "Analyser",
     popularDrinks: "Populære Drinks",
     peakHours: "Travle Timer",
     totalOrders: "Samlede Bestillinger",
     ordersToday: "Bestillinger I Dag",
 
+    // The drink list
+    newDrink: "Ny drink",
+    inTotal: "i alt",
+    columnName: "navn",
+    columnCategory: "kategori",
+    columnStock: "lager",
+    noPhoto: "intet foto",
+    confirmDeleteDrink: "Slet denne drink? Den forsvinder fra menuen for altid.",
+
     // Drink form
+    sectionGuestSees: "det gæsten ser",
+    sectionRecipe: "opskrift",
+    sectionPlacement: "hvor den hører til",
+    optionalSection: "valgfri",
+    oneRequiredSection: "1 påkrævet",
+    drinkName: "Navn",
+    drinkNamePlaceholder: "F.eks. Negroni Sbagliato",
+    guestDescriptionPrompt: "Hvad er der i, og hvordan smager den?",
+    saveDrink: "Gem drink",
+    deleteThisDrink: "Slet denne drink",
+    inStockHelp: "Slå fra, og drinken vises stadig, men kan ikke bestilles.",
+    chooseImage: "Vælg et billede",
+    imageFormats: "JPG eller PNG · beskæres 3:2",
+    cropAgain: "Beskær igen",
+    removeImage: "Fjern",
+    orPasteLink: "eller indsæt et link til et",
+    uploading: "Sender billedet",
     drinkTitle: "Drink Titel",
     drinkImage: "Billede URL",
     uploadImage: "Upload Billede",
     or: "eller",
     recipe: "Opskrift (Markdown)",
-    guestDescription: "Gæste Beskrivelse",
+    guestDescription: "Beskrivelse til gæsten",
     showRecipeToGuests: "Vis Opskrift til Gæster",
     guestDescriptionHelp: "Valgfri beskrivelse vist til gæster i stedet for eller sammen med opskriften",
     showRecipeHelp: "Når aktiveret, kan gæster se den fulde opskrift. Når deaktiveret, ser de kun gæste beskrivelsen (hvis angivet).",

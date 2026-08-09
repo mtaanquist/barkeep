@@ -48,9 +48,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [categories, setCategories] = useState<Category[]>([]);
 
   // UI states
-  const [editingDrink, setEditingDrink] = useState<Drink | "new" | null>(
-    null
-  );
   const [viewingRecipe, setViewingRecipe] = useState<Drink | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -137,7 +134,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     categories,
 
     // UI states
-    editingDrink,
     viewingRecipe,
     showPassword,
 
@@ -154,7 +150,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     setOrders,
     setAnalytics,
     setCategories,
-    setEditingDrink,
     setViewingRecipe,
     setShowPassword,
 

@@ -1,39 +1,103 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { ChevronDown, ChevronLeft } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
 import type { Drink } from "../types";
-import { useTranslation } from "../utils/translations";
+import { translations, useTranslation } from "../utils/translations";
 import { BASE_SPIRITS } from "../utils/spirits";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 import LazyMDEditor from "./LazyMDEditor";
 import DrinkImageField, { type DrinkImage } from "./drinkForm/DrinkImageField";
+import Switch from "./bartender/Switch";
 
-interface DrinkFormProps {
-  /** The drink being changed, or nothing when adding one. */
-  drink: Drink | null;
-  onClose: () => void;
-}
+type T = (key: keyof typeof translations.en) => string;
 
 const INPUT =
-  "w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent";
+  "h-14 px-3.5 rounded-md border border-border bg-surface-raised text-body focus:outline-none focus:border-border-strong focus:shadow-focus";
 
-/** A labelled row, with an optional note underneath. */
+/** A labelled field, stacked. */
 const Field: React.FC<{
   label: string;
   hint?: string;
   children: React.ReactNode;
 }> = ({ label, hint, children }) => (
-  <div>
-    <label className="block text-sm font-medium text-text mb-2">
-      {label}
-    </label>
+  <label className="flex flex-col gap-1.5">
+    <span className="text-label">{label}</span>
     {children}
-    {hint && <p className="mt-1 text-xs text-text-muted">{hint}</p>}
-  </div>
+    {hint && <span className="text-body text-text-muted">{hint}</span>}
+  </label>
 );
 
-const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
+/** A switch with what it does written next to it. */
+const ToggleRow: React.FC<{
+  on: boolean;
+  onChange: (on: boolean) => void;
+  title: string;
+  help: string;
+}> = ({ on, onChange, title, help }) => (
+  <label className="flex items-center gap-3 p-3 rounded-md border border-border cursor-pointer">
+    <input
+      type="checkbox"
+      checked={on}
+      onChange={(e) => onChange(e.target.checked)}
+      className="sr-only"
+    />
+    <Switch on={on} />
+    <span className="flex-1 flex flex-col gap-0.5">
+      <span className="text-label">{title}</span>
+      <span className="text-body text-text-muted">{help}</span>
+    </span>
+  </label>
+);
+
+/**
+ * A named part of the form. On a new drink everything but the first is
+ * folded away, so a name and a recipe is fifteen seconds of work rather
+ * than a wall of eleven fields.
+ */
+const Section: React.FC<{
+  kicker: string;
+  marker: string;
+  open: boolean;
+  onOpen: () => void;
+  children: React.ReactNode;
+}> = ({ kicker, marker, open, onOpen, children }) => {
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={onOpen}
+        className="w-full h-14 px-5 flex items-center gap-3 text-left transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+      >
+        <span className="flex-1 font-mono text-caption uppercase text-text-muted">
+          {kicker}
+        </span>
+        <span className="font-mono text-caption uppercase text-text-muted">
+          {marker}
+        </span>
+        <ChevronDown className="w-4 h-4 text-text-muted" aria-hidden="true" />
+      </button>
+    );
+  }
+
+  return (
+    <div className="px-5 py-4.5 flex flex-col gap-4">
+      <span className="font-mono text-caption uppercase text-text-muted">
+        {kicker}
+      </span>
+      {children}
+    </div>
+  );
+};
+
+interface DrinkFormProps {
+  /** The drink being changed, or nothing when adding one. */
+  drink: Drink | null;
+  onDone: () => void;
+}
+
+export const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onDone }) => {
   const {
     currentBar,
     language,
@@ -46,7 +110,7 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
     apiCall,
   } = useApp();
 
-  const t = useTranslation(language);
+  const t: T = useTranslation(language);
   const isEditing = drink !== null;
 
   const [form, setForm] = useState(() => ({
@@ -56,6 +120,7 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
     recipe: drink?.recipe ?? "",
     guestDescription: drink?.guest_description ?? "",
     showRecipeToGuests: drink?.show_recipe_to_guests === 1,
+    inStock: drink === null || drink.in_stock === 1,
     image: {
       url: drink?.image_url ?? "",
       cropX: drink?.image_crop_x ?? 0,
@@ -63,6 +128,12 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
       zoom: drink?.image_crop_zoom ?? 1,
     } satisfies DrinkImage,
   }));
+
+  // Everything is open when there is already a drink to read.
+  const [open, setOpen] = useState({
+    recipe: isEditing,
+    placement: isEditing,
+  });
 
   const update = (patch: Partial<typeof form>) =>
     setForm((prev) => ({ ...prev, ...patch }));
@@ -82,24 +153,16 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
     fetchCategories();
   }, [fetchCategories]);
 
-  // Escape closes the form.
-  useEffect(() => {
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [onClose]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const missing =
       (!form.title.trim() && "Drink title is required") ||
-      (!form.recipe.trim() && "Recipe is required") ||
-      (!form.baseSpirit.trim() && "Base spirit is required");
+      (!form.recipe.trim() && "Recipe is required");
 
     if (missing) {
+      // Whichever part holds the missing field has to be on screen.
+      setOpen({ recipe: true, placement: true });
       setError(missing);
       return;
     }
@@ -119,6 +182,7 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
             baseSpirit: form.baseSpirit.trim(),
             guestDescription: form.guestDescription.trim() || null,
             showRecipeToGuests: form.showRecipeToGuests,
+            inStock: form.inStock,
             categoryId: form.categoryId || null,
             imageCropX: form.image.cropX,
             imageCropY: form.image.cropY,
@@ -133,7 +197,7 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
           : [...prev, saved]
       );
 
-      onClose();
+      onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save drink");
     } finally {
@@ -141,141 +205,221 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!isEditing || !confirm(t("confirmDeleteDrink"))) return;
+
+    setLoading(true);
+    try {
+      await apiCall(`/drinks/${drink.id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ barId: currentBar!.id }),
+      });
+
+      setDrinks((prev) => prev.filter((d) => d.id !== drink.id));
+      onDone();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete drink");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-overlay flex items-center justify-center p-4 z-50">
-      <div className="bg-surface-raised border border-border rounded-lg shadow-float w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-bold text-text">
-            {isEditing ? t("editDrink") : t("addDrink")}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-surface-sunken rounded-md transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-
-        <div className="flex flex-col lg:flex-row max-h-[calc(90vh-180px)]">
-          <div className="flex-1 p-6 overflow-y-auto">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <Field label={`${t("drinkTitle")} *`}>
-                <input
-                  type="text"
-                  value={form.title}
-                  onChange={(e) => update({ title: e.target.value })}
-                  placeholder="e.g., Old Fashioned"
-                  className={INPUT}
-                  required
-                />
-              </Field>
-
-              <Field label="Base Spirit *">
-                <select
-                  value={form.baseSpirit}
-                  onChange={(e) => update({ baseSpirit: e.target.value })}
-                  className={INPUT}
-                  required
-                >
-                  <option value="">{t("selectBaseSpirit")}</option>
-                  {BASE_SPIRITS.map((spirit) => (
-                    <option key={spirit} value={spirit}>
-                      {spirit}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              <Field label="Category">
-                <select
-                  value={form.categoryId}
-                  onChange={(e) => update({ categoryId: e.target.value })}
-                  className={INPUT}
-                >
-                  <option value="">{t("noCategory")}</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              <DrinkImageField
-                value={form.image}
-                onChange={(image) => update({ image })}
-                loading={loading}
-                setLoading={setLoading}
-                t={t}
-              />
-
-              <Field
-                label={`${t("recipe")} *`}
-                hint="Use Markdown formatting for better presentation"
-              >
-                <LazyMDEditor
-                  value={form.recipe}
-                  onChange={(value) => update({ recipe: value || "" })}
-                  height={300}
-                  textareaProps={{
-                    placeholder:
-                      "## Drink Name\n\n**Ingredients:**\n- 2 oz Spirit\n- 1 oz Mixer\n- Garnish\n\n**Instructions:**\n1. Step 1\n2. Step 2\n3. Serve and enjoy!",
-                  }}
-                />
-              </Field>
-
-              <Field
-                label={t("guestDescription")}
-                hint={t("guestDescriptionHelp")}
-              >
-                <textarea
-                  value={form.guestDescription}
-                  onChange={(e) => update({ guestDescription: e.target.value })}
-                  rows={4}
-                  placeholder={t("guestDescriptionPlaceholder")}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:border-transparent resize-vertical"
-                />
-              </Field>
-
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={form.showRecipeToGuests}
-                  onChange={(e) =>
-                    update({ showRecipeToGuests: e.target.checked })
-                  }
-                  className="w-4 h-4 text-text-muted border-border rounded"
-                />
-                <div>
-                  <span className="text-sm font-medium text-text">
-                    {t("showRecipeToGuests")}
-                  </span>
-                  <p className="text-xs text-text-muted">{t("showRecipeHelp")}</p>
-                </div>
-              </label>
-            </form>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 p-6 border-t bg-surface-sunken">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full sm:w-auto px-6 py-2 text-text bg-surface-raised border border-border rounded-md hover:bg-surface-sunken transition-colors"
-          >
-            {t("cancel")}
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading || !form.title.trim() || !form.recipe.trim()}
-            className="w-full sm:w-auto px-6 py-2 bg-text text-text-inverse rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? t("loading") : t("save")}
-          </button>
-        </div>
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-160 bg-surface border border-border rounded-md overflow-hidden"
+    >
+      {/* The way out is a labelled step back, not a cross. */}
+      <div className="px-5 py-3.5 border-b border-border flex items-center gap-3.5">
+        <button
+          type="button"
+          onClick={onDone}
+          className="h-14 pl-3 pr-4 flex items-center gap-2 rounded-md border border-border bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+        >
+          <ChevronLeft className="w-4.5 h-4.5" />
+          {t("drinkMenu")}
+        </button>
+        <h2
+          className={`flex-1 min-w-0 truncate text-display ${
+            form.title.trim() ? "" : "text-text-muted"
+          }`}
+        >
+          {form.title.trim() || t("newDrink")}
+        </h2>
       </div>
-    </div>
+
+      <Section
+        kicker={t("sectionGuestSees")}
+        marker={t("oneRequiredSection")}
+        open
+        onOpen={() => {}}
+      >
+        <Field label={t("drinkName")}>
+          <input
+            type="text"
+            value={form.title}
+            onChange={(e) => update({ title: e.target.value })}
+            placeholder={t("drinkNamePlaceholder")}
+            className={INPUT}
+            required
+          />
+        </Field>
+
+        <Field label={t("guestDescription")} hint={t("guestDescriptionHelp")}>
+          <textarea
+            value={form.guestDescription}
+            onChange={(e) => update({ guestDescription: e.target.value })}
+            rows={3}
+            placeholder={t("guestDescriptionPrompt")}
+            className="min-h-21 p-3.5 rounded-md border border-border bg-surface-raised text-body resize-y focus:outline-none focus:border-border-strong focus:shadow-focus"
+          />
+        </Field>
+
+        <DrinkImageField
+          value={form.image}
+          onChange={(image) => update({ image })}
+          loading={loading}
+          setLoading={setLoading}
+          t={t}
+        />
+      </Section>
+
+      <div className="h-px bg-border" />
+
+      <Section
+        kicker={t("sectionRecipe")}
+        marker={t("oneRequiredSection")}
+        open={open.recipe}
+        onOpen={() => setOpen((prev) => ({ ...prev, recipe: true }))}
+      >
+        <LazyMDEditor
+          value={form.recipe}
+          onChange={(value) => update({ recipe: value || "" })}
+          height={300}
+          textareaProps={{
+            placeholder:
+              "## Ingredients\n- 3 cl …\n\n## Method\n1. …",
+          }}
+        />
+
+        <ToggleRow
+          on={form.showRecipeToGuests}
+          onChange={(showRecipeToGuests) => update({ showRecipeToGuests })}
+          title={t("showRecipeToGuests")}
+          help={t("showRecipeHelp")}
+        />
+      </Section>
+
+      <div className="h-px bg-border" />
+
+      <Section
+        kicker={t("sectionPlacement")}
+        marker={t("optionalSection")}
+        open={open.placement}
+        onOpen={() => setOpen((prev) => ({ ...prev, placement: true }))}
+      >
+        <div className="grid sm:grid-cols-2 gap-3">
+          <Field label={t("categories")}>
+            <select
+              value={form.categoryId}
+              onChange={(e) => update({ categoryId: e.target.value })}
+              className={INPUT}
+            >
+              <option value="">{t("noCategory")}</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label={t("baseSpirit")}>
+            <select
+              value={form.baseSpirit}
+              onChange={(e) => update({ baseSpirit: e.target.value })}
+              className={INPUT}
+            >
+              <option value="">{t("selectBaseSpirit")}</option>
+              {BASE_SPIRITS.map((spirit) => (
+                <option key={spirit} value={spirit}>
+                  {spirit}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        <ToggleRow
+          on={form.inStock}
+          onChange={(inStock) => update({ inStock })}
+          title={t("inStock")}
+          help={t("inStockHelp")}
+        />
+
+        {/* Down here, where a hand on the way to Save cannot reach it. */}
+        {isEditing && (
+          <div className="pt-1">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={loading}
+              className="h-11 px-3.5 -ml-3.5 rounded-md text-label text-danger transition-colors duration-(--duration-instant) hover:bg-status-rejected-bg disabled:opacity-50 cursor-pointer"
+            >
+              {t("deleteThisDrink")}
+            </button>
+          </div>
+        )}
+      </Section>
+
+      <div className="lg:sticky lg:bottom-0 px-5 py-3 border-t border-border bg-surface-sunken flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onDone}
+          className="h-14 px-4 rounded-md text-label text-text-muted transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
+        >
+          {t("cancel")}
+        </button>
+        <span className="flex-1" />
+        <button
+          type="submit"
+          disabled={loading || !form.title.trim() || !form.recipe.trim()}
+          className="h-16 px-7 rounded-md bg-text text-text-inverse text-heading transition-colors duration-(--duration-instant) hover:bg-neutral-800 disabled:bg-disabled-bg disabled:text-disabled-fg disabled:cursor-not-allowed cursor-pointer"
+        >
+          {loading ? t("loading") : t("saveDrink")}
+        </button>
+      </div>
+    </form>
   );
 };
 
-export default DrinkForm;
+/**
+ * The form is a screen with its own address, so the browser's back button
+ * works and the queue count behind it never goes away.
+ */
+const DrinkFormRoute: React.FC = () => {
+  const { drinkId } = useParams<{ drinkId: string }>();
+  const { drinks, language } = useApp();
+  const t = useTranslation(language);
+  const navigate = useNavigate();
+
+  const backToMenu = useCallback(
+    () => navigate("/bartender/menu"),
+    [navigate]
+  );
+
+  if (drinkId === "new") {
+    return <DrinkForm drink={null} onDone={backToMenu} />;
+  }
+
+  const drink = drinks.find((d) => String(d.id) === drinkId);
+
+  if (!drink) {
+    // The drinks arrive a moment after the shell mounts on a fresh load.
+    return <p className="text-body text-text-muted">{t("loading")}</p>;
+  }
+
+  return <DrinkForm key={drink.id} drink={drink} onDone={backToMenu} />;
+};
+
+export default DrinkFormRoute;

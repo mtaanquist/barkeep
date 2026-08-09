@@ -20,10 +20,8 @@ import PastOrdersPage from "./pages/PastOrdersPage";
 const AppContent: React.FC = () => {
   const {
     error,
-    editingDrink,
     viewingRecipe,
     setError,
-    setEditingDrink,
     setViewingRecipe,
     userType,
     currentBar,
@@ -36,10 +34,10 @@ const AppContent: React.FC = () => {
     isAuthenticated && userType === "guest" && customerName;
   const isBartenderAuthenticated = isAuthenticated && userType === "bartender";
 
-  // The recipe, the drink form and an error all sit OVER the app rather than
-  // replacing it. They were built as dialogs all along, but were returned in
-  // place of everything else, so opening one took away the header, the menu
-  // and — the reason this matters — the live order.
+  // The recipe and an error sit OVER the app rather than replacing it. They
+  // were built as dialogs all along, but were returned in place of everything
+  // else, so opening one took away the header, the menu and — the reason this
+  // matters — the live order.
   return (
     <>
       <Routes>
@@ -80,6 +78,8 @@ const AppContent: React.FC = () => {
           <Route index element={<Navigate to="queue" replace />} />
           <Route path="queue" element={<OrdersTab />} />
           <Route path="menu" element={<MenuTab />} />
+          {/* Adding and editing a drink are screens, not a dialog over one. */}
+          <Route path="menu/:drinkId" element={<DrinkForm />} />
           <Route path="categories" element={<CategoriesTab />} />
           <Route path="analytics" element={<AnalyticsTab />} />
           <Route path="settings" element={<SettingsTab />} />
@@ -91,13 +91,6 @@ const AppContent: React.FC = () => {
         <RecipeView
           drink={viewingRecipe}
           onClose={() => setViewingRecipe(null)}
-        />
-      )}
-
-      {editingDrink !== null && (
-        <DrinkForm
-          drink={editingDrink === "new" ? null : editingDrink}
-          onClose={() => setEditingDrink(null)}
         />
       )}
 

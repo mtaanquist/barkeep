@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Crop, Upload } from "lucide-react";
 import ImageCropper from "../ImageCropper";
 import { translations } from "../../utils/translations";
 
@@ -28,7 +27,45 @@ const uncropped = (url: string): DrinkImage => ({
   zoom: 1,
 });
 
-/** Picking the photo for a drink: upload one, or paste an address. */
+/**
+ * Sends the picture and reports how far along it is. A phone on house wifi
+ * takes long enough that "how much longer" is a real question, and fetch()
+ * cannot answer it — only XHR reports upload progress.
+ */
+const sendImage = (
+  file: File,
+  onProgress: (percent: number) => void
+): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const body = new FormData();
+    body.append("image", file);
+
+    const request = new XMLHttpRequest();
+    request.open("POST", "/api/drinks/upload-image");
+
+    request.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress(Math.round((event.loaded / event.total) * 100));
+      }
+    };
+
+    request.onload = () => {
+      if (request.status >= 200 && request.status < 300) {
+        try {
+          resolve(JSON.parse(request.responseText).imageUrl);
+        } catch {
+          reject(new Error("Upload failed"));
+        }
+      } else {
+        reject(new Error("Upload failed"));
+      }
+    };
+    request.onerror = () => reject(new Error("Upload failed"));
+
+    request.send(body);
+  });
+
+/** The picture for a drink: a thumbnail once there is one, a dashed box until. */
 const DrinkImageField: React.FC<DrinkImageFieldProps> = ({
   value,
   onChange,
@@ -38,6 +75,7 @@ const DrinkImageField: React.FC<DrinkImageFieldProps> = ({
 }) => {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showCropper, setShowCropper] = useState(false);
+  const [percent, setPercent] = useState<number | null>(null);
 
   const upload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -54,43 +92,80 @@ const DrinkImageField: React.FC<DrinkImageFieldProps> = ({
     }
 
     setUploadError(null);
-    const body = new FormData();
-    body.append("image", file);
+    setPercent(0);
+    setLoading(true);
 
     try {
-      setLoading(true);
-      const response = await fetch("/api/drinks/upload-image", {
-        method: "POST",
-        body,
-      });
-
-      if (!response.ok) throw new Error("Upload failed");
-
-      const { imageUrl } = await response.json();
+      const imageUrl = await sendImage(file, setPercent);
       onChange(uncropped(imageUrl));
+      // Cropping is the one decision left, so ask it straight away.
+      setShowCropper(true);
     } catch {
       setUploadError("Failed to upload image. Please try again.");
     } finally {
+      setPercent(null);
       setLoading(false);
     }
   };
 
   return (
-    <div>
-      <label className="block text-sm font-medium text-text mb-2">
-        {t("drinkImage")}
-      </label>
+    <div className="flex flex-col gap-1.5">
+      <span className="text-label">{t("drinkImage")}</span>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-center w-full">
-          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-border border-dashed rounded-md cursor-pointer bg-surface-sunken hover:bg-border transition-colors">
-            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-              <Upload className="w-8 h-8 mb-2 text-text-muted" />
-              <p className="mb-2 text-sm text-text-muted">
-                <span className="font-semibold">{t("uploadImage")}</span>
-              </p>
-              <p className="text-xs text-text-muted">{t("imageHelp")}</p>
-            </div>
+      {percent !== null ? (
+        <div className="flex items-center gap-3">
+          <span className="w-30 h-21 shrink-0 rounded-md border border-border bg-surface-sunken" />
+          <div className="flex-1 flex flex-col gap-2">
+            <span className="font-mono text-caption uppercase text-text-muted">
+              {t("uploading")} · {percent}%
+            </span>
+            {/* A rule that fills, never a spinner: it answers "how long". */}
+            <span className="block h-1 w-full bg-surface-sunken">
+              <span
+                className="block h-full bg-text transition-[width] duration-(--duration-quick)"
+                style={{ width: `${percent}%` }}
+              />
+            </span>
+          </div>
+        </div>
+      ) : value.url ? (
+        <div className="flex items-center gap-3">
+          <span className="w-30 h-21 shrink-0 rounded-md border border-border overflow-hidden bg-surface-sunken">
+            <img
+              src={value.url}
+              alt=""
+              className="w-full h-full object-cover"
+              style={{
+                transform: `translate(${value.cropX}%, ${value.cropY}%) scale(${value.zoom})`,
+              }}
+            />
+          </span>
+          <div className="flex flex-wrap gap-2.5">
+            <button
+              type="button"
+              onClick={() => setShowCropper(true)}
+              className="h-14 px-4 rounded-md border border-border-strong bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+            >
+              {t("cropAgain")}
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange(uncropped(""))}
+              className="h-14 px-4 rounded-md border border-border text-label text-text-muted transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
+            >
+              {t("removeImage")}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <label className="h-28 flex flex-col items-center justify-center gap-1.5 rounded-md border-2 border-dashed border-border-strong transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer">
+            <span className="font-bold text-base leading-tight tracking-tight">
+              {t("chooseImage")}
+            </span>
+            <span className="font-mono text-caption uppercase text-text-muted">
+              {t("imageFormats")}
+            </span>
             <input
               type="file"
               className="hidden"
@@ -99,51 +174,23 @@ const DrinkImageField: React.FC<DrinkImageFieldProps> = ({
               disabled={loading}
             />
           </label>
-        </div>
 
-        {uploadError && <p className="text-sm text-danger">{uploadError}</p>}
+          <label className="flex flex-col gap-1.5 mt-1">
+            <span className="text-body text-text-muted">
+              {t("orPasteLink")}
+            </span>
+            <input
+              type="url"
+              value={value.url}
+              onChange={(e) => onChange(uncropped(e.target.value))}
+              placeholder="https://…"
+              className="h-14 px-3.5 rounded-md border border-border bg-surface-raised text-body focus:outline-none focus:border-border-strong focus:shadow-focus"
+            />
+          </label>
+        </>
+      )}
 
-        <div className="text-center text-text-muted text-sm">{t("or")}</div>
-
-        <input
-          type="url"
-          value={value.url}
-          onChange={(e) => onChange(uncropped(e.target.value))}
-          placeholder="https://example.com/image.jpg"
-          className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
-        />
-
-        {value.url && (
-          <div className="mt-4 space-y-2">
-            <div
-              className="relative w-full rounded-md overflow-hidden bg-surface-sunken"
-              style={{ aspectRatio: "16/9" }}
-            >
-              <div className="absolute inset-0 flex items-center justify-center">
-                <img
-                  src={value.url}
-                  alt="Preview"
-                  className="w-full h-full object-contain"
-                  style={{
-                    transform: `translate(${value.cropX}%, ${value.cropY}%) scale(${value.zoom})`,
-                  }}
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowCropper(true)}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-text bg-surface-raised border border-border rounded-md hover:bg-surface-sunken transition-colors"
-            >
-              <Crop className="w-4 h-4" />
-              <span>{t("cropImage")}</span>
-            </button>
-          </div>
-        )}
-      </div>
+      {uploadError && <p className="text-body text-danger">{uploadError}</p>}
 
       {showCropper && value.url && (
         <ImageCropper
