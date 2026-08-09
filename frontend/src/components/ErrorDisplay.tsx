@@ -50,7 +50,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, onRetry }) => {
               onClick={() => window.location.reload()}
               className="w-full bg-disabled-bg text-text px-4 py-2 rounded-md hover:bg-border transition-colors font-medium"
             >
-              Reload Page
+              {t("reloadPage")}
             </button>
           </div>
         </div>

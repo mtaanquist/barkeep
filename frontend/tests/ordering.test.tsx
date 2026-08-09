@@ -1,15 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
 import App from "../src/App";
 import CustomerInterface from "../src/components/CustomerInterface";
 import RecipeView from "../src/components/RecipeView";
-import PastOrdersPage from "../src/pages/PastOrdersPage";
 import { AppProvider } from "../src/context/AppContext";
 import { LiveUpdatesProvider } from "../src/context/LiveUpdatesContext";
 import {
+  aBar,
   aDrink,
   anOrder,
   fakeApi,
@@ -154,6 +154,66 @@ describe("ordering a drink", () => {
     expect(sent?.body).toMatchObject({ barId: 1, customerName: "Ada" });
   });
 
+  // Once it is poured and waiting on the bar there is nothing left to call
+  // off, so the button goes rather than sitting there doing harm.
+  it("takes cancelling away once the drink is ready", async () => {
+    orders = [anOrder({ id: 5, status: "ready", drink_title: "Negroni" })];
+
+    await showMenu();
+    const dock = await screen.findByRole("region", { name: "Your Order" });
+
+    expect(dock).toHaveTextContent("Ready");
+    expect(
+      within(dock).queryByRole("button", { name: "Cancel Order" })
+    ).toBeNull();
+  });
+
+  it("still allows cancelling before it is poured", async () => {
+    orders = [anOrder({ id: 5, status: "accepted", drink_title: "Negroni" })];
+
+    await showMenu();
+    await userEvent.click(screen.getByRole("button", { name: /Negroni/ }));
+
+    expect(
+      screen.getByRole("button", { name: "Cancel Order" })
+    ).toBeInTheDocument();
+  });
+
+  // Last orders. The drinks stay on screen so a guest can see what they
+  // missed, but nothing can be ordered.
+  it("says so, and takes the buttons away, once the bar has closed", async () => {
+    signIn({ bar: aBar({ orders_closed: 1 }) });
+
+    await showMenu();
+
+    expect(screen.getByText("The bar has stopped taking orders")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Order" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: /Surprise me/ })
+    ).toBeDisabled();
+  });
+
+  // A guest holding the menu open at one minute to should see it close,
+  // rather than finding out by tapping Order.
+  it("closes itself when the set time comes round", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const closesAt = new Date(Date.now() + 60_000).toISOString();
+    signIn({ bar: aBar({ last_orders_at: closesAt }) });
+
+    await showMenu();
+    expect(screen.getAllByRole("button", { name: "Order" }).length)
+      .toBeGreaterThan(0);
+
+    await act(async () => {
+      vi.advanceTimersByTime(61_000);
+    });
+
+    expect(
+      screen.getByText("The bar has stopped taking orders")
+    ).toBeInTheDocument();
+    vi.useRealTimers();
+  });
+
   it("says so plainly when there is nothing on", async () => {
     menu = [];
 
@@ -169,6 +229,49 @@ describe("ordering a drink", () => {
 
     expect(
       await screen.findByText("No drinks available right now")
+    ).toBeInTheDocument();
+  });
+});
+
+describe("filtering on a phone", () => {
+  // The rail belongs to the header's own sticky block. Put it at the top of
+  // the scrolling content instead and it sits below a band of white.
+  it("rides with the header rather than the page", async () => {
+    await showMenu();
+
+    const header = screen.getByRole("banner");
+    expect(
+      within(header).getByRole("button", { name: "Filter" })
+    ).toBeInTheDocument();
+    expect(
+      within(header).getByRole("button", { name: /All drinks/ })
+    ).toBeInTheDocument();
+  });
+
+  it("carries a count on every chip, so nothing needs opening", async () => {
+    await showMenu();
+
+    const header = screen.getByRole("banner");
+    expect(
+      within(header).getByRole("button", { name: "All drinks 2" })
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(header).getByRole("button", { name: "Gin 1" })
+    ).toBeInTheDocument();
+  });
+
+  it("opens the whole list when the rail is not enough", async () => {
+    await showMenu();
+
+    await userEvent.click(screen.getByRole("button", { name: "Filter" }));
+
+    const sheet = screen.getByRole("dialog", { name: "Filter drinks" });
+    await userEvent.click(within(sheet).getByRole("button", { name: /Rum/ }));
+
+    // Choosing closes it, and the menu is still where it was.
+    expect(screen.queryByRole("dialog", { name: "Filter drinks" })).toBeNull();
+    expect(
+      screen.getByRole("heading", { name: "Daiquiri", level: 3 })
     ).toBeInTheDocument();
   });
 });
@@ -193,6 +296,25 @@ describe("looking at a recipe", () => {
     await userEvent.keyboard("{Escape}");
 
     expect(onClose).toHaveBeenCalled();
+  });
+
+  // Everything a guest reads here used to be written into the file in
+  // English, whatever language the bar was set to.
+  it("reads in the bar's language", () => {
+    signIn({ bar: aBar({ language: "da" }) });
+
+    render(
+      <RecipeView
+        drink={aDrink({ base_spirit: "Gin", in_stock: 0 })}
+        onClose={vi.fn()}
+      />,
+      { wrapper: withApp }
+    );
+
+    const recipe = screen.getByRole("dialog", { name: "Negroni" });
+    expect(recipe).toHaveTextContent("Basisspiritus");
+    expect(recipe).toHaveTextContent("Udsolgt");
+    expect(recipe).not.toHaveTextContent(/Base Spirit|Out of stock/);
   });
 
   // The recipe used to be returned in place of the whole app, so a guest
@@ -220,22 +342,22 @@ describe("looking at a recipe", () => {
   });
 });
 
-describe("the past orders page", () => {
-  // Wrapped in the live updates provider because the page now sits in the
-  // guest shell, which carries the order in progress and so needs them.
+describe("past orders, as a panel over the menu", () => {
+  // A panel, not a peer screen: the menu stays behind it and the dock keeps
+  // carrying the drink that is on its way.
   const openDirectly = () =>
     render(
       <MemoryRouter initialEntries={["/customer/past-orders"]}>
         <AppProvider>
           <LiveUpdatesProvider>
-            <PastOrdersPage />
+            <CustomerInterface />
           </LiveUpdatesProvider>
         </AppProvider>
       </MemoryRouter>
     );
 
-  // The page used to read whatever the menu had already loaded, so arriving
-  // straight at it, or refreshing, showed nothing.
+  // The history used to read whatever the menu had already loaded, so
+  // arriving straight at it, or refreshing, showed nothing.
   it("loads the orders itself rather than relying on the menu", async () => {
     orders = [
       anOrder({ id: 5, status: "processed", drink_id: 1, drink_title: "Negroni" }),
@@ -249,10 +371,9 @@ describe("the past orders page", () => {
 
     openDirectly();
 
-    // Both come back, even though nothing loaded the menu first.
-    expect(await screen.findAllByText("Negroni")).not.toHaveLength(0);
-    expect(screen.getAllByText("Daiquiri")).not.toHaveLength(0);
-    expect(screen.queryByText(/no past orders/i)).toBeNull();
+    const history = await screen.findByRole("dialog", { name: "Past orders" });
+    expect(within(history).getByText("Negroni")).toBeInTheDocument();
+    expect(within(history).getByText("Daiquiri")).toBeInTheDocument();
   });
 
   it("shows only this guest's finished orders", async () => {
@@ -264,14 +385,87 @@ describe("the past orders page", () => {
 
     openDirectly();
 
-    const history = await screen.findByRole("region", { name: "Past Orders" });
+    const history = await screen.findByRole("dialog", { name: "Past orders" });
     expect(within(history).getByText("Negroni")).toBeInTheDocument();
     expect(within(history).queryByText("Still Coming")).toBeNull();
     expect(within(history).queryByText("Someone Elses")).toBeNull();
 
     // The one still on the go is not history — it is in the dock, which
-    // follows the guest onto this screen.
+    // the panel deliberately stops short of.
     const dock = screen.getByRole("region", { name: "Your Order" });
     expect(within(dock).getByText("Still Coming")).toBeInTheDocument();
+  });
+
+  it("leaves the menu underneath rather than replacing it", async () => {
+    orders = [anOrder({ id: 5, status: "processed", drink_title: "Negroni" })];
+
+    openDirectly();
+
+    await screen.findByRole("dialog", { name: "Past orders" });
+    // The menu's own drink headings are still on the page behind the panel.
+    expect(
+      screen.getAllByRole("heading", { name: "Negroni", level: 3 }).length
+    ).toBeGreaterThan(0);
+  });
+
+  it("cannot order again while a drink is already on the way", async () => {
+    orders = [
+      anOrder({ id: 5, status: "processed", drink_id: 1, drink_title: "Negroni" }),
+      anOrder({ id: 6, status: "new", drink_id: 2, drink_title: "Daiquiri" }),
+    ];
+
+    openDirectly();
+
+    const history = await screen.findByRole("dialog", { name: "Past orders" });
+    expect(within(history).getByRole("button", { name: "Again" })).toBeDisabled();
+    // The reason sits beside the button rather than behind an alert.
+    expect(history).toHaveTextContent(/once your current drink has been/i);
+  });
+});
+
+describe("the surprise me reveal", () => {
+  const roll = async () => {
+    await showMenu();
+    await userEvent.click(screen.getByRole("button", { name: /Surprise me/ }));
+    return screen.getByRole("dialog", { name: "Surprise me" });
+  };
+
+  it("says who chose, and puts ordering below the second go", async () => {
+    const reveal = await roll();
+
+    expect(reveal).toHaveTextContent(/the bar chose for you/i);
+
+    // Turning the suggestion down is expected, not a corner case, so it is
+    // a button of its own between ordering and backing out.
+    const labels = within(reveal)
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim());
+
+    expect(labels).toHaveLength(3);
+    expect(labels[0]).toMatch(/^Order /);
+    expect(labels[1]).toMatch(/Try another/);
+    expect(labels[2]).toMatch(/Cancel/);
+  });
+
+  // The panel and its buttons stay put across a re-roll, so the third go is
+  // as quick to tap as the first.
+  it("swaps the drink without changing anything around it", async () => {
+    const reveal = await roll();
+    const first = within(reveal).getByRole("heading").textContent;
+
+    await userEvent.click(
+      within(reveal).getByRole("button", { name: /Try another/ })
+    );
+
+    const again = screen.getByRole("dialog", { name: "Surprise me" });
+    expect(within(again).getByRole("heading").textContent).not.toBe(first);
+
+    const labels = within(again)
+      .getAllByRole("button")
+      .map((button) => button.textContent?.trim());
+
+    expect(labels).toHaveLength(3);
+    expect(labels[1]).toMatch(/Try another/);
+    expect(labels[2]).toMatch(/Cancel/);
   });
 });

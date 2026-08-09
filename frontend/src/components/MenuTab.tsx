@@ -1,8 +1,91 @@
 import React from "react";
-import { Plus, Edit3, Trash2, Package, PackageX, Eye } from "lucide-react";
+import { ChevronRight, Plus, Trash2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
-import { useTranslation } from "../utils/translations";
-import { LazyMarkdownViewer } from "./LazyMDEditor";
+import type { Drink } from "../types";
+import { translations, useTranslation } from "../utils/translations";
+import Switch from "./bartender/Switch";
+
+type Sort = "default" | "alphabetical" | "category";
+type T = (key: keyof typeof translations.en) => string;
+
+/** The stock column: the pill, with what it currently means beside it. */
+const StockSwitch: React.FC<{
+  on: boolean;
+  onChange: () => void;
+  disabled?: boolean;
+  label: string;
+}> = ({ on, onChange, disabled, label }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={on}
+    aria-label={label}
+    disabled={disabled}
+    onClick={onChange}
+    className="inline-flex items-center gap-2 text-label disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+  >
+    <Switch on={on} />
+    <span className={on ? "text-text" : "text-text-muted"}>{label}</span>
+  </button>
+);
+
+/** 56 square: the photo, or a dashed box saying there isn't one. */
+const Thumbnail: React.FC<{ drink: Drink; t: T }> = ({ drink, t }) => {
+  const dimmed = drink.in_stock !== 1 ? "grayscale opacity-50" : "";
+
+  if (!drink.image_url) {
+    return (
+      <span
+        className={`w-14 h-14 shrink-0 rounded-md border border-dashed border-border bg-surface-sunken flex items-center justify-center text-center font-mono text-[0.5rem] leading-tight uppercase text-text-muted ${dimmed}`}
+        aria-hidden="true"
+      >
+        {t("noPhoto")}
+      </span>
+    );
+  }
+
+  return (
+    <span
+      className={`w-14 h-14 shrink-0 rounded-md border border-border overflow-hidden ${dimmed}`}
+    >
+      <img
+        src={drink.image_url}
+        alt=""
+        className="w-full h-full object-cover"
+        style={{
+          transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,
+        }}
+      />
+    </span>
+  );
+};
+
+/** Out of stock is a state, not an error — muted mono, never red. */
+const SoldOutTag: React.FC<{ t: T }> = ({ t }) => (
+  <span className="inline-flex items-center h-6 px-2 shrink-0 rounded-sm bg-status-processed-bg border border-status-processed-border text-status-processed-fg font-mono text-[0.625rem] font-bold tracking-[0.12em] uppercase">
+    {t("outOfStock")}
+  </span>
+);
+
+/** A column heading that also sorts by that column. */
+const ColumnSort: React.FC<{
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  className?: string;
+}> = ({ label, active, onClick, className = "" }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={active}
+    className={`text-left uppercase transition-colors duration-(--duration-instant) hover:text-text cursor-pointer ${
+      active ? "text-text" : ""
+    } ${className}`}
+  >
+    {label}
+  </button>
+);
 
 const MenuTab: React.FC = () => {
   const {
@@ -11,20 +94,22 @@ const MenuTab: React.FC = () => {
     loading,
     drinks,
     setDrinks,
-    setEditingDrink,
-    setViewingRecipe,
     setLoading,
     setError,
     apiCall,
   } = useApp();
 
   const t = useTranslation(language);
+  const navigate = useNavigate();
 
-  // Sorting state
-  const [sortBy, setSortBy] = React.useState<"alphabetical" | "category" | "default">("default");
+  const [sortBy, setSortBy] = React.useState<Sort>("default");
 
-  const handleDeleteDrink = async (id: number, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+  // Clicking the column already sorted puts it back the way it was added.
+  const sortByColumn = (next: Sort) =>
+    setSortBy((prev) => (prev === next ? "default" : next));
+
+  const handleDelete = async (id: number) => {
+    if (!confirm(t("confirmDeleteDrink"))) return;
 
     setLoading(true);
     try {
@@ -41,7 +126,7 @@ const MenuTab: React.FC = () => {
     }
   };
 
-  const toggleDrinkStock = async (id: number) => {
+  const toggleStock = async (id: number) => {
     setLoading(true);
     try {
       await apiCall(`/drinks/${id}/stock`, {
@@ -51,7 +136,9 @@ const MenuTab: React.FC = () => {
 
       setDrinks((prev) =>
         prev.map((drink) =>
-          drink.id === id ? { ...drink, in_stock: drink.in_stock ? 0 : 1 } : drink
+          drink.id === id
+            ? { ...drink, in_stock: drink.in_stock === 1 ? 0 : 1 }
+            : drink
         )
       );
     } catch (err) {
@@ -61,245 +148,151 @@ const MenuTab: React.FC = () => {
     }
   };
 
-  const inStockDrinks = drinks.filter((drink) => drink.in_stock);
-  const outOfStockDrinks = drinks.filter((drink) => !drink.in_stock);
+  const soldOut = drinks.filter((drink) => drink.in_stock !== 1).length;
 
-  // Sort drinks based on selected sort option
-  const getSortedDrinks = () => {
-    const drinksCopy = [...drinks];
-    
-    if (sortBy === "alphabetical") {
-      return drinksCopy.sort((a, b) => a.title.localeCompare(b.title));
-    } else if (sortBy === "category") {
-      return drinksCopy.sort((a, b) => {
-        // First sort by category, then by title within category
-        const categoryA = a.category_name || "Uncategorized";
-        const categoryB = b.category_name || "Uncategorized";
-        const categoryCompare = categoryA.localeCompare(categoryB);
-        if (categoryCompare !== 0) return categoryCompare;
-        return a.title.localeCompare(b.title);
-      });
+  const sorted = [...drinks].sort((a, b) => {
+    if (sortBy === "alphabetical") return a.title.localeCompare(b.title);
+    if (sortBy === "category") {
+      const byCategory = (a.category_name ?? "").localeCompare(
+        b.category_name ?? ""
+      );
+      return byCategory !== 0 ? byCategory : a.title.localeCompare(b.title);
     }
-    
-    // Default: return as-is (database order)
-    return drinksCopy;
-  };
-  
-  const sortedDrinks = getSortedDrinks();
+    return 0;
+  });
 
   return (
-    <div className="space-y-6">
-      {/* Header with Add Button */}
-      <div className="bg-surface-raised rounded-md border p-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h3 className="text-lg font-semibold text-text">
-              {t("drinkMenu")}
-            </h3>
-            <p className="text-sm text-text-muted">
-              {drinks.length} total drinks • {inStockDrinks.length} in stock •{" "}
-              {outOfStockDrinks.length} out of stock
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "alphabetical" | "category" | "default")}
-              className="px-3 py-2 border border-border rounded-md text-sm focus:ring-2 focus:border-transparent"
-            >
-              <option value="default">Sort: Default</option>
-              <option value="alphabetical">Sort: Alphabetical</option>
-              <option value="category">Sort: Category</option>
-            </select>
-            <button
-              onClick={() => setEditingDrink("new")}
-              className="bg-text text-text-inverse px-4 py-2 rounded-md hover:bg-neutral-800 transition-colors flex items-center space-x-2 w-full sm:w-auto justify-center"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{t("addDrink")}</span>
-            </button>
-          </div>
+    <div>
+      <div className="bg-surface border border-border rounded-md overflow-hidden">
+        <div className="flex items-center gap-3.5 px-5 py-4 border-b border-border">
+          <h2 className="text-display">{t("drinkMenu")}</h2>
+          <p className="font-mono text-caption uppercase text-text-muted">
+            {drinks.length} {t("inTotal")}
+            {soldOut > 0 && ` · ${soldOut} ${t("outOfStock")}`}
+          </p>
+          <span className="flex-1" />
+          <Link
+            to="new"
+            className="hidden sm:inline-flex h-14 px-5 items-center rounded-md bg-text text-text-inverse text-heading transition-colors duration-(--duration-instant) hover:bg-neutral-800"
+          >
+            {t("newDrink")}
+          </Link>
         </div>
+
+        {drinks.length === 0 ? (
+          <div className="px-5 py-10 text-center">
+            <h3 className="text-heading mb-1">{t("noDrinks")}</h3>
+            <p className="text-body text-text-muted">{t("noDrinksHelp")}</p>
+          </div>
+        ) : (
+          <>
+            {/* The headings sort, so there is no separate sort control. */}
+            <div className="hidden lg:flex items-center gap-4 px-5 py-2.5 border-b border-border bg-surface-sunken font-mono text-caption text-text-muted">
+              <span className="w-14 shrink-0" />
+              <ColumnSort
+                label={t("columnName")}
+                active={sortBy === "alphabetical"}
+                onClick={() => sortByColumn("alphabetical")}
+                className="flex-1"
+              />
+              <ColumnSort
+                label={t("columnCategory")}
+                active={sortBy === "category"}
+                onClick={() => sortByColumn("category")}
+                className="w-38 shrink-0"
+              />
+              <span className="w-28 shrink-0 uppercase">
+                {t("columnStock")}
+              </span>
+              <span className="w-28 shrink-0" />
+            </div>
+
+            <ul>
+              {sorted.map((drink) => {
+                const inStock = drink.in_stock === 1;
+
+                return (
+                  <li
+                    key={drink.id}
+                    className="relative flex items-center gap-4 px-4 lg:px-5 py-3 border-b border-border last:border-b-0 transition-colors duration-(--duration-instant) hover:bg-surface-sunken"
+                  >
+                    <Thumbnail drink={drink} t={t} />
+
+                    {/* The whole row is the way in — no second pencil. */}
+                    <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                      <span className="flex items-center gap-2.5">
+                        <Link
+                          to={String(drink.id)}
+                          className={`text-heading truncate after:absolute after:inset-0 ${
+                            inStock ? "" : "text-text-muted"
+                          }`}
+                        >
+                          {drink.title}
+                        </Link>
+                        {!inStock && <SoldOutTag t={t} />}
+                      </span>
+                      <span className="text-body text-text-muted truncate">
+                        {/* On a phone the columns fold into this line. */}
+                        <span className="lg:hidden">
+                          {[
+                            drink.category_name,
+                            inStock ? t("inStock") : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                        <span className="hidden lg:inline">
+                          {drink.guest_description || drink.base_spirit}
+                        </span>
+                      </span>
+                    </div>
+
+                    <span className="hidden lg:block w-38 shrink-0 text-body text-text-muted truncate">
+                      {drink.category_name}
+                    </span>
+
+                    <span className="hidden lg:block relative w-28 shrink-0">
+                      <StockSwitch
+                        on={inStock}
+                        disabled={loading}
+                        onChange={() => toggleStock(drink.id)}
+                        label={inStock ? t("inStock") : t("outOfStock")}
+                      />
+                    </span>
+
+                    <span className="relative flex items-center justify-end gap-5 lg:w-28 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(drink.id)}
+                        disabled={loading}
+                        aria-label={`${t("deleteDrink")} ${drink.title}`}
+                        className="hidden lg:flex w-14 h-14 items-center justify-center rounded-md border border-border bg-surface-raised text-danger transition-colors duration-(--duration-instant) hover:bg-status-rejected-bg disabled:opacity-50 cursor-pointer"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                      <ChevronRight
+                        className="w-5 h-5 text-text-muted"
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
       </div>
 
-      {/* Drinks Grid */}
-      {drinks.length === 0 ? (
-        <div className="bg-surface-raised rounded-md border p-8 text-center">
-          <Package className="w-16 h-16 mx-auto mb-4 text-text-muted" />
-          <h3 className="text-lg font-medium text-text mb-2">
-            No drinks yet
-          </h3>
-          <p className="text-text-muted mb-4">
-            Start building your menu by adding your first drink
-          </p>
-          <button
-            onClick={() => setEditingDrink("new")}
-            className="bg-text text-text-inverse px-6 py-2 rounded-md hover:bg-neutral-800 transition-colors inline-flex items-center space-x-2"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t("addDrink")}</span>
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {sortedDrinks.map((drink) => (
-            <div
-              key={drink.id}
-              className="bg-surface-raised rounded-md border overflow-hidden hover:shadow-md transition-colors duration-(--duration-instant)"
-            >
-              {/* Image */}
-              <div className="aspect-video overflow-hidden bg-surface-sunken relative">
-                {drink.image_url ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <img
-                      src={drink.image_url}
-                      alt={drink.title}
-                      className="w-full h-full object-contain"
-                      style={{
-                        transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-text-muted">
-                    <Package className="w-12 h-12" />
-                  </div>
-                )}
-              </div>
-
-              {/* Content */}
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-semibold text-text truncate pr-2">
-                    {drink.title}
-                  </h3>
-                  <span
-                    className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
-                      drink.in_stock
-                        ? "bg-surface-sunken text-text"
-                        : "bg-status-rejected-bg text-danger"
-                    }`}
-                  >
-                    {drink.in_stock ? t("inStock") : t("outOfStock")}
-                  </span>
-                </div>
-
-                {/* Recipe Preview */}
-                <div className="mb-4 line-clamp-2 prose max-w-none prose-p:text-text prose-li:text-text prose-strong:text-text prose-em:text-text">
-                  <LazyMarkdownViewer
-                    source={drink.recipe ?? ""}
-                    style={{ background: "none", padding: 0, margin: 0 }}
-                  />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="space-y-2">
-                  {/* Top Row - Primary Actions */}
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setEditingDrink(drink)}
-                      className="flex-1 bg-surface-sunken text-text py-2 px-3 rounded-md text-sm hover:bg-border transition-colors flex items-center justify-center space-x-1"
-                    >
-                      <Edit3 className="w-3 h-3" />
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={() => setViewingRecipe(drink)}
-                      className="flex-1 bg-surface-sunken text-text py-2 px-3 rounded-md text-sm hover:bg-border transition-colors flex items-center justify-center space-x-1"
-                    >
-                      <Eye className="w-3 h-3" />
-                      <span>View</span>
-                    </button>
-                  </div>
-
-                  {/* Bottom Row - Secondary Actions */}
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => toggleDrinkStock(drink.id)}
-                      disabled={loading}
-                      className={`flex-1 py-2 px-3 rounded-md text-sm transition-colors disabled:opacity-50 flex items-center justify-center space-x-1 ${
-                        drink.in_stock
-                          ? "bg-surface-sunken text-text-muted hover:bg-border"
-                          : "bg-surface-sunken text-text hover:bg-border"
-                      }`}
-                    >
-                      {drink.in_stock ? (
-                        <>
-                          <PackageX className="w-3 h-3" />
-                          <span>Out of Stock</span>
-                        </>
-                      ) : (
-                        <>
-                          <Package className="w-3 h-3" />
-                          <span>In Stock</span>
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleDeleteDrink(drink.id, drink.title)}
-                      disabled={loading}
-                      className="bg-status-rejected-bg text-danger py-2 px-3 rounded-md text-sm hover:bg-status-rejected-bg transition-colors disabled:opacity-50"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Quick Stats */}
-      {drinks.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-surface-raised rounded-md border p-4">
-            <div className="flex items-center">
-              <div className="p-2 bg-surface-sunken rounded-md">
-                <Package className="w-6 h-6 text-text-muted" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-text-muted">
-                  Total Drinks
-                </p>
-                <p className="text-2xl font-bold text-text">
-                  {drinks.length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-surface-raised rounded-md border p-4">
-            <div className="flex items-center">
-              <div className="p-2 bg-surface-sunken rounded-md">
-                <Package className="w-6 h-6 text-text-muted" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-text-muted">In Stock</p>
-                <p className="text-2xl font-bold text-text">
-                  {inStockDrinks.length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-surface-raised rounded-md border p-4">
-            <div className="flex items-center">
-              <div className="p-2 bg-status-rejected-bg rounded-md">
-                <PackageX className="w-6 h-6 text-danger" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-text-muted">
-                  Out of Stock
-                </p>
-                <p className="text-2xl font-bold text-text">
-                  {outOfStockDrinks.length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* The only floating thing in the product, and it sits clear of the
+          queue bar rather than over it. */}
+      <button
+        type="button"
+        onClick={() => navigate("new")}
+        aria-label={t("newDrink")}
+        className="sm:hidden fixed right-4 bottom-20 z-30 w-16 h-16 flex items-center justify-center rounded-md bg-text text-text-inverse shadow-float cursor-pointer"
+      >
+        <Plus className="w-7 h-7" strokeWidth={2.5} />
+      </button>
     </div>
   );
 };

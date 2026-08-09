@@ -1,14 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { Coffee } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
+import { useSessionManager } from "../hooks/useSessionManager";
 import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
+import { ordersAreClosed } from "../utils/lastOrders";
 import { useGuestMenu } from "../hooks/useGuestMenu";
 import RandomDrinkModal from "./RandomDrinkModal";
 import DrinkGrid from "./customer/DrinkGrid";
 import GuestShell from "./customer/GuestShell";
 import OrderPlacedModal from "./customer/OrderPlacedModal";
-import { MenuFilterSelect, MenuSidebar } from "./customer/MenuFilters";
+import PastOrdersPanel from "./customer/PastOrdersPanel";
+import {
+  FilterSheet,
+  MenuChipRail,
+  MenuSidebar,
+} from "./customer/MenuFilters";
 
 /** Statuses that mean a guest still has a drink on the go. */
 const IN_PROGRESS = ["new", "accepted", "ready"];
@@ -17,6 +25,7 @@ const CustomerInterface: React.FC = () => {
   const {
     currentBar,
     customerName,
+    drinks,
     language,
     loading,
     orders,
@@ -27,10 +36,18 @@ const CustomerInterface: React.FC = () => {
   } = useApp();
 
   const t = useTranslation(language);
+  const { clearSession } = useSessionManager();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const menu = useGuestMenu();
 
+  // History is a panel over the menu rather than a screen instead of it, but
+  // it still has an address, so it can be linked to and backed out of.
+  const historyOpen = location.pathname.endsWith("/past-orders");
+
   const [showOrderPlaced, setShowOrderPlaced] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [randomDrink, setRandomDrink] = useState<Drink | null>(null);
 
   // Escape closes the surprise-me pick.
@@ -45,6 +62,23 @@ const CustomerInterface: React.FC = () => {
     return () => window.removeEventListener("keydown", close);
   }, [randomDrink]);
 
+  // Last orders: what is already in still arrives, nothing new goes in.
+  // Re-read on a timer so a guest holding the menu open at one minute to
+  // sees it close, rather than finding out by tapping Order.
+  const [now, setNow] = useState(() => Date.now());
+  const closed = ordersAreClosed(currentBar, now);
+
+  useEffect(() => {
+    const closesAt = currentBar?.last_orders_at;
+    if (!closesAt || closed) return;
+
+    const wait = new Date(closesAt).getTime() - Date.now();
+    if (wait <= 0 || wait > 2 ** 31 - 1) return;
+
+    const timer = setTimeout(() => setNow(Date.now()), wait);
+    return () => clearTimeout(timer);
+  }, [currentBar?.last_orders_at, closed]);
+
   const currentOrder = orders.find(
     (order) =>
       order.customer_name === customerName && IN_PROGRESS.includes(order.status)
@@ -53,7 +87,7 @@ const CustomerInterface: React.FC = () => {
   const placeOrder = async (drink: Drink) => {
     if (currentOrder) {
       alert(t("oneOrderLimit"));
-      return;
+      return false;
     }
 
     setLoading(true);
@@ -69,11 +103,19 @@ const CustomerInterface: React.FC = () => {
       });
       setShowOrderPlaced(true);
       await menu.refreshOrders();
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to place order");
+      return false;
     } finally {
       setLoading(false);
     }
+  };
+
+  // Ordering again closes the history, because what matters next is the
+  // drink coming, which the dock is carrying.
+  const orderAgain = async (drink: Drink) => {
+    if (await placeOrder(drink)) navigate("/customer");
   };
 
   const toggleFavourite = async (drink: Drink) => {
@@ -127,7 +169,7 @@ const CustomerInterface: React.FC = () => {
     onViewRecipe: setViewingRecipe,
     onOrder: placeOrder,
     onToggleFavourite: toggleFavourite,
-    disabled: !!currentOrder || loading,
+    disabled: !!currentOrder || closed || loading,
     loading,
     t,
   };
@@ -148,9 +190,45 @@ const CustomerInterface: React.FC = () => {
     menu.favourites.length === 0;
 
   return (
-    <GuestShell onCancelOrder={cancelOrder} loading={loading}>
+    <GuestShell
+      onCancelOrder={cancelOrder}
+      loading={loading}
+      underHeader={
+        <MenuChipRail
+          {...filters}
+          favouriteCount={menu.favourites.length}
+          totalCount={menu.inStock.length}
+          onOpenFilters={() => setFiltersOpen(true)}
+        />
+      }
+    >
+      {filtersOpen && (
+        <FilterSheet
+          {...filters}
+          onFilter={(next) => {
+            menu.setFilter(next);
+            setFiltersOpen(false);
+          }}
+          onClose={() => setFiltersOpen(false)}
+        />
+      )}
+
       {showOrderPlaced && (
         <OrderPlacedModal onClose={() => setShowOrderPlaced(false)} t={t} />
+      )}
+
+      {historyOpen && (
+        <PastOrdersPanel
+          orders={orders}
+          drinks={drinks}
+          customerName={customerName}
+          currentOrder={currentOrder}
+          loading={loading}
+          t={t}
+          onClose={() => navigate("/customer")}
+          onOrderAgain={orderAgain}
+          onNotMe={clearSession}
+        />
       )}
 
       {randomDrink && (
@@ -170,21 +248,31 @@ const CustomerInterface: React.FC = () => {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 py-6 flex space-x-6">
+      <div className="max-w-7xl mx-auto flex">
         <MenuSidebar
           {...filters}
           favouriteCount={menu.favourites.length}
-          canSurprise={menu.inStock.length > 0 && !currentOrder && !loading}
+          totalCount={menu.inStock.length}
+          canSurprise={
+            menu.inStock.length > 0 && !currentOrder && !closed && !loading
+          }
           onSurpriseMe={pickRandom}
         />
 
-        <div className="flex-1 min-w-0 space-y-8">
-          <MenuFilterSelect {...filters} />
+        <div className="flex-1 min-w-0 px-4 lg:px-6 py-6 space-y-8">
+          {closed && (
+            <div className="p-4 rounded-md border-2 border-border-strong bg-surface-sunken">
+              <p className="text-heading">{t("barClosed")}</p>
+              <p className="text-body text-text-muted mt-0.5">
+                {t("barClosedHelp")}
+              </p>
+            </div>
+          )}
 
           {nothingToShow ? (
             <div className="p-8 text-center text-text-muted">
               <Coffee className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-body">No drinks available right now</p>
+              <p className="text-body">{t("noDrinksAvailable")}</p>
             </div>
           ) : (
             <>

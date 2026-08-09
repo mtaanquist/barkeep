@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useApp } from "../hooks/useApp";
 import type { Bar } from "../types";
 import { useTranslation } from "../utils/translations";
+import { rememberMe } from "../hooks/useSessionManager";
+import ToggleRow from "./ToggleRow";
 
 interface LoginFormProps {
   bar?: Bar;
@@ -48,6 +50,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
     }
   }, [mode, userType, setUserType]);
 
+  // Kept on by default: most people at a party are on their own phone.
+  const [remember, setRemember] = useState(true);
+
   const handleLogin = async () => {
     if (!loginForm.password) {
       setError("Password is required");
@@ -85,6 +90,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
       // Set customer name in context for guests
       if (userType === "guest") {
         setCustomerName(loginForm.name);
+        rememberMe(remember);
       }
 
       navigate(userType === "bartender" ? "/bartender" : "/customer");
@@ -172,16 +178,25 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
           {/* Guest Name Field */}
           {userType === "guest" && (
-            <input
-              type="text"
-              placeholder={t("enterName")}
-              value={loginForm.name}
-              onChange={(e) =>
-                setLoginForm((prev) => ({ ...prev, name: e.target.value }))
-              }
-              className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
-              onKeyPress={(e) => e.key === "Enter" && handleLogin()}
-            />
+            <>
+              <input
+                type="text"
+                placeholder={t("enterName")}
+                value={loginForm.name}
+                onChange={(e) =>
+                  setLoginForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
+                onKeyPress={(e) => e.key === "Enter" && handleLogin()}
+              />
+
+              <ToggleRow
+                on={remember}
+                onChange={setRemember}
+                title={t("rememberMe")}
+                help={t("rememberMeHelp")}
+              />
+            </>
           )}
 
           {/* Login Button */}
