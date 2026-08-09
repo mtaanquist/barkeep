@@ -12,8 +12,15 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, onRetry }) => {
   const t = useTranslation(language);
 
   return (
-    <div className="min-h-screen bg-status-rejected-bg flex items-center justify-center p-4">
-      <div className="bg-surface-raised rounded-md shadow-float p-6 max-w-md w-full text-center">
+    /* Sits over whatever the person was doing, so going back is losing
+       nothing. It used to replace the whole app. */
+    <div className="fixed inset-0 z-50 bg-overlay flex items-center justify-center p-4">
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-label={t("error")}
+        className="bg-surface-raised border border-border rounded-lg shadow-float p-6 max-w-md w-full text-center"
+      >
         <div className="text-danger mb-6">
           <div className="w-16 h-16 bg-status-rejected-bg rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
@@ -43,7 +50,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, onRetry }) => {
               onClick={() => window.location.reload()}
               className="w-full bg-disabled-bg text-text px-4 py-2 rounded-md hover:bg-border transition-colors font-medium"
             >
-              Reload Page
+              {t("reloadPage")}
             </button>
           </div>
         </div>

@@ -2,9 +2,25 @@ import { useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
 
-const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const A_DAY = 24 * 60 * 60 * 1000;
+
+/** How long a session lasts without being used. */
+const SESSION_TIMEOUT = A_DAY;
+
+/** And how long when the guest asked to be remembered. */
+const REMEMBERED_TIMEOUT = 60 * A_DAY;
+
 // Kept under the old name for the same reason as STORAGE_PREFIX.
 export const ACTIVITY_KEY = "homeBarSystem_lastActivity";
+export const REMEMBER_KEY = "homeBarSystem_remember";
+
+/** Remembers this guest on this browser for the next two months. */
+export function rememberMe(remember: boolean): void {
+  if (remember) localStorage.setItem(REMEMBER_KEY, "true");
+  else localStorage.removeItem(REMEMBER_KEY);
+}
+
+const isRemembered = () => localStorage.getItem(REMEMBER_KEY) === "true";
 
 export const useSessionManager = () => {
   const { setUserType, setCurrentBar, setCustomerName, setLoginForm } =
@@ -21,7 +37,8 @@ export const useSessionManager = () => {
     const lastActivity = localStorage.getItem(ACTIVITY_KEY);
     if (!lastActivity) return false;
 
-    return Date.now() - parseInt(lastActivity) > SESSION_TIMEOUT;
+    const allowed = isRemembered() ? REMEMBERED_TIMEOUT : SESSION_TIMEOUT;
+    return Date.now() - parseInt(lastActivity) > allowed;
   }, []);
 
   const clearSession = useCallback(() => {
@@ -31,6 +48,8 @@ export const useSessionManager = () => {
     setCustomerName("");
     setLoginForm({ password: "", name: "" });
     localStorage.removeItem(ACTIVITY_KEY);
+    // Signing out is the guest saying it is not them, so forget them too.
+    localStorage.removeItem(REMEMBER_KEY);
   }, [navigate, setUserType, setCurrentBar, setCustomerName, setLoginForm]);
 
   useEffect(() => {

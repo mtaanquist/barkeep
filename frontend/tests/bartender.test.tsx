@@ -1,0 +1,120 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+
+import App from "../src/App";
+import {
+  aDrink,
+  anOrder,
+  fakeApi,
+  FakeEventSource,
+  signIn,
+} from "./helpers";
+
+let orders: ReturnType<typeof anOrder>[];
+let menu: ReturnType<typeof aDrink>[];
+
+const serve = () => {
+  fakeApi((path) => {
+    if (path.includes("/analytics"))
+      return {
+        totalOrders: 2,
+        ordersToday: 2,
+        recentOrders: 2,
+        popularDrinks: [],
+        peakHours: [],
+        statusDistribution: [],
+        averageOrdersPerDay: 2,
+        period: "30 days",
+      };
+    if (path.includes("/categories")) return [];
+    if (path.includes("/drinks/bar/")) return menu;
+    if (path.includes("/orders/bar/")) return orders;
+    return undefined;
+  });
+};
+
+const openBar = (at = "/bartender") => {
+  window.history.pushState({}, "", at);
+  return render(<App />);
+};
+
+beforeEach(() => {
+  FakeEventSource.reset();
+  vi.stubGlobal("EventSource", FakeEventSource);
+  signIn({ as: "bartender" });
+  orders = [
+    anOrder({ id: 1, status: "new", drink_title: "Negroni" }),
+    anOrder({ id: 2, status: "accepted", drink_title: "Daiquiri" }),
+  ];
+  menu = [aDrink({ id: 1, title: "Negroni" })];
+  serve();
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  window.history.pushState({}, "", "/");
+});
+
+describe("finding your way around the bar", () => {
+  // The screens used to be remembered state rather than addresses, so the
+  // back button did nothing and none of them could be linked to.
+  it("puts the queue at its own address", async () => {
+    openBar();
+
+    await screen.findByRole("heading", { name: "Pending Orders" });
+    expect(window.location.pathname).toBe("/bartender/queue");
+  });
+
+  it("opens a setup screen directly, without going through the queue", async () => {
+    openBar("/bartender/categories");
+
+    await waitFor(() =>
+      expect(window.location.pathname).toBe("/bartender/categories")
+    );
+    expect(
+      screen.queryByRole("heading", { name: "Pending Orders" })
+    ).toBeNull();
+  });
+
+  it("goes back to where it was before", async () => {
+    openBar();
+    await screen.findByRole("heading", { name: "Pending Orders" });
+
+    await userEvent.click(screen.getAllByRole("link", { name: "Settings" })[0]);
+    await waitFor(() =>
+      expect(window.location.pathname).toBe("/bartender/settings")
+    );
+
+    window.history.back();
+
+    await waitFor(() =>
+      expect(window.location.pathname).toBe("/bartender/queue")
+    );
+  });
+
+  // Rule two of the shell: nothing may render over the count or in place of
+  // it, because an order arriving is the thing the bartender must not miss.
+  it("keeps the pending count on screen while setting up", async () => {
+    openBar("/bartender/settings");
+
+    const toQueue = await screen.findAllByRole("button", {
+      name: /Pending Orders/,
+    });
+    expect(toQueue.length).toBeGreaterThan(0);
+    expect(within(toQueue[0]).getByText("2")).toBeInTheDocument();
+  });
+
+  it("gets back to the queue in one go from anywhere", async () => {
+    openBar("/bartender/analytics");
+
+    const toQueue = await screen.findAllByRole("button", {
+      name: /Pending Orders/,
+    });
+    await userEvent.click(toQueue[0]);
+
+    await waitFor(() =>
+      expect(window.location.pathname).toBe("/bartender/queue")
+    );
+  });
+});

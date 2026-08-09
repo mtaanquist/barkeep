@@ -1,55 +1,21 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { BarChart3, TrendingUp, Coffee, Clock, Star } from "lucide-react";
 import { useApp } from "../hooks/useApp";
 import type { OrderStatus } from "../types";
+import { statusCard, statusRail } from "../utils/orderStatus";
 import { useTranslation } from "../utils/translations";
 import StatCard from "./analytics/StatCard";
 import StatList from "./analytics/StatList";
 import RankedBars from "./analytics/RankedBars";
 
-/** The steps an order goes through, and how each is drawn. */
-const STATUS_TILES: Array<{
-  status: OrderStatus;
-  label: string;
-  dot: string;
-  tint: string;
-  text: string;
-}> = [
-  {
-    status: "new",
-    label: "New",
-    dot: "bg-surface-sunken0",
-    tint: "bg-surface-sunken",
-    text: "text-text-muted",
-  },
-  {
-    status: "accepted",
-    label: "Accepted",
-    dot: "bg-surface-sunken0",
-    tint: "bg-surface-sunken",
-    text: "text-text",
-  },
-  {
-    status: "rejected",
-    label: "Rejected",
-    dot: "bg-status-rejected-bg0",
-    tint: "bg-status-rejected-bg",
-    text: "text-danger",
-  },
-  {
-    status: "ready",
-    label: "Ready",
-    dot: "bg-surface-sunken0",
-    tint: "bg-surface-sunken",
-    text: "text-text",
-  },
-  {
-    status: "processed",
-    label: "Completed",
-    dot: "bg-surface-sunken0",
-    tint: "bg-surface-sunken",
-    text: "text-text",
-  },
+/** The steps an order goes through. How each one is drawn comes from the
+    shared status helper, so this never drifts from the queue. */
+const STATUSES: OrderStatus[] = [
+  "new",
+  "accepted",
+  "rejected",
+  "ready",
+  "processed",
 ];
 
 const isToday = (when: string): boolean =>
@@ -62,14 +28,20 @@ const AnalyticsTab: React.FC = () => {
   const t = useTranslation(language);
   const barId = currentBar?.id;
 
+  // The server has always accepted a window and the page never asked for
+  // one, so seven days was the only report anyone could see.
+  const [days, setDays] = useState(7);
+
   const fetchAnalytics = useCallback(async () => {
     if (!barId) return;
     try {
-      setAnalytics(await apiCall(`/orders/bar/${barId}/analytics`));
+      setAnalytics(
+        await apiCall(`/orders/bar/${barId}/analytics?days=${days}`)
+      );
     } catch (err) {
       console.error("Could not load the reports:", err);
     }
-  }, [barId, apiCall, setAnalytics]);
+  }, [barId, days, apiCall, setAnalytics]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -80,9 +52,9 @@ const AnalyticsTab: React.FC = () => {
       <div className="bg-surface-raised rounded-md border p-8 text-center">
         <BarChart3 className="w-16 h-16 mx-auto mb-4 text-text-muted" />
         <h3 className="text-lg font-medium text-text mb-2">
-          Loading Analytics...
+          {t("loadingAnalytics")}
         </h3>
-        <p className="text-text-muted">Gathering data from your orders</p>
+        <p className="text-text-muted">{t("gatheringData")}</p>
       </div>
     );
   }
@@ -94,6 +66,24 @@ const AnalyticsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <h2 className="text-heading">{t("analytics")}</h2>
+        <label className="flex items-center gap-2 ml-auto">
+          <span className="font-mono text-caption uppercase text-text-muted">
+            {t("reportingWindow")}
+          </span>
+          <select
+            value={days}
+            onChange={(e) => setDays(Number(e.target.value))}
+            className="h-11 px-3 rounded-md border border-border bg-surface-raised text-label cursor-pointer focus:outline-none focus:border-border-strong focus:shadow-focus"
+          >
+            <option value={7}>{t("lastSevenDays")}</option>
+            <option value={30}>{t("lastThirtyDays")}</option>
+            <option value={90}>{t("lastNinetyDays")}</option>
+          </select>
+        </label>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           icon={<BarChart3 className="w-6 h-6 text-text-muted" />}
@@ -151,15 +141,20 @@ const AnalyticsTab: React.FC = () => {
 
       <div className="bg-surface-raised rounded-md border p-6">
         <h3 className="text-lg font-semibold text-text mb-6">
-          Order Status Distribution
+          {t("statusDistribution")}
         </h3>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {STATUS_TILES.map(({ status, label, dot, tint, text }) => (
-            <div key={status} className={`${tint} rounded-md p-4 text-center`}>
-              <div className={`w-4 h-4 ${dot} rounded-full mx-auto mb-2`} />
-              <p className={`text-sm font-medium ${text}`}>{label}</p>
-              <p className="text-2xl font-bold text-text">
+          {STATUSES.map((status) => (
+            <div
+              key={status}
+              className={`rounded-md border p-4 text-center ${statusCard(status)}`}
+            >
+              <div
+                className={`w-4 h-4 rounded-full mx-auto mb-2 ${statusRail(status)}`}
+              />
+              <p className="text-label">{t(status)}</p>
+              <p className="font-mono text-display mt-1">
                 {orders.filter((order) => order.status === status).length}
               </p>
             </div>
@@ -169,7 +164,7 @@ const AnalyticsTab: React.FC = () => {
 
       <div className="bg-surface-raised rounded-md border p-6">
         <h3 className="text-lg font-semibold text-text mb-6">
-          Recent Activity Summary
+          {t("recentActivity")}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

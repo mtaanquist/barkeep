@@ -121,10 +121,10 @@ const CategoriesTab: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h3 className="text-lg font-semibold text-text">
-              Drink Categories
+              {t("categories")}
             </h3>
             <p className="text-sm text-text-muted">
-              Create and manage categories to organize your drinks
+              {t("categoriesHelp")}
             </p>
           </div>
           <button
@@ -132,7 +132,7 @@ const CategoriesTab: React.FC = () => {
             className="bg-text text-text-inverse px-4 py-2 rounded-md hover:bg-neutral-800 transition-colors flex items-center space-x-2 w-full sm:w-auto justify-center"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Category</span>
+            <span>{t("addCategory")}</span>
           </button>
         </div>
       </div>
@@ -143,7 +143,7 @@ const CategoriesTab: React.FC = () => {
           <form onSubmit={handleCreateCategory} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-text mb-2">
-                Category Name
+                {t("categoryName")}
               </label>
               <input
                 type="text"
@@ -183,17 +183,17 @@ const CategoriesTab: React.FC = () => {
         <div className="bg-surface-raised rounded-md border p-8 text-center">
           <Tag className="w-16 h-16 mx-auto mb-4 text-text-muted" />
           <h3 className="text-lg font-medium text-text mb-2">
-            No categories yet
+            {t("noCategories")}
           </h3>
           <p className="text-text-muted mb-4">
-            Create your first category to start organizing your drinks
+            {t("noCategoriesHelp")}
           </p>
           <button
             onClick={() => setShowCreateForm(true)}
             className="bg-text text-text-inverse px-6 py-2 rounded-md hover:bg-neutral-800 transition-colors inline-flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Category</span>
+            <span>{t("addCategory")}</span>
           </button>
         </div>
       ) : (
@@ -227,7 +227,7 @@ const CategoriesTab: React.FC = () => {
                       <button
                         onClick={() => setEditingCategory(category)}
                         className="p-2 text-text-muted hover:text-text-muted transition-colors"
-                        title="Edit category"
+                        title={t("editCategory")}
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
@@ -235,7 +235,7 @@ const CategoriesTab: React.FC = () => {
                         onClick={() => handleDeleteCategory(category)}
                         disabled={loading}
                         className="p-2 text-text-muted hover:text-danger transition-colors disabled:opacity-50"
-                        title="Delete category"
+                        title={t("deleteCategory")}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

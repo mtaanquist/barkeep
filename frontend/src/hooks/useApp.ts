@@ -10,14 +10,6 @@ import type {
   UserType,
 } from "../types";
 
-/** The bartender's tabs, in the order they appear. */
-export type Tab =
-  | "orders"
-  | "menu"
-  | "analytics"
-  | "categories"
-  | "settings";
-
 /** The two sign-in forms hold the same handful of fields throughout. */
 type BarForm = {
   name: string;
@@ -50,10 +42,8 @@ export interface AppContextType {
   categories: Category[];
 
   // UI states
-  editingDrink: Drink | "new" | null;
   viewingRecipe: Drink | null;
   showPassword: boolean;
-  currentTab: Tab;
 
   // Setters
   setUserType: (type: UserType | null) => void;
@@ -68,10 +58,8 @@ export interface AppContextType {
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   setAnalytics: React.Dispatch<React.SetStateAction<Analytics | null>>;
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
-  setEditingDrink: (drink: Drink | "new" | null) => void;
   setViewingRecipe: (drink: Drink | null) => void;
   setShowPassword: (show: boolean) => void;
-  setCurrentTab: (tab: Tab) => void;
 
   // API helper
   apiCall: <T = unknown>(
