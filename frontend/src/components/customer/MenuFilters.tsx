@@ -192,10 +192,14 @@ const chipsFor = ({
  * Every chip carries its count, so a guest sees what is on offer without
  * opening anything; the leading button opens the full list when the rail
  * is not enough.
+ *
+ * It rides in the header's own sticky block rather than at the top of the
+ * page, so it sits against the header instead of below a band of white.
  */
-export const MenuChips: React.FC<ChipsProps> = (props) => {
-  const { filter, onFilter, t } = props;
-  const [sheetOpen, setSheetOpen] = React.useState(false);
+export const MenuChipRail: React.FC<
+  ChipsProps & { onOpenFilters: () => void }
+> = (props) => {
+  const { filter, onFilter, onOpenFilters, t } = props;
 
   const chosen = keyOf(filter);
   // Whichever is in force comes first, so it is never off the side.
@@ -204,48 +208,39 @@ export const MenuChips: React.FC<ChipsProps> = (props) => {
   );
 
   return (
-    <div className="lg:hidden">
-      <div className="sticky top-0 z-10 -mx-4 px-4 py-2.5 bg-surface border-b border-border flex gap-2 overflow-x-auto">
+    <div className="lg:hidden max-w-7xl mx-auto px-4 py-2.5 flex gap-2 overflow-x-auto">
+      <button
+        onClick={onOpenFilters}
+        className="h-11 pl-3.5 pr-4 shrink-0 flex items-center gap-1.5 rounded-full border border-border-strong bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+      >
+        <SlidersHorizontal className="w-4 h-4 shrink-0" />
+        {t("filterShort")}
+      </button>
+
+      {chips.map((chip) => (
         <button
-          onClick={() => setSheetOpen(true)}
-          className="h-11 pl-3.5 pr-4 shrink-0 flex items-center gap-1.5 rounded-full border border-border-strong bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+          key={chip.key}
+          onClick={() => onFilter(chip.filter)}
+          aria-pressed={chip.key === chosen}
+          className={`h-11 px-4 shrink-0 rounded-full text-label whitespace-nowrap transition-colors duration-(--duration-instant) cursor-pointer ${
+            chip.key === chosen
+              ? "bg-text text-text-inverse"
+              : "bg-surface-raised border border-border hover:bg-surface-sunken"
+          }`}
         >
-          <SlidersHorizontal className="w-4 h-4 shrink-0" />
-          {t("filterShort")}
+          {chip.label} {chip.count}
         </button>
-
-        {chips.map((chip) => (
-          <button
-            key={chip.key}
-            onClick={() => onFilter(chip.filter)}
-            aria-pressed={chip.key === chosen}
-            className={`h-11 px-4 shrink-0 rounded-full text-label whitespace-nowrap transition-colors duration-(--duration-instant) cursor-pointer ${
-              chip.key === chosen
-                ? "bg-text text-text-inverse"
-                : "bg-surface-raised border border-border hover:bg-surface-sunken"
-            }`}
-          >
-            {chip.label} {chip.count}
-          </button>
-        ))}
-      </div>
-
-      {sheetOpen && (
-        <FilterSheet
-          {...props}
-          onFilter={(next) => {
-            onFilter(next);
-            setSheetOpen(false);
-          }}
-          onClose={() => setSheetOpen(false)}
-        />
-      )}
+      ))}
     </div>
   );
 };
 
-/** The whole list, over the menu, with the menu left where it was. */
-const FilterSheet: React.FC<FilterProps & { onClose: () => void }> = ({
+/**
+ * The whole list, over the menu, with the menu left where it was. Kept out
+ * of the header on purpose: anything fixed inside it is trapped under the
+ * dock, which sits higher.
+ */
+export const FilterSheet: React.FC<FilterProps & { onClose: () => void }> = ({
   categories,
   spirits,
   byCategory,

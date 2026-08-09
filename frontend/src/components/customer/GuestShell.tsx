@@ -16,6 +16,8 @@ interface GuestShellProps {
   children: React.ReactNode;
   /** A labelled way back, on the screens that are not the menu. */
   back?: { label: string; onClick: () => void };
+  /** A second row under the header, inside the same sticky block. */
+  underHeader?: React.ReactNode;
   onCancelOrder?: (orderId: number) => void;
   loading?: boolean;
 }
@@ -26,6 +28,7 @@ interface GuestShellProps {
 const GuestShell: React.FC<GuestShellProps> = ({
   children,
   back,
+  underHeader,
   onCancelOrder,
   loading = false,
 }) => {
@@ -60,7 +63,11 @@ const GuestShell: React.FC<GuestShellProps> = ({
           the greeting stack, because side by side one of them ends up as an
           ellipsis; from sm they share a line. */}
       <header className="bg-surface-raised border-b border-border sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 lg:px-6 py-3">
+        <div
+          className={`max-w-7xl mx-auto px-4 lg:px-6 py-3 ${
+            underHeader ? "border-b border-border" : ""
+          }`}
+        >
           <div className="flex items-center gap-2.5 sm:gap-4">
             {back && (
               <button
@@ -104,6 +111,8 @@ const GuestShell: React.FC<GuestShellProps> = ({
             </button>
           </div>
         </div>
+
+        {underHeader}
       </header>
 
       {/* Room at the bottom so the dock never covers the last drink. */}

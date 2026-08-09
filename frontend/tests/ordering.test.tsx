@@ -198,6 +198,49 @@ describe("ordering a drink", () => {
   });
 });
 
+describe("filtering on a phone", () => {
+  // The rail belongs to the header's own sticky block. Put it at the top of
+  // the scrolling content instead and it sits below a band of white.
+  it("rides with the header rather than the page", async () => {
+    await showMenu();
+
+    const header = screen.getByRole("banner");
+    expect(
+      within(header).getByRole("button", { name: "Filter" })
+    ).toBeInTheDocument();
+    expect(
+      within(header).getByRole("button", { name: /All drinks/ })
+    ).toBeInTheDocument();
+  });
+
+  it("carries a count on every chip, so nothing needs opening", async () => {
+    await showMenu();
+
+    const header = screen.getByRole("banner");
+    expect(
+      within(header).getByRole("button", { name: "All drinks 2" })
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(header).getByRole("button", { name: "Gin 1" })
+    ).toBeInTheDocument();
+  });
+
+  it("opens the whole list when the rail is not enough", async () => {
+    await showMenu();
+
+    await userEvent.click(screen.getByRole("button", { name: "Filter" }));
+
+    const sheet = screen.getByRole("dialog", { name: "Filter drinks" });
+    await userEvent.click(within(sheet).getByRole("button", { name: /Rum/ }));
+
+    // Choosing closes it, and the menu is still where it was.
+    expect(screen.queryByRole("dialog", { name: "Filter drinks" })).toBeNull();
+    expect(
+      screen.getByRole("heading", { name: "Daiquiri", level: 3 })
+    ).toBeInTheDocument();
+  });
+});
+
 describe("looking at a recipe", () => {
   // A drink with no recipe used to throw, because the recipe was typed as
   // always being there.

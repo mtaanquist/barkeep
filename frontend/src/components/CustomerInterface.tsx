@@ -11,7 +11,11 @@ import DrinkGrid from "./customer/DrinkGrid";
 import GuestShell from "./customer/GuestShell";
 import OrderPlacedModal from "./customer/OrderPlacedModal";
 import PastOrdersPanel from "./customer/PastOrdersPanel";
-import { MenuChips, MenuSidebar } from "./customer/MenuFilters";
+import {
+  FilterSheet,
+  MenuChipRail,
+  MenuSidebar,
+} from "./customer/MenuFilters";
 
 /** Statuses that mean a guest still has a drink on the go. */
 const IN_PROGRESS = ["new", "accepted", "ready"];
@@ -42,6 +46,7 @@ const CustomerInterface: React.FC = () => {
   const historyOpen = location.pathname.endsWith("/past-orders");
 
   const [showOrderPlaced, setShowOrderPlaced] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [randomDrink, setRandomDrink] = useState<Drink | null>(null);
 
   // Escape closes the surprise-me pick.
@@ -167,7 +172,29 @@ const CustomerInterface: React.FC = () => {
     menu.favourites.length === 0;
 
   return (
-    <GuestShell onCancelOrder={cancelOrder} loading={loading}>
+    <GuestShell
+      onCancelOrder={cancelOrder}
+      loading={loading}
+      underHeader={
+        <MenuChipRail
+          {...filters}
+          favouriteCount={menu.favourites.length}
+          totalCount={menu.inStock.length}
+          onOpenFilters={() => setFiltersOpen(true)}
+        />
+      }
+    >
+      {filtersOpen && (
+        <FilterSheet
+          {...filters}
+          onFilter={(next) => {
+            menu.setFilter(next);
+            setFiltersOpen(false);
+          }}
+          onClose={() => setFiltersOpen(false)}
+        />
+      )}
+
       {showOrderPlaced && (
         <OrderPlacedModal onClose={() => setShowOrderPlaced(false)} t={t} />
       )}
@@ -213,12 +240,6 @@ const CustomerInterface: React.FC = () => {
         />
 
         <div className="flex-1 min-w-0 px-4 lg:px-6 py-6 space-y-8">
-          <MenuChips
-            {...filters}
-            favouriteCount={menu.favourites.length}
-            totalCount={menu.inStock.length}
-          />
-
           {nothingToShow ? (
             <div className="p-8 text-center text-text-muted">
               <Coffee className="w-12 h-12 mx-auto mb-3 opacity-50" />
