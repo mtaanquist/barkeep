@@ -42,4 +42,10 @@ export default [
       "@typescript-eslint/no-empty-object-type": "error",
     },
   },
+  {
+    files: ["tests/**/*.{ts,tsx}", "vitest.config.ts"],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
+    },
+  },
 ];

@@ -20,6 +20,9 @@ uploads
 **/.vscode
 **/.idea
 
+# Tests are not needed to build the image.
+frontend/tests
+
 compose.yaml
 compose.dev.yaml
 README.md

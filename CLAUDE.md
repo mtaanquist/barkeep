@@ -73,7 +73,7 @@ Test the `staging` image against a copy of the real data before releasing.
 
 ```sh
 cd backend  && npm test && npm run lint && npm run typecheck
-cd frontend && npm run lint && npm run build
+cd frontend && npm test && npm run lint && npm run typecheck && npm run build
 ```
 
 Both linters fail on a warning, so anything new has to be dealt with rather
@@ -114,17 +114,40 @@ text.
 
 ## Tests
 
+Both halves use Vitest, both in `tests/`, both run by `npm test`.
+
+### The server
+
 `createApp()` takes the database and folders it should use, so a test hands in
-its own and nothing touches real data. `tests/helpers.js` has the pieces:
+its own and nothing touches real data. `tests/helpers.ts` has the pieces:
 `makeTestApp()` for a wired-up app, `makeEmptyDatabase()` for testing the
 migration steps, `seedBar()` for something to order.
 
 Live updates are checked by putting a stand-in on `app.locals.wss` and looking
 at what got sent, rather than opening a real connection.
 
+### The pages
+
+These run against a stand-in browser, so no server and no real browser are
+needed. `tests/helpers.tsx` has the pieces: `fakeApi()` answers requests and
+records them, `signIn()` sets up a session the way a real one is remembered,
+`FakeEventSource` stands in for live updates and is driven by hand, and
+`aBar`/`aDrink`/`anOrder` make something to work with.
+
+Ask for things the way a guest would — the button that says "Order", the text
+they would read — rather than by class name, so a test breaks when the app
+does and not when the styling changes.
+
+### Both
+
 Cover the behaviour, not the wiring. The tests worth having are the ones for
 things that have actually gone wrong before: migrations against half-updated
-databases, handler order, and anything touching files on disk.
+databases, handler order, anything touching files on disk, and anything that
+reloads or reconnects on its own.
+
+A test for a bug should fail against the old code. Worth actually checking by
+putting the old behaviour back for a moment — a regression test that passes
+either way is not testing anything.
 
 ## Don't commit
 
