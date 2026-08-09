@@ -156,6 +156,7 @@ export interface TranslationMap {
   yourRandomDrink: string;
   barChoseForYou: string;
   baseSpirit: string;
+  servings: string;
   orderThis: string;
   tryAnother: string;
   pastOrders: string; // Added
@@ -353,7 +354,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     surpriseMe: "Surprise me",
     yourRandomDrink: "Your Random Drink",
     barChoseForYou: "the bar chose for you",
-    baseSpirit: "Base Spirit",
+    baseSpirit: "Base spirit",
+    servings: "serves",
     orderThis: "Order this!",
     tryAnother: "Try another",
     pastOrders: "Past orders", // Added
@@ -549,7 +551,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     surpriseMe: "Overrask mig",
     yourRandomDrink: "Your Random Drink",
     barChoseForYou: "baren har valgt til dig",
-    baseSpirit: "Base Spirit",
+    baseSpirit: "Basisspiritus",
+    servings: "til",
     orderThis: "Bestil denne!",
     tryAnother: "Prøv en anden",
     pastOrders: "Tidligere bestillinger", // Added

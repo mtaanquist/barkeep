@@ -10,192 +10,173 @@ interface RecipeViewProps {
   onClose: () => void;
 }
 
+/**
+ * Some bartenders write a line like "prep: 5 min" at the top of a recipe.
+ * If one is there it becomes a chip; if not, nothing is missing.
+ */
+const readMetadata = (recipe: string | null) => {
+  if (!recipe) return { difficulty: null, prepTime: null, servings: null };
+
+  const difficulty = recipe.match(/difficulty:\s*(\w+)/i);
+  const prepTime = recipe.match(
+    /prep(?:\s+time)?:\s*(\d+(?:\s*-\s*\d+)?)\s*(?:min|minutes?)/i
+  );
+  const servings = recipe.match(
+    /(?:serves?|servings?):\s*(\d+(?:\s*-\s*\d+)?)/i
+  );
+
+  return {
+    difficulty: difficulty ? difficulty[1] : null,
+    prepTime: prepTime ? prepTime[1] : null,
+    servings: servings ? servings[1] : null,
+  };
+};
+
+const Chip: React.FC<{
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  onPhoto: boolean;
+}> = ({ icon, children, onPhoto }) => (
+  <span
+    className={`inline-flex items-center gap-1.5 font-mono text-caption uppercase ${
+      onPhoto ? "text-sign-fg/90" : "text-text-muted"
+    }`}
+  >
+    {icon}
+    {children}
+  </span>
+);
+
 const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
   const { language } = useApp();
   const t = useTranslation(language);
 
-  // Extract difficulty, prep time, and servings from recipe if present
-  const extractMetadata = (recipe: string | null) => {
-    if (!recipe) return { difficulty: null, prepTime: null, servings: null };
+  const metadata = readMetadata(drink.recipe);
+  const onPhoto = !!drink.image_url;
 
-    const difficultyMatch = recipe.match(/difficulty:\s*(\w+)/i);
-    const prepTimeMatch = recipe.match(
-      /prep(?:\s+time)?:\s*(\d+(?:\s*-\s*\d+)?)\s*(?:min|minutes?)/i
-    );
-    const servingsMatch = recipe.match(
-      /(?:serves?|servings?):\s*(\d+(?:\s*-\s*\d+)?)/i
-    );
-
-    return {
-      difficulty: difficultyMatch ? difficultyMatch[1] : null,
-      prepTime: prepTimeMatch ? prepTimeMatch[1] : null,
-      servings: servingsMatch ? servingsMatch[1] : null,
-    };
-  };
-
-  const metadata = extractMetadata(drink.recipe);
-
-  // Escape key closes modal
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose?.();
-      }
+    const close = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
     };
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 bg-overlay flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-overlay flex items-center justify-center p-4 overflow-y-auto">
       <div
         role="dialog"
         aria-modal="true"
         aria-label={drink.title}
-        className="bg-surface-raised border border-border rounded-lg shadow-float w-full max-w-4xl max-h-[90vh] overflow-hidden my-8"
+        className="w-full max-w-lg my-8 bg-surface-raised border border-border rounded-lg shadow-float overflow-hidden flex flex-col max-h-[90vh]"
       >
-        {/* Header */}
-        <div className="relative">
-          {drink.image_url && (
-            <div className="h-64 lg:h-80 overflow-hidden relative">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <img
-                  src={drink.image_url}
-                  alt={drink.title}
-                  className="w-full h-full object-contain"
-                  style={{
-                    transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,
-                  }}
-                />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="relative shrink-0">
+          {onPhoto && (
+            <div className="h-56 overflow-hidden">
+              <img
+                src={drink.image_url!}
+                alt=""
+                className="w-full h-full object-cover"
+                style={{
+                  transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,
+                }}
+              />
+              {/* Enough shade under the name to keep it readable. */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
             </div>
           )}
 
           <div
-            className={`${
-              drink.image_url ? "absolute bottom-0 left-0 right-0" : ""
-            } p-6`}
+            className={`${onPhoto ? "absolute inset-x-0 bottom-0" : ""} p-5 pr-16 flex flex-col gap-2`}
           >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h1
-                  className={`text-3xl lg:text-4xl font-bold mb-2 ${
-                    drink.image_url ? "text-sign-fg" : "text-text"
-                  }`}
-                >
-                  {drink.title}
-                </h1>
-                {drink.base_spirit && (
-                  <div
-                    className={`text-base font-medium mb-2 ${
-                      drink.image_url ? "text-sign-fg/90" : "text-text"
-                    }`}
-                  >
-                    Base Spirit: {drink.base_spirit}
-                  </div>
-                )}
+            <h2
+              className={`text-display break-words ${onPhoto ? "text-sign-fg" : "text-text"}`}
+            >
+              {drink.title}
+            </h2>
 
-                {/* Metadata */}
-                {(metadata.difficulty ||
-                  metadata.prepTime ||
-                  metadata.servings) && (
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    {metadata.difficulty && (
-                      <div
-                        className={`flex items-center ${
-                          drink.image_url ? "text-sign-fg/90" : "text-text-muted"
-                        }`}
-                      >
-                        <ChefHat className="w-4 h-4 mr-1" />
-                        <span className="capitalize">
-                          {metadata.difficulty}
-                        </span>
-                      </div>
-                    )}
-                    {metadata.prepTime && (
-                      <div
-                        className={`flex items-center ${
-                          drink.image_url ? "text-sign-fg/90" : "text-text-muted"
-                        }`}
-                      >
-                        <Clock className="w-4 h-4 mr-1" />
-                        <span>{metadata.prepTime} min</span>
-                      </div>
-                    )}
-                    {metadata.servings && (
-                      <div
-                        className={`flex items-center ${
-                          drink.image_url ? "text-sign-fg/90" : "text-text-muted"
-                        }`}
-                      >
-                        <Users className="w-4 h-4 mr-1" />
-                        <span>
-                          {metadata.servings}{" "}
-                          {metadata.servings === "1" ? "serving" : "servings"}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+            {(drink.base_spirit ||
+              metadata.difficulty ||
+              metadata.prepTime ||
+              metadata.servings) && (
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                {drink.base_spirit && (
+                  <Chip icon={null} onPhoto={onPhoto}>
+                    {t("baseSpirit")} · {drink.base_spirit}
+                  </Chip>
+                )}
+                {metadata.difficulty && (
+                  <Chip
+                    icon={<ChefHat className="w-3.5 h-3.5" />}
+                    onPhoto={onPhoto}
+                  >
+                    {metadata.difficulty}
+                  </Chip>
+                )}
+                {metadata.prepTime && (
+                  <Chip
+                    icon={<Clock className="w-3.5 h-3.5" />}
+                    onPhoto={onPhoto}
+                  >
+                    {metadata.prepTime} min
+                  </Chip>
+                )}
+                {metadata.servings && (
+                  <Chip
+                    icon={<Users className="w-3.5 h-3.5" />}
+                    onPhoto={onPhoto}
+                  >
+                    {t("servings")} {metadata.servings}
+                  </Chip>
                 )}
               </div>
-
-              <button
-                onClick={onClose}
-                className={`p-2 rounded-md transition-colors ml-4 ${
-                  drink.image_url
-                    ? "bg-black/20 text-sign-fg hover:bg-overlay"
-                    : "bg-surface-sunken text-text-muted hover:bg-border"
-                }`}
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+            )}
           </div>
+
+          <button
+            onClick={onClose}
+            aria-label={t("close")}
+            className={`absolute top-3 right-3 w-11 h-11 flex items-center justify-center rounded-md transition-colors duration-(--duration-instant) cursor-pointer ${
+              onPhoto
+                ? "bg-overlay text-sign-fg hover:bg-black/60"
+                : "text-text-muted hover:bg-surface-sunken"
+            }`}
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 lg:p-8 overflow-y-auto max-h-[50vh]">
-          {/* Ensure the markdown container uses a readable color and prose styling */}
-          <div className="prose prose-sm text-text max-w-none">
-            <LazyMarkdownViewer
-              source={drink.recipe ?? ""}
-              style={
-                // The editor ships its own near-black, which vanishes on a
-                // dark panel. Hand it the ink the rest of the app uses.
-                {
-                  "--color-fg-default": "var(--bk-text)",
-                } as React.CSSProperties
-              }
+        <div className="flex-1 overflow-y-auto p-5 border-t border-border">
+          <LazyMarkdownViewer
+            source={drink.recipe ?? ""}
+            style={
+              // The editor ships its own near-black, which vanishes on a
+              // dark panel. Hand it the ink the rest of the app uses.
+              {
+                background: "none",
+                "--color-fg-default": "var(--bk-text)",
+              } as React.CSSProperties
+            }
+          />
+        </div>
+
+        <div className="shrink-0 p-4 border-t border-border bg-surface-sunken flex items-center gap-3">
+          <p className="flex-1 flex items-center gap-2 text-body text-text-muted">
+            {/* Running out is a state, not a fault, so it is not red. */}
+            <span
+              className={`inline-block w-2 h-2 rounded-full ${
+                drink.in_stock === 1 ? "bg-text" : "bg-disabled-fg"
+              }`}
             />
-          </div>
-        </div>
+            {drink.in_stock === 1 ? t("inStock") : t("outOfStock")}
+          </p>
 
-        {/* Footer */}
-        <div className="border-t border-border p-6 bg-surface-sunken">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="text-sm text-text-muted">
-              <p>
-                Created on {new Date(drink.created_at).toLocaleDateString()}
-              </p>
-              <p className="flex items-center mt-1">
-                {/* Running out is a state, not a fault, so it is not red. */}
-                <span
-                  className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                    drink.in_stock ? "bg-text" : "bg-disabled-fg"
-                  }`}
-                />
-                {drink.in_stock ? t("inStock") : t("outOfStock")}
-              </p>
-            </div>
-
-            <button
-              onClick={onClose}
-              className="w-full sm:w-auto px-6 py-2 bg-text text-text-inverse rounded-md hover:bg-neutral-800 transition-colors"
-            >
-              {t("close")}
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="h-14 px-5 rounded-md border border-border-strong bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+          >
+            {t("close")}
+          </button>
         </div>
       </div>
     </div>

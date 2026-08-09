@@ -9,6 +9,7 @@ import RecipeView from "../src/components/RecipeView";
 import { AppProvider } from "../src/context/AppContext";
 import { LiveUpdatesProvider } from "../src/context/LiveUpdatesContext";
 import {
+  aBar,
   aDrink,
   anOrder,
   fakeApi,
@@ -192,6 +193,25 @@ describe("looking at a recipe", () => {
     await userEvent.keyboard("{Escape}");
 
     expect(onClose).toHaveBeenCalled();
+  });
+
+  // Everything a guest reads here used to be written into the file in
+  // English, whatever language the bar was set to.
+  it("reads in the bar's language", () => {
+    signIn({ bar: aBar({ language: "da" }) });
+
+    render(
+      <RecipeView
+        drink={aDrink({ base_spirit: "Gin", in_stock: 0 })}
+        onClose={vi.fn()}
+      />,
+      { wrapper: withApp }
+    );
+
+    const recipe = screen.getByRole("dialog", { name: "Negroni" });
+    expect(recipe).toHaveTextContent("Basisspiritus");
+    expect(recipe).toHaveTextContent("Udsolgt");
+    expect(recipe).not.toHaveTextContent(/Base Spirit|Out of stock/);
   });
 
   // The recipe used to be returned in place of the whole app, so a guest

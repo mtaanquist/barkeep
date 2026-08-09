@@ -52,6 +52,8 @@ export function signIn({
 }: { bar?: Bar; as?: "guest" | "bartender"; name?: string } = {}): void {
   localStorage.setItem("homeBarSystem_userType", JSON.stringify(as));
   localStorage.setItem("homeBarSystem_currentBar", JSON.stringify(bar));
+  // Signing in is also what settles which language the app reads in.
+  localStorage.setItem("homeBarSystem_language", JSON.stringify(bar.language));
   if (as === "guest") {
     localStorage.setItem("homeBarSystem_customerName", JSON.stringify(name));
   }
