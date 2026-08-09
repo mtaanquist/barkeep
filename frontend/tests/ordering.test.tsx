@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 
 import CustomerInterface from "../src/components/CustomerInterface";
 import RecipeView from "../src/components/RecipeView";
+import PastOrdersPage from "../src/pages/PastOrdersPage";
 import { AppProvider } from "../src/context/AppContext";
 import { LiveUpdatesProvider } from "../src/context/LiveUpdatesContext";
 import {
@@ -177,5 +178,51 @@ describe("looking at a recipe", () => {
     await userEvent.keyboard("{Escape}");
 
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe("the past orders page", () => {
+  const openDirectly = () =>
+    render(
+      <MemoryRouter initialEntries={["/customer/past-orders"]}>
+        <AppProvider>
+          <PastOrdersPage />
+        </AppProvider>
+      </MemoryRouter>
+    );
+
+  // The page used to read whatever the menu had already loaded, so arriving
+  // straight at it, or refreshing, showed nothing.
+  it("loads the orders itself rather than relying on the menu", async () => {
+    orders = [
+      anOrder({ id: 5, status: "processed", drink_id: 1, drink_title: "Negroni" }),
+      anOrder({
+        id: 6,
+        status: "processed",
+        drink_id: 2,
+        drink_title: "Daiquiri",
+      }),
+    ];
+
+    openDirectly();
+
+    // Both come back, even though nothing loaded the menu first.
+    expect(await screen.findAllByText("Negroni")).not.toHaveLength(0);
+    expect(screen.getAllByText("Daiquiri")).not.toHaveLength(0);
+    expect(screen.queryByText(/no past orders/i)).toBeNull();
+  });
+
+  it("shows only this guest's finished orders", async () => {
+    orders = [
+      anOrder({ id: 5, status: "processed", drink_title: "Negroni" }),
+      anOrder({ id: 6, status: "new", drink_title: "Still Coming" }),
+      anOrder({ id: 7, status: "processed", customer_name: "Bob", drink_title: "Someone Elses" }),
+    ];
+
+    openDirectly();
+
+    expect(await screen.findByText("Negroni")).toBeInTheDocument();
+    expect(screen.queryByText("Still Coming")).toBeNull();
+    expect(screen.queryByText("Someone Elses")).toBeNull();
   });
 });
