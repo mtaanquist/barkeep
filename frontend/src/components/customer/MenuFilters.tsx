@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { Dices, Star } from "lucide-react";
 import type { Drink } from "../../types";
 import type { MenuFilter } from "../../hooks/useGuestMenu";
 import { translations } from "../../utils/translations";
@@ -16,6 +16,8 @@ interface FilterProps {
 
 interface SidebarProps extends FilterProps {
   favouriteCount: number;
+  /** Everything on the menu, for the count beside "all drinks". */
+  totalCount: number;
   canSurprise: boolean;
   onSurpriseMe: () => void;
 }
@@ -23,22 +25,24 @@ interface SidebarProps extends FilterProps {
 const isChosen = (filter: MenuFilter, type: string, value: string): boolean =>
   filter.type === type && "value" in filter && filter.value === value;
 
-/** Chosen is a filled row rather than a colour, so the menu stays quiet. */
-const button = (chosen: boolean) =>
-  `w-full text-left px-3 py-2.5 rounded-md text-label transition-colors duration-(--duration-instant) cursor-pointer ${
+/** Chosen is a sunken row with a bar down its left edge, not a fill. */
+const row = (chosen: boolean) =>
+  `w-full h-14 flex items-center gap-2.5 text-left transition-colors duration-(--duration-instant) cursor-pointer ${
     chosen
-      ? "bg-text text-text-inverse"
-      : "text-text-muted hover:bg-surface-sunken hover:text-text"
+      ? "bg-surface-sunken border-l-4 border-border-strong pl-2 pr-3"
+      : "px-3 hover:bg-surface-sunken"
   }`;
 
-const Divider: React.FC<{ label: string }> = ({ label }) => (
-  <li className="pt-4 pb-1">
-    <div className="flex items-center gap-2.5">
-      <span className="font-mono text-caption uppercase text-text-muted">
-        {label}
-      </span>
-      <span className="flex-1 h-px bg-border" />
-    </div>
+/** The count sits to the right of every row, in the same column. */
+const Count: React.FC<{ n: number }> = ({ n }) => (
+  <span className="font-mono text-[0.8125rem] font-bold leading-none text-text-muted">
+    {n}
+  </span>
+);
+
+const GroupLabel: React.FC<{ label: string }> = ({ label }) => (
+  <li className="px-3 pt-4 pb-1.5 font-mono text-caption uppercase text-text-muted">
+    {label}
   </li>
 );
 
@@ -51,68 +55,87 @@ export const MenuSidebar: React.FC<SidebarProps> = ({
   filter,
   onFilter,
   favouriteCount,
+  totalCount,
   canSurprise,
   onSurpriseMe,
   t,
 }) => (
-  <nav className="hidden lg:block w-62 shrink-0 sticky top-24 self-start">
-    <ul className="space-y-1">
-      <li className="mb-3">
+  <nav className="hidden lg:block w-62 shrink-0 self-stretch border-r border-border py-4 pr-3">
+    <ul>
+      {/* Dashed, because it is the one thing here that is a bit of a game. */}
+      <li className="px-3 mb-2">
         <button
           onClick={onSurpriseMe}
           disabled={!canSurprise}
-          className="w-full h-14 flex items-center justify-center gap-2 px-3 rounded-md border border-border bg-surface-raised text-label text-text transition-colors duration-(--duration-instant) hover:border-border-strong disabled:bg-disabled-bg disabled:text-disabled-fg disabled:border-disabled-border disabled:cursor-not-allowed cursor-pointer"
+          className="w-full h-14 flex items-center justify-center gap-2.5 rounded-md border-2 border-dashed border-border-strong text-text transition-colors duration-(--duration-instant) hover:bg-surface-sunken disabled:border-disabled-border disabled:text-disabled-fg disabled:cursor-not-allowed cursor-pointer"
         >
-          <Sparkles className="w-4 h-4 shrink-0" />
-          {t("surpriseMe")}
+          <Dices className="w-5 h-5 shrink-0 text-text-muted" />
+          <span className="flex flex-col items-start">
+            <span className="font-bold text-base leading-tight tracking-tight">
+              {t("surpriseMe")}
+            </span>
+            <span className="font-mono text-[0.5625rem] font-bold tracking-[0.14em] uppercase text-text-muted">
+              {t("letTheBarChoose")}
+            </span>
+          </span>
         </button>
       </li>
 
       <li>
         <button
           onClick={() => onFilter({ type: "all" })}
-          className={button(filter.type === "all")}
+          className={row(filter.type === "all")}
         >
-          {t("allDrinks")}
+          <span className="flex-1 font-semibold text-base">
+            {t("allDrinks")}
+          </span>
+          <Count n={totalCount} />
         </button>
       </li>
 
       {favouriteCount > 0 && (
         <li>
-          <a
-            href="#favourites"
-            className="block px-3 py-2.5 rounded-md text-label text-text-muted transition-colors duration-(--duration-instant) hover:bg-surface-sunken hover:text-text"
-          >
-            {t("favourites")} ({favouriteCount})
+          <a href="#favourites" className={row(false)}>
+            <span className="flex-1 flex items-center gap-2 font-semibold text-base">
+              <Star className="w-4 h-4 shrink-0 fill-current" />
+              {t("favourites")}
+            </span>
+            <Count n={favouriteCount} />
           </a>
         </li>
       )}
 
       {categories.length > 0 && (
         <>
-          <Divider label={t("categories")} />
+          <GroupLabel label={t("categories")} />
           {categories.map((category) => (
             <li key={category}>
               <button
                 onClick={() => onFilter({ type: "category", value: category })}
-                className={button(isChosen(filter, "category", category))}
+                className={row(isChosen(filter, "category", category))}
               >
-                {category} ({byCategory[category].length})
+                <span className="flex-1 font-semibold text-base truncate">
+                  {category}
+                </span>
+                <Count n={byCategory[category].length} />
               </button>
             </li>
           ))}
         </>
       )}
 
-      {spirits.length > 0 && <Divider label={t("baseSpirits")} />}
+      {spirits.length > 0 && <GroupLabel label={t("baseSpirits")} />}
 
       {spirits.map((spirit) => (
         <li key={spirit}>
           <button
             onClick={() => onFilter({ type: "spirit", value: spirit })}
-            className={button(isChosen(filter, "spirit", spirit))}
+            className={row(isChosen(filter, "spirit", spirit))}
           >
-            {spirit} ({bySpirit[spirit].length})
+            <span className="flex-1 font-semibold text-base truncate">
+              {spirit}
+            </span>
+            <Count n={bySpirit[spirit].length} />
           </button>
         </li>
       ))}

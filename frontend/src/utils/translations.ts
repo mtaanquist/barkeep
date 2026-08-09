@@ -21,6 +21,9 @@ export interface TranslationMap {
   qrArrival: string;
   yourName: string;
   startOrdering: string;
+  greeting: string;
+  letTheBarChoose: string;
+  confirmReject: string;
   bartender: string;
   loadingAnalytics: string;
   gatheringData: string;
@@ -180,6 +183,9 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     qrArrival: "You scanned the code, so you are already in. Type your first name to start ordering.",
     yourName: "Your name",
     startOrdering: "Start ordering",
+    greeting: "Welcome",
+    letTheBarChoose: "Let the bar choose",
+    confirmReject: "Reject this order? The guest is told straight away.",
     bartender: "Bartender",
     loadingAnalytics: "Fetching the reports…",
     gatheringData: "Gathering the numbers from your orders",
@@ -285,7 +291,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     howToOrder: "How to order",
     howToOrderInstructions:
       'Browse the available drinks below and click "Order" to place your order. You can only have one active order at a time. Your order status will update in real-time.',
-    surpriseMe: "Surprise Me!",
+    surpriseMe: "Surprise me",
     yourRandomDrink: "Your Random Drink",
     baseSpirit: "Base Spirit",
     orderThis: "Order this!",
@@ -339,6 +345,9 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     qrArrival: "Du har scannet koden, så du er inde. Skriv dit fornavn for at komme i gang.",
     yourName: "Dit navn",
     startOrdering: "Kom i gang",
+    greeting: "Velkommen",
+    letTheBarChoose: "Lad baren vælge",
+    confirmReject: "Afvis denne bestilling? Gæsten får besked med det samme.",
     bartender: "Bartender",
     loadingAnalytics: "Henter rapporterne…",
     gatheringData: "Samler tal fra bestillingerne",
@@ -444,7 +453,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     howToOrder: "How to order",
     howToOrderInstructions:
       'Browse the available drinks below and click "Order" to place your order. You can only have one active order at a time. Your order status will update in real-time.',
-    surpriseMe: "Surprise Me!",
+    surpriseMe: "Overrask mig",
     yourRandomDrink: "Your Random Drink",
     baseSpirit: "Base Spirit",
     orderThis: "Bestil denne!",

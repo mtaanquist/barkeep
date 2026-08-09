@@ -73,9 +73,13 @@ const OrdersTab: React.FC = () => {
     }
   };
 
-  const pendingOrders = orders.filter((order) =>
-    ["new", "accepted", "ready"].includes(order.status)
-  );
+  // Oldest first, always, so the list never reorders under a working hand.
+  const pendingOrders = orders
+    .filter((order) => ["new", "accepted", "ready"].includes(order.status))
+    .sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
 
   const readyCount = orders.filter((order) => order.status === "ready").length;
 
@@ -171,7 +175,12 @@ const OrdersTab: React.FC = () => {
               const step = nextStep(order.status);
 
               return (
-                <div key={order.id} className="flex items-stretch">
+                <div
+                  key={order.id}
+                  className={`flex items-stretch ${
+                    order.status === "ready" ? "bg-accent/[0.06]" : ""
+                  }`}
+                >
                   {/* Repeats the step as a shape, for reading down the list at a glance. */}
                   <div
                     className={`w-1 shrink-0 ${statusRail(order.status)}`}
@@ -201,9 +210,10 @@ const OrdersTab: React.FC = () => {
                       <div className="flex items-center justify-end gap-5 lg:w-74 shrink-0">
                         {order.status === "new" && (
                           <button
-                            onClick={() =>
-                              handleUpdateOrderStatus(order.id, "rejected")
-                            }
+                            onClick={() => {
+                              if (!window.confirm(t("confirmReject"))) return;
+                              handleUpdateOrderStatus(order.id, "rejected");
+                            }}
                             disabled={loading}
                             title={t("rejectOrder")}
                             aria-label={t("rejectOrder")}

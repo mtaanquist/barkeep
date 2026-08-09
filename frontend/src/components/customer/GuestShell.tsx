@@ -55,40 +55,37 @@ const GuestShell: React.FC<GuestShellProps> = ({
         />
       )}
 
+      {/* One line: whose bar, who you are, and the two ways out. */}
       <header className="bg-surface-raised border-b border-border sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              {back && (
-                <button
-                  onClick={back.onClick}
-                  className="w-11 h-11 shrink-0 flex items-center justify-center rounded-md border border-border text-text-muted transition-colors duration-(--duration-instant) hover:text-text hover:border-border-strong cursor-pointer"
-                  aria-label={back.label}
-                  title={back.label}
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </button>
-              )}
-              <div className="min-w-0">
-                <h1 className="text-heading truncate">{currentBar?.name}</h1>
-                <div className="flex items-center gap-4">
-                  <p className="font-mono text-caption uppercase text-text-muted truncate">
-                    {customerName}
-                  </p>
-                  {!back && (
-                    <button
-                      onClick={() => navigate("/customer/past-orders")}
-                      className="text-label text-text-muted transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
-                    >
-                      {t("pastOrders")}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 py-3">
+          <div className="flex items-center gap-3 lg:gap-4">
+            {back && (
+              <button
+                onClick={back.onClick}
+                className="w-11 h-11 shrink-0 flex items-center justify-center rounded-md border border-border text-text-muted transition-colors duration-(--duration-instant) hover:text-text hover:border-border-strong cursor-pointer"
+                aria-label={back.label}
+                title={back.label}
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
+
+            <h1 className="text-heading truncate">{currentBar?.name}</h1>
+            <p className="flex-1 min-w-0 text-body text-text-muted truncate">
+              {t("greeting")}, {customerName}
+            </p>
+
+            {!back && (
+              <button
+                onClick={() => navigate("/customer/past-orders")}
+                className="hidden sm:block h-11 px-3.5 shrink-0 rounded-md border border-border bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:border-border-strong cursor-pointer"
+              >
+                {t("pastOrders")}
+              </button>
+            )}
             <button
               onClick={clearSession}
-              className="text-label text-text-muted shrink-0 transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
+              className="h-11 px-3.5 shrink-0 rounded-md text-label text-text-muted transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
             >
               {t("logout")}
             </button>
