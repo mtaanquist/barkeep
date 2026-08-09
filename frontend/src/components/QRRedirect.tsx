@@ -4,7 +4,8 @@ import { useApp } from "../hooks/useApp";
 import type { Bar, SignedIn } from "../types";
 import { useTranslation } from "../utils/translations";
 import LoginForm from "./LoginForm";
-import { ACTIVITY_KEY } from "../hooks/useSessionManager";
+import { ACTIVITY_KEY, rememberMe } from "../hooks/useSessionManager";
+import ToggleRow from "./ToggleRow";
 
 const QRRedirect: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,8 @@ const QRRedirect: React.FC = () => {
   const [hasToken, setHasToken] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  // Kept on by default: someone scanning a code is on their own phone.
+  const [remember, setRemember] = useState(true);
   const hasFetched = useRef(false);
 
   useEffect(() => {
@@ -94,6 +97,7 @@ const QRRedirect: React.FC = () => {
       
       // Update session activity timestamp
       localStorage.setItem(ACTIVITY_KEY, Date.now().toString());
+      rememberMe(remember);
       
       // The current bar should already be set from the earlier fetchBarInfo call,
       // but let's make sure it has the latest info
@@ -180,6 +184,13 @@ const QRRedirect: React.FC = () => {
                 className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
                 onKeyPress={(e) => e.key === "Enter" && handleGuestLogin()}
                 autoFocus
+              />
+
+              <ToggleRow
+                on={remember}
+                onChange={setRemember}
+                title={t("rememberMe")}
+                help={t("rememberMeHelp")}
               />
 
               {error && (

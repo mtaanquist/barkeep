@@ -112,6 +112,8 @@ export interface TranslationMap {
   login: string;
   enterPassword: string;
   enterName: string;
+  rememberMe: string;
+  rememberMeHelp: string;
 
   // Bartender interface
   pendingOrders: string;
@@ -354,6 +356,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     login: "Login",
     enterPassword: "Enter Password",
     enterName: "Enter Your Name",
+    rememberMe: "Remember me on this phone",
+    rememberMeHelp: "So you do not have to type your name again next time.",
 
     // Bartender interface
     pendingOrders: "Pending Orders",
@@ -595,6 +599,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     login: "Log ind",
     enterPassword: "Indtast adgangskode",
     enterName: "Indtast dit navn",
+    rememberMe: "Husk mig på denne telefon",
+    rememberMeHelp: "Så du ikke skal skrive dit navn igen næste gang.",
 
     // Bartender interface
     pendingOrders: "Afventende bestillinger",
