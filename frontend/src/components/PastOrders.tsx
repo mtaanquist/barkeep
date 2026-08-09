@@ -1,6 +1,6 @@
 import React from "react";
 import { Eye, Package } from "lucide-react";
-import { Drink } from "../context/AppContext";
+import type { Drink } from "../types";
 import { TranslationKeys } from "../utils/translations";
 
 interface PastOrdersProps {

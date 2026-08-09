@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Upload, Crop } from "lucide-react";
-import { useApp, Drink } from "../context/AppContext";
+import { useApp } from "../context/AppContext";
+import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
@@ -34,7 +35,8 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
     recipe: "recipe" in drink ? drink.recipe || "" : "",
     baseSpirit: "base_spirit" in drink ? drink.base_spirit || "" : "",
     guestDescription: "guest_description" in drink ? drink.guest_description || "" : "",
-    showRecipeToGuests: "show_recipe_to_guests" in drink ? drink.show_recipe_to_guests || false : false,
+    showRecipeToGuests:
+      "show_recipe_to_guests" in drink ? drink.show_recipe_to_guests === 1 : false,
     categoryId: "category_id" in drink ? drink.category_id || "" : "",
     imageCropX: "image_crop_x" in drink ? drink.image_crop_x || 0 : 0,
     imageCropY: "image_crop_y" in drink ? drink.image_crop_y || 0 : 0,

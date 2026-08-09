@@ -5,6 +5,7 @@ import fs from "fs";
 
 import type {
   Drink,
+  DrinkAnalytics,
   DrinkForGuest,
   DrinkWithCategory,
 } from "../../../shared/types.js";
@@ -269,7 +270,7 @@ export default function createDrinkRoutes({
     route((req, res) => {
       const barId = idParam(req, "barId");
 
-      res.json({
+      const report = {
         popularDrinks: all<{ drink_title: string; order_count: number }>(
           db,
           `SELECT drink_title, COUNT(*) AS order_count FROM orders
@@ -287,7 +288,9 @@ export default function createDrinkRoutes({
           "SELECT COUNT(*) AS n FROM drinks WHERE bar_id = ? AND in_stock = 1",
           barId
         ),
-      });
+      } satisfies DrinkAnalytics;
+
+      res.json(report);
     })
   );
 

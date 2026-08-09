@@ -8,6 +8,7 @@ import React, {
   ReactNode,
 } from "react";
 import { useApp } from "./AppContext";
+import type { LiveUpdate } from "../types";
 
 interface LiveUpdatesContextType {
   isConnected: boolean;
@@ -94,7 +95,7 @@ export const LiveUpdatesProvider: React.FC<{ children: ReactNode }> = ({
 
     source.onmessage = (event) => {
       try {
-        const update = JSON.parse(event.data);
+        const update: LiveUpdate = JSON.parse(event.data);
         switch (update.type) {
           case "new_order":
           case "order_status_updated":

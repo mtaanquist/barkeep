@@ -1,7 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, LogIn } from "lucide-react";
-import { useApp, Bar } from "../context/AppContext";
+import { useApp } from "../context/AppContext";
+import type { Bar } from "../types";
 import { useTranslation } from "../utils/translations";
 
 interface LoginFormProps {

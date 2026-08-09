@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock, CheckCircle, XCircle, Coffee, Check } from "lucide-react";
-import { useApp, Drink } from "../context/AppContext";
+import { useApp } from "../context/AppContext";
+import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
 import { useSessionManager } from "../hooks/useSessionManager";
 import { useLiveUpdates } from "../context/LiveUpdatesContext";

@@ -3,13 +3,21 @@ import bcrypt from "bcrypt";
 
 import type { UserType } from "../../../shared/types.js";
 import { HttpError, requireId, requireText, route } from "../http.js";
-import { findBar, type BarRow, type Db } from "../db/queries.js";
+import { findBar, publicBar, type BarRow, type Db } from "../db/queries.js";
 
 /** Which stored password a sign-in should be checked against. */
 const PASSWORD_FIELD = {
   bartender: "bartender_password_hash",
   guest: "guest_password_hash",
 } as const satisfies Record<UserType, keyof BarRow>;
+
+/**
+ * The reply to a sign-in. The whole bar goes back, so the pages never have to
+ * piece one together from loose fields and lose its settings doing it.
+ */
+function signedInAs(bar: BarRow, userType: UserType) {
+  return { success: true, userType, bar: publicBar(bar) };
+}
 
 export default function createAuthRoutes(db: Db): Router {
   const router = express.Router();
@@ -32,13 +40,7 @@ export default function createAuthRoutes(db: Db): Router {
     route(async (req, res) => {
       const bar = await signIn(req.body, "bartender");
 
-      res.json({
-        success: true,
-        barId: bar.id,
-        barName: bar.name,
-        language: bar.language,
-        userType: "bartender",
-      });
+      res.json(signedInAs(bar, "bartender"));
     })
   );
 
@@ -51,14 +53,7 @@ export default function createAuthRoutes(db: Db): Router {
       });
       const bar = await signIn(req.body, "guest");
 
-      res.json({
-        success: true,
-        barId: bar.id,
-        barName: bar.name,
-        language: bar.language,
-        customerName,
-        userType: "guest",
-      });
+      res.json({ ...signedInAs(bar, "guest"), customerName });
     })
   );
 
@@ -69,13 +64,7 @@ export default function createAuthRoutes(db: Db): Router {
       const userType = requireText(req.body, "userType");
       const bar = findBar(db, barId);
 
-      res.json({
-        success: true,
-        barId: bar.id,
-        barName: bar.name,
-        language: bar.language,
-        userType,
-      });
+      res.json(signedInAs(bar, userType as UserType));
     })
   );
 
