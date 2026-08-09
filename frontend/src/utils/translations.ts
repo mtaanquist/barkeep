@@ -158,6 +158,12 @@ export interface TranslationMap {
   orderThis: string;
   tryAnother: string;
   pastOrders: string; // Added
+  menuLabel: string;
+  tonight: string;
+  orderAgain: string;
+  reorderWhenCollected: string;
+  youAreHereAs: string;
+  notMe: string;
   favourites: string; // Added
   reorder: string; // Added
   status: string; // Added
@@ -339,7 +345,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     accepted: "Accepted",
     rejected: "Rejected",
     ready: "Ready",
-    processed: "Processed",
+    processed: "Picked up",
     howToOrder: "How to order",
     howToOrderInstructions:
       'Browse the available drinks below and click "Order" to place your order. You can only have one active order at a time. Your order status will update in real-time.',
@@ -348,7 +354,14 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     baseSpirit: "Base Spirit",
     orderThis: "Order this!",
     tryAnother: "Try another",
-    pastOrders: "Past Orders", // Added
+    pastOrders: "Past orders", // Added
+    menuLabel: "Menu",
+    tonight: "tonight",
+    orderAgain: "Again",
+    reorderWhenCollected:
+      "You can order again once your current drink has been picked up.",
+    youAreHereAs: "You are here as",
+    notMe: "That is not me",
     favourites: "Favourites", // Added
     reorder: "Reorder", // Added
     status: "Status", // Added
@@ -527,7 +540,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     accepted: "Accepteret",
     rejected: "Afvist",
     ready: "Klar",
-    processed: "Behandlet",
+    processed: "Afhentet",
     howToOrder: "How to order",
     howToOrderInstructions:
       'Browse the available drinks below and click "Order" to place your order. You can only have one active order at a time. Your order status will update in real-time.',
@@ -537,6 +550,13 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     orderThis: "Bestil denne!",
     tryAnother: "Prøv en anden",
     pastOrders: "Tidligere bestillinger", // Added
+    menuLabel: "Menu",
+    tonight: "i aften",
+    orderAgain: "Igen",
+    reorderWhenCollected:
+      "Du kan bestille igen, når din nuværende drink er hentet.",
+    youAreHereAs: "Du er her som",
+    notMe: "Det er ikke mig",
     favourites: "Favoritter", // Added
     reorder: "Bestil igen", // Added
     status: "Status", // Added

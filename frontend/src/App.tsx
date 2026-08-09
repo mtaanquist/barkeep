@@ -15,7 +15,6 @@ import QRRedirect from "./components/QRRedirect";
 import { AppProvider } from "./context/AppContext";
 import { useApp } from "./hooks/useApp";
 import { LiveUpdatesProvider } from "./context/LiveUpdatesContext";
-import PastOrdersPage from "./pages/PastOrdersPage";
 
 const AppContent: React.FC = () => {
   const {
@@ -53,11 +52,13 @@ const AppContent: React.FC = () => {
             )
           }
         />
+        {/* History is a panel over the menu, so the menu is what renders
+            here too — it opens the panel when this is the address. */}
         <Route
           path="/customer/past-orders"
           element={
             isCustomerAuthenticated ? (
-              <PastOrdersPage />
+              <CustomerInterface />
             ) : (
               <Navigate to="/" replace />
             )

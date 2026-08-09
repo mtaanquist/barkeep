@@ -6,7 +6,6 @@ import { MemoryRouter } from "react-router-dom";
 import App from "../src/App";
 import CustomerInterface from "../src/components/CustomerInterface";
 import RecipeView from "../src/components/RecipeView";
-import PastOrdersPage from "../src/pages/PastOrdersPage";
 import { AppProvider } from "../src/context/AppContext";
 import { LiveUpdatesProvider } from "../src/context/LiveUpdatesContext";
 import {
@@ -220,22 +219,22 @@ describe("looking at a recipe", () => {
   });
 });
 
-describe("the past orders page", () => {
-  // Wrapped in the live updates provider because the page now sits in the
-  // guest shell, which carries the order in progress and so needs them.
+describe("past orders, as a panel over the menu", () => {
+  // A panel, not a peer screen: the menu stays behind it and the dock keeps
+  // carrying the drink that is on its way.
   const openDirectly = () =>
     render(
       <MemoryRouter initialEntries={["/customer/past-orders"]}>
         <AppProvider>
           <LiveUpdatesProvider>
-            <PastOrdersPage />
+            <CustomerInterface />
           </LiveUpdatesProvider>
         </AppProvider>
       </MemoryRouter>
     );
 
-  // The page used to read whatever the menu had already loaded, so arriving
-  // straight at it, or refreshing, showed nothing.
+  // The history used to read whatever the menu had already loaded, so
+  // arriving straight at it, or refreshing, showed nothing.
   it("loads the orders itself rather than relying on the menu", async () => {
     orders = [
       anOrder({ id: 5, status: "processed", drink_id: 1, drink_title: "Negroni" }),
@@ -249,10 +248,9 @@ describe("the past orders page", () => {
 
     openDirectly();
 
-    // Both come back, even though nothing loaded the menu first.
-    expect(await screen.findAllByText("Negroni")).not.toHaveLength(0);
-    expect(screen.getAllByText("Daiquiri")).not.toHaveLength(0);
-    expect(screen.queryByText(/no past orders/i)).toBeNull();
+    const history = await screen.findByRole("dialog", { name: "Past orders" });
+    expect(within(history).getByText("Negroni")).toBeInTheDocument();
+    expect(within(history).getByText("Daiquiri")).toBeInTheDocument();
   });
 
   it("shows only this guest's finished orders", async () => {
@@ -264,14 +262,40 @@ describe("the past orders page", () => {
 
     openDirectly();
 
-    const history = await screen.findByRole("region", { name: "Past Orders" });
+    const history = await screen.findByRole("dialog", { name: "Past orders" });
     expect(within(history).getByText("Negroni")).toBeInTheDocument();
     expect(within(history).queryByText("Still Coming")).toBeNull();
     expect(within(history).queryByText("Someone Elses")).toBeNull();
 
     // The one still on the go is not history — it is in the dock, which
-    // follows the guest onto this screen.
+    // the panel deliberately stops short of.
     const dock = screen.getByRole("region", { name: "Your Order" });
     expect(within(dock).getByText("Still Coming")).toBeInTheDocument();
+  });
+
+  it("leaves the menu underneath rather than replacing it", async () => {
+    orders = [anOrder({ id: 5, status: "processed", drink_title: "Negroni" })];
+
+    openDirectly();
+
+    await screen.findByRole("dialog", { name: "Past orders" });
+    // The menu's own drink headings are still on the page behind the panel.
+    expect(
+      screen.getAllByRole("heading", { name: "Negroni", level: 3 }).length
+    ).toBeGreaterThan(0);
+  });
+
+  it("cannot order again while a drink is already on the way", async () => {
+    orders = [
+      anOrder({ id: 5, status: "processed", drink_id: 1, drink_title: "Negroni" }),
+      anOrder({ id: 6, status: "new", drink_id: 2, drink_title: "Daiquiri" }),
+    ];
+
+    openDirectly();
+
+    const history = await screen.findByRole("dialog", { name: "Past orders" });
+    expect(within(history).getByRole("button", { name: "Again" })).toBeDisabled();
+    // The reason sits beside the button rather than behind an alert.
+    expect(history).toHaveTextContent(/once your current drink has been/i);
   });
 });

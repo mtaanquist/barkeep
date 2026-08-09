@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Coffee } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
+import { useSessionManager } from "../hooks/useSessionManager";
 import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
 import { useGuestMenu } from "../hooks/useGuestMenu";
@@ -8,6 +10,7 @@ import RandomDrinkModal from "./RandomDrinkModal";
 import DrinkGrid from "./customer/DrinkGrid";
 import GuestShell from "./customer/GuestShell";
 import OrderPlacedModal from "./customer/OrderPlacedModal";
+import PastOrdersPanel from "./customer/PastOrdersPanel";
 import { MenuFilterSelect, MenuSidebar } from "./customer/MenuFilters";
 
 /** Statuses that mean a guest still has a drink on the go. */
@@ -17,6 +20,7 @@ const CustomerInterface: React.FC = () => {
   const {
     currentBar,
     customerName,
+    drinks,
     language,
     loading,
     orders,
@@ -27,8 +31,15 @@ const CustomerInterface: React.FC = () => {
   } = useApp();
 
   const t = useTranslation(language);
+  const { clearSession } = useSessionManager();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const menu = useGuestMenu();
+
+  // History is a panel over the menu rather than a screen instead of it, but
+  // it still has an address, so it can be linked to and backed out of.
+  const historyOpen = location.pathname.endsWith("/past-orders");
 
   const [showOrderPlaced, setShowOrderPlaced] = useState(false);
   const [randomDrink, setRandomDrink] = useState<Drink | null>(null);
@@ -53,7 +64,7 @@ const CustomerInterface: React.FC = () => {
   const placeOrder = async (drink: Drink) => {
     if (currentOrder) {
       alert(t("oneOrderLimit"));
-      return;
+      return false;
     }
 
     setLoading(true);
@@ -69,11 +80,19 @@ const CustomerInterface: React.FC = () => {
       });
       setShowOrderPlaced(true);
       await menu.refreshOrders();
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to place order");
+      return false;
     } finally {
       setLoading(false);
     }
+  };
+
+  // Ordering again closes the history, because what matters next is the
+  // drink coming, which the dock is carrying.
+  const orderAgain = async (drink: Drink) => {
+    if (await placeOrder(drink)) navigate("/customer");
   };
 
   const toggleFavourite = async (drink: Drink) => {
@@ -151,6 +170,20 @@ const CustomerInterface: React.FC = () => {
     <GuestShell onCancelOrder={cancelOrder} loading={loading}>
       {showOrderPlaced && (
         <OrderPlacedModal onClose={() => setShowOrderPlaced(false)} t={t} />
+      )}
+
+      {historyOpen && (
+        <PastOrdersPanel
+          orders={orders}
+          drinks={drinks}
+          customerName={customerName}
+          currentOrder={currentOrder}
+          loading={loading}
+          t={t}
+          onClose={() => navigate("/customer")}
+          onOrderAgain={orderAgain}
+          onNotMe={clearSession}
+        />
       )}
 
       {randomDrink && (
