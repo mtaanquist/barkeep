@@ -162,7 +162,7 @@ const MenuTab: React.FC = () => {
   });
 
   return (
-    <div className="max-w-5xl">
+    <div>
       <div className="bg-surface border border-border rounded-md overflow-hidden">
         <div className="flex items-center gap-3.5 px-5 py-4 border-b border-border">
           <h2 className="text-display">{t("drinkMenu")}</h2>
