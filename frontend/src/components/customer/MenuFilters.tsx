@@ -60,10 +60,10 @@ export const MenuSidebar: React.FC<SidebarProps> = ({
   onSurpriseMe,
   t,
 }) => (
-  <nav className="hidden lg:block w-62 shrink-0 self-stretch border-r border-border py-4 pr-3">
-    <ul>
+  <nav className="hidden lg:block w-62 shrink-0 self-stretch border-r border-border py-4 px-3">
+    <ul className="flex flex-col gap-1">
       {/* Dashed, because it is the one thing here that is a bit of a game. */}
-      <li className="px-3 mb-2">
+      <li className="mb-1">
         <button
           onClick={onSurpriseMe}
           disabled={!canSurprise}
