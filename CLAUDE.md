@@ -44,7 +44,14 @@ Add a dated `.sql` file to `backend/src/db/migrations/`. It is applied once on
 the next start and recorded by filename, oldest first.
 
 Never edit a migration that has already run — the change would be silently
-skipped on any database that has seen it. Add a new one instead.
+skipped on any database that has seen it. Add a new one instead. A fingerprint
+of each file is kept, so the app now refuses to start rather than run on with
+the two out of step. Comments and whitespace count as edits.
+
+A migration that mixes creating a table with adding a column should say
+`IF NOT EXISTS` on the create. Anything already applied by hand is caught up a
+statement at a time, and only statements that are harmless to run twice can be
+handled that way.
 
 Real installs have data in them. Anything that changes the schema should be
 tried against a copy of a real database first, not just an empty one.
