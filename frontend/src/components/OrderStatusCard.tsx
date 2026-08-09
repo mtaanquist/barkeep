@@ -1,12 +1,12 @@
 import React from "react";
 import { X } from "lucide-react";
+import type { Order } from "../types";
+import { statusCardWithText, statusIcon } from "../utils/orderStatus";
 import { translations } from "../utils/translations";
 
 interface OrderStatusCardProps {
-  order: any;
+  order: Order;
   t: (key: keyof typeof translations.en) => string;
-  getStatusIcon: (status: string) => React.ReactNode;
-  getStatusColor: (status: string) => string;
   onCancelOrder?: (orderId: number) => void;
   loading?: boolean;
 }
@@ -14,14 +14,12 @@ interface OrderStatusCardProps {
 const OrderStatusCard: React.FC<OrderStatusCardProps> = ({
   order,
   t,
-  getStatusIcon,
-  getStatusColor,
   onCancelOrder,
   loading = false,
 }) => (
-  <div className={`rounded-lg border-2 p-4 ${getStatusColor(order.status)}`}>
+  <div className={`rounded-lg border-2 p-4 ${statusCardWithText(order.status)}`}>
     <div className="flex items-center space-x-3">
-      {getStatusIcon(order.status)}
+      {statusIcon(order.status)}
       <div className="flex-1">
         <h3 className="font-semibold">{t("yourOrder")}</h3>
         <p className="text-sm opacity-90">{order.drink_title}</p>
@@ -50,6 +48,6 @@ const OrderStatusCard: React.FC<OrderStatusCardProps> = ({
       </div>
     </div>
   </div>
-); 
+);
 
 export default OrderStatusCard;

@@ -1,10 +1,14 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
   ReactNode,
 } from "react";
+
+import { apiCall } from "../utils/api";
+import { clearStoredState, useStoredState } from "../hooks/useStoredState";
 
 import type {
   Analytics,
@@ -56,7 +60,7 @@ interface AppContextType {
   categories: Category[];
 
   // UI states
-  editingDrink: Drink | {} | null;
+  editingDrink: Drink | "new" | null;
   viewingRecipe: Drink | null;
   showPassword: boolean;
   currentTab: Tab;
@@ -74,7 +78,7 @@ interface AppContextType {
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   setAnalytics: React.Dispatch<React.SetStateAction<Analytics | null>>;
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
-  setEditingDrink: (drink: Drink | {} | null) => void;
+  setEditingDrink: (drink: Drink | "new" | null) => void;
   setViewingRecipe: (drink: Drink | null) => void;
   setShowPassword: (show: boolean) => void;
   setCurrentTab: (tab: Tab) => void;
@@ -93,95 +97,23 @@ export const useApp = () => {
   return context;
 };
 
-const API_BASE = "/api";
-
-// Everything this app saves in the browser starts with this, so signing out
-// can clear its own things without touching anything else on the site.
-export const STORAGE_PREFIX = "homeBarSystem_";
-
-const STORAGE_KEYS = {
-  userType: "homeBarSystem_userType",
-  currentBar: "homeBarSystem_currentBar",
-  customerName: "homeBarSystem_customerName",
-  language: "homeBarSystem_language",
-  currentTab: "homeBarSystem_currentTab",
-};
-
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  // Initialize state from localStorage if available
-  const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
-    const storedValue = localStorage.getItem(key);
-    return storedValue ? JSON.parse(storedValue) : defaultValue;
-  };
-
-  const saveToStorage = <T,>(key: string, value: T) => {
-    try {
-      localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.error(`Failed to save ${key} to localStorage`, error);
-    }
-  };
-
-  // App state with initial values from localStorage
-  const [userType, setUserTypeState] = useState<UserType | null>(
-    () => loadFromStorage(STORAGE_KEYS.userType, null)
+  const [userType, setUserType] = useStoredState<UserType | null>(
+    "userType",
+    null
   );
-
-  const [currentBar, setCurrentBarState] = useState<Bar | null>(() =>
-    loadFromStorage(STORAGE_KEYS.currentBar, null)
+  const [currentBar, setCurrentBar] = useStoredState<Bar | null>(
+    "currentBar",
+    null
   );
-
-  const [customerName, setCustomerNameState] = useState(() =>
-    loadFromStorage(STORAGE_KEYS.customerName, "")
+  const [customerName, setCustomerName] = useStoredState("customerName", "");
+  const [language, setLanguage] = useStoredState<Language>("language", "en");
+  const [currentTab, setCurrentTab] = useStoredState<Tab>(
+    "currentTab",
+    "orders"
   );
-
-  const [language, setLanguageState] = useState<Language>(() =>
-    loadFromStorage(STORAGE_KEYS.language, "en")
-  );
-
-  const [currentTab, setCurrentTabState] = useState<Tab>(() =>
-    loadFromStorage(STORAGE_KEYS.currentTab, "orders")
-  );
-
-  // Wrapper functions that save to storage
-  const setUserType = (type: UserType | null) => {
-    setUserTypeState(type);
-    if (type === null) {
-      localStorage.removeItem(STORAGE_KEYS.userType);
-    } else {
-      saveToStorage(STORAGE_KEYS.userType, type);
-    }
-  };
-
-  const setCurrentBar = (bar: Bar | null) => {
-    setCurrentBarState(bar);
-    if (bar === null) {
-      localStorage.removeItem(STORAGE_KEYS.currentBar);
-    } else {
-      saveToStorage(STORAGE_KEYS.currentBar, bar);
-    }
-  };
-
-  const setCustomerName = (name: string) => {
-    setCustomerNameState(name);
-    if (name === "") {
-      localStorage.removeItem(STORAGE_KEYS.customerName);
-    } else {
-      saveToStorage(STORAGE_KEYS.customerName, name);
-    }
-  };
-
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    saveToStorage(STORAGE_KEYS.language, lang);
-  };
-
-  const setCurrentTab = (tab: Tab) => {
-    setCurrentTabState(tab);
-    saveToStorage(STORAGE_KEYS.currentTab, tab);
-  };
 
   // Loading and error states
   const [loading, setLoading] = useState(false);
@@ -203,12 +135,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [categories, setCategories] = useState<Category[]>([]);
 
   // UI states
-  const [editingDrink, setEditingDrink] = useState<Drink | {} | null>(null);
+  const [editingDrink, setEditingDrink] = useState<Drink | "new" | null>(
+    null
+  );
   const [viewingRecipe, setViewingRecipe] = useState<Drink | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Clear all data function
-  const clearAllData = () => {
+  /** Puts everything back as it was before anyone signed in. */
+  const clearAllData = useCallback(() => {
     setUserType(null);
     setCurrentBar(null);
     setCustomerName("");
@@ -222,10 +156,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     });
     setLoginForm({ password: "", name: "" });
 
-    Object.keys(localStorage)
-      .filter((key) => key.startsWith(STORAGE_PREFIX))
-      .forEach((key) => localStorage.removeItem(key));
-  };
+    clearStoredState();
+  }, [setUserType, setCurrentBar, setCustomerName, setLanguage, setCurrentTab]);
 
   // Session validation effect
   useEffect(() => {
@@ -269,27 +201,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     };
 
     validateSession();
-  }, [userType, currentBar, customerName]);
-
-  // API helper function
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-      ...options,
-    });
-
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: "Unknown error" }));
-      throw new Error(errorData.error || `HTTP ${response.status}`);
-    }
-
-    return response.json();
-  };
+  }, [userType, currentBar, customerName, clearAllData]);
 
   const value: AppContextType = {
     // App state

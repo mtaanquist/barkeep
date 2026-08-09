@@ -9,7 +9,8 @@ interface RandomDrinkModalProps {
   onTryAnother: () => void;
   onCancel: () => void;
   loading: boolean;
-  customerOrder: any;
+  /** The guest may only have one drink on the go at a time. */
+  hasOrderInProgress: boolean;
   t: (key: keyof typeof translations.en) => string;
 }
 
@@ -20,7 +21,7 @@ const RandomDrinkModal: React.FC<RandomDrinkModalProps> = ({
   onTryAnother,
   onCancel,
   loading,
-  customerOrder,
+  hasOrderInProgress,
   t,
 }) => {
   if (!visible || !drink) return null;
@@ -58,7 +59,7 @@ const RandomDrinkModal: React.FC<RandomDrinkModalProps> = ({
         <div className="flex flex-col gap-2">
           <button
             onClick={onOrder}
-            disabled={!!customerOrder || loading}
+            disabled={hasOrderInProgress || loading}
             className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? t("loading") : t("orderThis")}

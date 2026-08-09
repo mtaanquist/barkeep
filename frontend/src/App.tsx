@@ -42,7 +42,10 @@ const AppContent: React.FC = () => {
   // Drink form modal
   if (editingDrink !== null) {
     return (
-      <DrinkForm drink={editingDrink} onClose={() => setEditingDrink(null)} />
+      <DrinkForm
+        drink={editingDrink === "new" ? null : editingDrink}
+        onClose={() => setEditingDrink(null)}
+      />
     );
   }
 
