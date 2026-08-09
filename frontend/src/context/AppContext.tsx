@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -271,25 +272,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     validateSession();
   }, [userType, currentBar, customerName]);
 
-  // API helper function
-  const apiCall = async (endpoint: string, options: RequestInit = {}) => {
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-      ...options,
-    });
+  // Talks to the API. It keeps the same identity for the life of the app,
+  // because anything that reloads when this changes would otherwise reload on
+  // every single render.
+  const apiCall = useCallback(
+    async (endpoint: string, options: RequestInit = {}) => {
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+        ...options,
+      });
 
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: "Unknown error" }));
-      throw new Error(errorData.error || `HTTP ${response.status}`);
-    }
+      if (!response.ok) {
+        const errorData = await response
+          .json()
+          .catch(() => ({ error: "Unknown error" }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
 
-    return response.json();
-  };
+      return response.json();
+    },
+    []
+  );
 
   const value: AppContextType = {
     // App state

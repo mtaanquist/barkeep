@@ -1,16 +1,15 @@
 import React, { useState } from "react";
 import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  Coffee,
-  Check,
-  User,
   Calendar,
+  Check,
   ChevronDown,
   ChevronUp,
+  Clock,
+  Coffee,
+  User,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
+import { statusCard, statusIcon } from "../utils/orderStatus";
 import { useTranslation } from "../utils/translations";
 
 const OrdersTab: React.FC = () => {
@@ -61,40 +60,6 @@ const OrdersTab: React.FC = () => {
       setError(err instanceof Error ? err.message : "Failed to update order");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "new":
-        return <Clock className="w-5 h-5 text-yellow-500" />;
-      case "accepted":
-        return <CheckCircle className="w-5 h-5 text-blue-500" />;
-      case "rejected":
-        return <XCircle className="w-5 h-5 text-red-500" />;
-      case "ready":
-        return <Coffee className="w-5 h-5 text-green-500" />;
-      case "processed":
-        return <Check className="w-5 h-5 text-gray-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "new":
-        return "bg-yellow-50 border-yellow-200";
-      case "accepted":
-        return "bg-blue-50 border-blue-200";
-      case "rejected":
-        return "bg-red-50 border-red-200";
-      case "ready":
-        return "bg-green-50 border-green-200";
-      case "processed":
-        return "bg-gray-50 border-gray-200";
-      default:
-        return "bg-white border-gray-200";
     }
   };
 
@@ -169,11 +134,11 @@ const OrdersTab: React.FC = () => {
             pendingOrders.map((order) => (
               <div
                 key={order.id}
-                className={`p-4 ${getStatusColor(order.status)}`}
+                className={`p-4 ${statusCard(order.status)}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    {getStatusIcon(order.status)}
+                    {statusIcon(order.status)}
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <User className="w-4 h-4 text-gray-500" />
