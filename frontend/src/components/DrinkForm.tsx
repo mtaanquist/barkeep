@@ -16,7 +16,7 @@ interface DrinkFormProps {
 }
 
 const INPUT =
-  "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent";
+  "w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent";
 
 /** A labelled row, with an optional note underneath. */
 const Field: React.FC<{
@@ -25,11 +25,11 @@ const Field: React.FC<{
   children: React.ReactNode;
 }> = ({ label, hint, children }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">
+    <label className="block text-sm font-medium text-text mb-2">
       {label}
     </label>
     {children}
-    {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
+    {hint && <p className="mt-1 text-xs text-text-muted">{hint}</p>}
   </div>
 );
 
@@ -142,15 +142,15 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-overlay flex items-center justify-center p-4 z-50">
+      <div className="bg-surface-raised border border-border rounded-lg shadow-float w-full max-w-4xl max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-2xl font-bold text-text">
             {isEditing ? t("editDrink") : t("addDrink")}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-surface-sunken rounded-md transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -233,7 +233,7 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
                   onChange={(e) => update({ guestDescription: e.target.value })}
                   rows={4}
                   placeholder="Optional description shown to guests..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:border-transparent resize-vertical"
                 />
               </Field>
 
@@ -244,31 +244,31 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
                   onChange={(e) =>
                     update({ showRecipeToGuests: e.target.checked })
                   }
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-text-muted border-border rounded"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-text">
                     {t("showRecipeToGuests")}
                   </span>
-                  <p className="text-xs text-gray-500">{t("showRecipeHelp")}</p>
+                  <p className="text-xs text-text-muted">{t("showRecipeHelp")}</p>
                 </div>
               </label>
             </form>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 p-6 border-t bg-gray-50">
+        <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 p-6 border-t bg-surface-sunken">
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="w-full sm:w-auto px-6 py-2 text-text bg-surface-raised border border-border rounded-md hover:bg-surface-sunken transition-colors"
           >
             {t("cancel")}
           </button>
           <button
             onClick={handleSubmit}
             disabled={loading || !form.title.trim() || !form.recipe.trim()}
-            className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-6 py-2 bg-text text-text-inverse rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? t("loading") : t("save")}
           </button>

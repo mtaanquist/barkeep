@@ -90,13 +90,13 @@ const MenuTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header with Add Button */}
-      <div className="bg-white rounded-lg shadow-sm border p-4">
+      <div className="bg-surface-raised rounded-md border p-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">
+            <h3 className="text-lg font-semibold text-text">
               {t("drinkMenu")}
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-text-muted">
               {drinks.length} total drinks • {inStockDrinks.length} in stock •{" "}
               {outOfStockDrinks.length} out of stock
             </p>
@@ -105,7 +105,7 @@ const MenuTab: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as "alphabetical" | "category" | "default")}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-border rounded-md text-sm focus:ring-2 focus:border-transparent"
             >
               <option value="default">Sort: Default</option>
               <option value="alphabetical">Sort: Alphabetical</option>
@@ -113,7 +113,7 @@ const MenuTab: React.FC = () => {
             </select>
             <button
               onClick={() => setEditingDrink("new")}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 w-full sm:w-auto justify-center"
+              className="bg-text text-text-inverse px-4 py-2 rounded-md hover:bg-neutral-800 transition-colors flex items-center space-x-2 w-full sm:w-auto justify-center"
             >
               <Plus className="w-4 h-4" />
               <span>{t("addDrink")}</span>
@@ -124,17 +124,17 @@ const MenuTab: React.FC = () => {
 
       {/* Drinks Grid */}
       {drinks.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-          <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="bg-surface-raised rounded-md border p-8 text-center">
+          <Package className="w-16 h-16 mx-auto mb-4 text-text-muted" />
+          <h3 className="text-lg font-medium text-text mb-2">
             No drinks yet
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-text-muted mb-4">
             Start building your menu by adding your first drink
           </p>
           <button
             onClick={() => setEditingDrink("new")}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center space-x-2"
+            className="bg-text text-text-inverse px-6 py-2 rounded-md hover:bg-neutral-800 transition-colors inline-flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
             <span>{t("addDrink")}</span>
@@ -145,10 +145,10 @@ const MenuTab: React.FC = () => {
           {sortedDrinks.map((drink) => (
             <div
               key={drink.id}
-              className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow"
+              className="bg-surface-raised rounded-md border overflow-hidden hover:shadow-md transition-colors duration-(--duration-instant)"
             >
               {/* Image */}
-              <div className="aspect-video overflow-hidden bg-gray-100 relative">
+              <div className="aspect-video overflow-hidden bg-surface-sunken relative">
                 {drink.image_url ? (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <img
@@ -161,7 +161,7 @@ const MenuTab: React.FC = () => {
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <div className="w-full h-full flex items-center justify-center text-text-muted">
                     <Package className="w-12 h-12" />
                   </div>
                 )}
@@ -170,14 +170,14 @@ const MenuTab: React.FC = () => {
               {/* Content */}
               <div className="p-4">
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-semibold text-gray-800 truncate pr-2">
+                  <h3 className="font-semibold text-text truncate pr-2">
                     {drink.title}
                   </h3>
                   <span
                     className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
                       drink.in_stock
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        ? "bg-surface-sunken text-text"
+                        : "bg-status-rejected-bg text-danger"
                     }`}
                   >
                     {drink.in_stock ? t("inStock") : t("outOfStock")}
@@ -185,7 +185,7 @@ const MenuTab: React.FC = () => {
                 </div>
 
                 {/* Recipe Preview */}
-                <div className="mb-4 line-clamp-2 prose max-w-none prose-p:text-gray-800 prose-li:text-gray-800 prose-strong:text-gray-900 prose-em:text-gray-700">
+                <div className="mb-4 line-clamp-2 prose max-w-none prose-p:text-text prose-li:text-text prose-strong:text-text prose-em:text-text">
                   <LazyMarkdownViewer
                     source={drink.recipe ?? ""}
                     style={{ background: "none", padding: 0, margin: 0 }}
@@ -198,14 +198,14 @@ const MenuTab: React.FC = () => {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => setEditingDrink(drink)}
-                      className="flex-1 bg-blue-100 text-blue-700 py-2 px-3 rounded-lg text-sm hover:bg-blue-200 transition-colors flex items-center justify-center space-x-1"
+                      className="flex-1 bg-surface-sunken text-text py-2 px-3 rounded-md text-sm hover:bg-border transition-colors flex items-center justify-center space-x-1"
                     >
                       <Edit3 className="w-3 h-3" />
                       <span>Edit</span>
                     </button>
                     <button
                       onClick={() => setViewingRecipe(drink)}
-                      className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg text-sm hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1"
+                      className="flex-1 bg-surface-sunken text-text py-2 px-3 rounded-md text-sm hover:bg-surface-sunken transition-colors flex items-center justify-center space-x-1"
                     >
                       <Eye className="w-3 h-3" />
                       <span>View</span>
@@ -217,10 +217,10 @@ const MenuTab: React.FC = () => {
                     <button
                       onClick={() => toggleDrinkStock(drink.id)}
                       disabled={loading}
-                      className={`flex-1 py-2 px-3 rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center justify-center space-x-1 ${
+                      className={`flex-1 py-2 px-3 rounded-md text-sm transition-colors disabled:opacity-50 flex items-center justify-center space-x-1 ${
                         drink.in_stock
-                          ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                          : "bg-green-100 text-green-700 hover:bg-green-200"
+                          ? "bg-surface-sunken text-text-muted hover:bg-border"
+                          : "bg-surface-sunken text-text hover:bg-border"
                       }`}
                     >
                       {drink.in_stock ? (
@@ -238,7 +238,7 @@ const MenuTab: React.FC = () => {
                     <button
                       onClick={() => handleDeleteDrink(drink.id, drink.title)}
                       disabled={loading}
-                      className="bg-red-100 text-red-700 py-2 px-3 rounded-lg text-sm hover:bg-red-200 transition-colors disabled:opacity-50"
+                      className="bg-status-rejected-bg text-danger py-2 px-3 rounded-md text-sm hover:bg-status-rejected-bg transition-colors disabled:opacity-50"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -253,46 +253,46 @@ const MenuTab: React.FC = () => {
       {/* Quick Stats */}
       {drinks.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow-sm border p-4">
+          <div className="bg-surface-raised rounded-md border p-4">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Package className="w-6 h-6 text-blue-600" />
+              <div className="p-2 bg-surface-sunken rounded-md">
+                <Package className="w-6 h-6 text-text-muted" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-text-muted">
                   Total Drinks
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-text">
                   {drinks.length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border p-4">
+          <div className="bg-surface-raised rounded-md border p-4">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Package className="w-6 h-6 text-green-600" />
+              <div className="p-2 bg-surface-sunken rounded-md">
+                <Package className="w-6 h-6 text-text-muted" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-600">In Stock</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm font-medium text-text-muted">In Stock</p>
+                <p className="text-2xl font-bold text-text">
                   {inStockDrinks.length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border p-4">
+          <div className="bg-surface-raised rounded-md border p-4">
             <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <PackageX className="w-6 h-6 text-red-600" />
+              <div className="p-2 bg-status-rejected-bg rounded-md">
+                <PackageX className="w-6 h-6 text-danger" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-text-muted">
                   Out of Stock
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-text">
                   {outOfStockDrinks.length}
                 </p>
               </div>

@@ -117,19 +117,19 @@ const CategoriesTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header with Add Button */}
-      <div className="bg-white rounded-lg shadow-sm border p-4">
+      <div className="bg-surface-raised rounded-md border p-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-800">
+            <h3 className="text-lg font-semibold text-text">
               Drink Categories
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-text-muted">
               Create and manage categories to organize your drinks
             </p>
           </div>
           <button
             onClick={() => setShowCreateForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 w-full sm:w-auto justify-center"
+            className="bg-text text-text-inverse px-4 py-2 rounded-md hover:bg-neutral-800 transition-colors flex items-center space-x-2 w-full sm:w-auto justify-center"
           >
             <Plus className="w-4 h-4" />
             <span>Add Category</span>
@@ -139,10 +139,10 @@ const CategoriesTab: React.FC = () => {
 
       {/* Create Category Form */}
       {showCreateForm && (
-        <div className="bg-white rounded-lg shadow-sm border p-4">
+        <div className="bg-surface-raised rounded-md border p-4">
           <form onSubmit={handleCreateCategory} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text mb-2">
                 Category Name
               </label>
               <input
@@ -150,7 +150,7 @@ const CategoriesTab: React.FC = () => {
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder="e.g., Summer Drinks, Bartender's Favorites"
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
                 required
                 autoFocus
               />
@@ -159,7 +159,7 @@ const CategoriesTab: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading || !newCategoryName.trim()}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-text text-text-inverse px-4 py-2 rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Creating..." : "Create Category"}
               </button>
@@ -169,7 +169,7 @@ const CategoriesTab: React.FC = () => {
                   setShowCreateForm(false);
                   setNewCategoryName("");
                 }}
-                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                className="bg-surface-sunken text-text px-4 py-2 rounded-md hover:bg-surface-sunken transition-colors"
               >
                 {t("cancel")}
               </button>
@@ -180,25 +180,25 @@ const CategoriesTab: React.FC = () => {
 
       {/* Categories List */}
       {categories.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-          <Tag className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="bg-surface-raised rounded-md border p-8 text-center">
+          <Tag className="w-16 h-16 mx-auto mb-4 text-text-muted" />
+          <h3 className="text-lg font-medium text-text mb-2">
             No categories yet
           </h3>
-          <p className="text-gray-600 mb-4">
+          <p className="text-text-muted mb-4">
             Create your first category to start organizing your drinks
           </p>
           <button
             onClick={() => setShowCreateForm(true)}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center space-x-2"
+            className="bg-text text-text-inverse px-6 py-2 rounded-md hover:bg-neutral-800 transition-colors inline-flex items-center space-x-2"
           >
             <Plus className="w-4 h-4" />
             <span>Add Category</span>
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-          <div className="grid grid-cols-1 divide-y divide-gray-200">
+        <div className="bg-surface-raised rounded-md border overflow-hidden">
+          <div className="grid grid-cols-1 divide-y divide-border">
             {categories.map((category) => (
               <div key={category.id} className="p-4">
                 {editingCategory?.id === category.id ? (
@@ -211,14 +211,14 @@ const CategoriesTab: React.FC = () => {
                 ) : (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Tag className="w-5 h-5 text-blue-600" />
+                      <div className="p-2 bg-surface-sunken rounded-md">
+                        <Tag className="w-5 h-5 text-text-muted" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-800">
+                        <h4 className="font-semibold text-text">
                           {category.name}
                         </h4>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-text-muted">
                           Created {new Date(category.created_at).toLocaleDateString()}
                         </p>
                       </div>
@@ -226,7 +226,7 @@ const CategoriesTab: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => setEditingCategory(category)}
-                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                        className="p-2 text-text-muted hover:text-text-muted transition-colors"
                         title="Edit category"
                       >
                         <Edit3 className="w-4 h-4" />
@@ -234,7 +234,7 @@ const CategoriesTab: React.FC = () => {
                       <button
                         onClick={() => handleDeleteCategory(category)}
                         disabled={loading}
-                        className="p-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                        className="p-2 text-text-muted hover:text-danger transition-colors disabled:opacity-50"
                         title="Delete category"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -283,7 +283,7 @@ const EditCategoryForm: React.FC<EditCategoryFormProps> = ({
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full p-2 border border-border rounded-md focus:ring-2 focus:border-transparent"
           required
           autoFocus
         />
@@ -292,14 +292,14 @@ const EditCategoryForm: React.FC<EditCategoryFormProps> = ({
         <button
           type="submit"
           disabled={loading || !name.trim() || name.trim() === category.name}
-          className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-text text-text-inverse px-3 py-1.5 rounded text-sm hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "Saving..." : t("save")}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-200 transition-colors"
+          className="bg-surface-sunken text-text px-3 py-1.5 rounded text-sm hover:bg-surface-sunken transition-colors"
         >
           {t("cancel")}
         </button>

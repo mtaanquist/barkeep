@@ -48,11 +48,11 @@ const SettingsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-surface-raised rounded-md border border-border">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center space-x-2">
-            <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+            <Settings className="w-5 h-5 text-text-muted" />
+            <h3 className="text-lg font-semibold text-text">
               Bar Settings
             </h3>
           </div>
@@ -67,17 +67,17 @@ const SettingsTab: React.FC = () => {
                 type="checkbox"
                 checked={skipApproval}
                 onChange={(e) => setSkipApproval(e.target.checked)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                className="w-4 h-4 text-text-muted bg-surface-sunken border-border rounded focus:ring-2"
               />
             </div>
             <div className="flex-1">
               <label
                 htmlFor="skip-approval"
-                className="font-medium text-gray-900 dark:text-white cursor-pointer"
+                className="font-medium text-text cursor-pointer"
               >
                 Auto-accept drink orders
               </label>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-text-muted mt-1">
                 When enabled, new drink orders will be automatically accepted and skip the manual approval step. 
                 Customers can still cancel their orders until they are marked as processed.
               </p>
@@ -85,18 +85,18 @@ const SettingsTab: React.FC = () => {
           </div>
 
           {/* Bar Information */}
-          <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+          <div className="pt-6 border-t border-border">
+            <h4 className="text-sm font-semibold text-text mb-3">
               Bar Information
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Bar Name:</span>
-                <span className="font-medium text-gray-900 dark:text-white">{currentBar?.name}</span>
+                <span className="text-text-muted">Bar Name:</span>
+                <span className="font-medium text-text">{currentBar?.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Language:</span>
-                <span className="font-medium text-gray-900 dark:text-white">
+                <span className="text-text-muted">Language:</span>
+                <span className="font-medium text-text">
                   {currentBar?.language === "en" ? "English" : "Danish"}
                 </span>
               </div>
@@ -108,7 +108,7 @@ const SettingsTab: React.FC = () => {
             <button
               onClick={handleSaveSettings}
               disabled={isSaving || loading}
-              className="flex items-center space-x-2 px-6 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center space-x-2 px-6 py-2 bg-text text-text-inverse rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-4 h-4" />
               <span>{isSaving ? "Saving..." : "Save Settings"}</span>

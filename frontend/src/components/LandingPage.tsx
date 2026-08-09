@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "../hooks/useApp";
-import type { Bar } from "../types";
+import type { Bar, Language } from "../types";
 import { useTranslation } from "../utils/translations";
 import BarSelector from "./BarSelector";
 import BarCreator from "./BarCreator";
@@ -84,94 +84,54 @@ const LandingPage: React.FC = () => {
     }
   };
 
+  const languageOption = (value: Language, label: string) => (
+    <button
+      onClick={() => setLanguage(value)}
+      aria-pressed={language === value}
+      className={`h-11 px-4 text-label transition-colors duration-(--duration-instant) cursor-pointer ${
+        language === value
+          ? "bg-text text-text-inverse"
+          : "text-text-muted hover:text-text"
+      }`}
+    >
+      {label}
+    </button>
+  );
+
   return (
-    <div className="landing-page-container min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 dark:from-gray-900 dark:via-gray-800 dark:to-black transition-colors duration-300">
-      {/* Desktop Layout */}
-      <div className="hidden lg:flex min-h-screen">
-        {/* Left Side - Hero Section */}
-        <div className="flex-1 flex items-center justify-center p-12">
-          <div className="max-w-lg text-center text-white">
-            <h1 className="text-6xl font-bold mb-6">🍸</h1>
-            <h2 className="text-4xl font-bold mb-4">Barkeep</h2>
-            <p className="text-xl opacity-90 mb-8">
-              Drinks on tap for your guests. Add what you are pouring, manage
-              orders, and serve your guests with style.
-            </p>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
-                <h3 className="font-semibold mb-2">For Bartenders</h3>
-                <p className="opacity-80">
-                  Manage your drink menu, process orders, and view analytics
-                </p>
-              </div>
-              <div className="bg-white/10 backdrop-blur rounded-lg p-4">
-                <h3 className="font-semibold mb-2">For Guests</h3>
-                <p className="opacity-80">
-                  Browse drinks, place orders, and track your order status
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side - Form */}
-        <div className="landing-form-container w-96 bg-white dark:bg-gray-800 flex items-center justify-center p-8 transition-colors duration-300">
-          <div className="w-full max-w-sm">
-            <div className="mb-8 text-center">
-              <h3 className="landing-text text-2xl font-bold text-gray-800 dark:text-white mb-2">
-                {getTitle()}
-              </h3>
-              <p className="landing-text text-gray-600 dark:text-gray-300">{getSubtitle()}</p>
-            </div>
-
-            <div className="space-y-6">
-              {/* Controls Row */}
-              <div className="flex gap-3">
-                {/* Language Selector */}
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value as "en" | "da")}
-                  className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white transition-colors duration-200"
-                >
-                  <option value="en">English</option>
-                  <option value="da">Dansk</option>
-                </select>
-              </div>
-
-              {/* Dynamic Content */}
-              {renderContent()}
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-surface lg:flex">
+      {/* The sign above the door. Ink in both schemes — it is the one
+          deliberate block of colour in the product. */}
+      <div className="lg:w-[44%] shrink-0 bg-sign text-sign-fg px-6 py-8 lg:px-10 lg:py-11 flex flex-col min-h-50 lg:min-h-screen">
+        <span className="font-mono text-caption uppercase opacity-65">
+          Barkeep
+        </span>
+        <span className="flex-1" />
+        <p className="font-bold text-4xl lg:text-[4.75rem] leading-[0.95] tracking-[-0.035em]">
+          {t("barIsOpen")}
+        </p>
+        <span className="h-px bg-current opacity-28 my-5 lg:my-6" />
+        <p className="text-body lg:text-[1.0625rem] opacity-75 max-w-[38ch]">
+          {t("landingIntro")}
+        </p>
       </div>
 
-      {/* Mobile Layout */}
-      <div className="lg:hidden min-h-screen flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-8 w-full max-w-md transition-colors duration-300">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
-              🍸 Barkeep
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">{getSubtitle()}</p>
-          </div>
-
-          <div className="space-y-4">
-            {/* Controls Row */}
-            <div className="flex gap-3">
-              {/* Language Selector */}
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as "en" | "da")}
-                className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 dark:text-white transition-colors duration-200"
-              >
-                <option value="en">English</option>
-                <option value="da">Dansk</option>
-              </select>
+      {/* The work. */}
+      <div className="flex-1 min-w-0 px-6 py-8 lg:px-10 lg:py-9">
+        <div className="max-w-md mx-auto lg:mx-0 space-y-5">
+          <div className="flex justify-end">
+            <div className="inline-flex border border-border rounded-md overflow-hidden divide-x divide-border">
+              {languageOption("da", "Dansk")}
+              {languageOption("en", "English")}
             </div>
-
-            {/* Dynamic Content */}
-            {renderContent()}
           </div>
+
+          <div>
+            <h1 className="text-display">{getTitle()}</h1>
+            <p className="text-body text-text-muted mt-1">{getSubtitle()}</p>
+          </div>
+
+          {renderContent()}
         </div>
       </div>
     </div>

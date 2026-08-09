@@ -77,19 +77,19 @@ const DrinkImageField: React.FC<DrinkImageFieldProps> = ({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-text mb-2">
         {t("drinkImage")}
       </label>
 
       <div className="space-y-4">
         <div className="flex items-center justify-center w-full">
-          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-border border-dashed rounded-md cursor-pointer bg-surface-sunken hover:bg-surface-sunken transition-colors">
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
-              <Upload className="w-8 h-8 mb-2 text-gray-500" />
-              <p className="mb-2 text-sm text-gray-500">
+              <Upload className="w-8 h-8 mb-2 text-text-muted" />
+              <p className="mb-2 text-sm text-text-muted">
                 <span className="font-semibold">{t("uploadImage")}</span>
               </p>
-              <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+              <p className="text-xs text-text-muted">PNG, JPG, GIF up to 5MB</p>
             </div>
             <input
               type="file"
@@ -101,22 +101,22 @@ const DrinkImageField: React.FC<DrinkImageFieldProps> = ({
           </label>
         </div>
 
-        {uploadError && <p className="text-sm text-red-600">{uploadError}</p>}
+        {uploadError && <p className="text-sm text-danger">{uploadError}</p>}
 
-        <div className="text-center text-gray-500 text-sm">{t("or")}</div>
+        <div className="text-center text-text-muted text-sm">{t("or")}</div>
 
         <input
           type="url"
           value={value.url}
           onChange={(e) => onChange(uncropped(e.target.value))}
           placeholder="https://example.com/image.jpg"
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
         />
 
         {value.url && (
           <div className="mt-4 space-y-2">
             <div
-              className="relative w-full rounded-lg overflow-hidden bg-gray-100"
+              className="relative w-full rounded-md overflow-hidden bg-surface-sunken"
               style={{ aspectRatio: "16/9" }}
             >
               <div className="absolute inset-0 flex items-center justify-center">
@@ -136,7 +136,7 @@ const DrinkImageField: React.FC<DrinkImageFieldProps> = ({
             <button
               type="button"
               onClick={() => setShowCropper(true)}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-text bg-surface-raised border border-border rounded-md hover:bg-surface-sunken transition-colors"
             >
               <Crop className="w-4 h-4" />
               <span>Crop &amp; Position</span>

@@ -1,6 +1,8 @@
 export interface TranslationMap {
   // Landing page
   welcome: string;
+  barIsOpen: string;
+  landingIntro: string;
   bartenderLogin: string;
   guestLogin: string;
   createBar: string;
@@ -99,6 +101,9 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
   en: {
     // Landing page
     welcome: "Welcome to",
+    barIsOpen: "The bar is open.",
+    landingIntro:
+      "Pick a bar, type your first name, and order from your phone. No account, no app.",
     bartenderLogin: "Bartender Login",
     guestLogin: "Guest Login",
     createBar: "Create New Bar",
@@ -195,6 +200,9 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
   da: {
     // Landing page (Danish)
     welcome: "Velkommen til",
+    barIsOpen: "Baren er åben.",
+    landingIntro:
+      "Vælg en bar, skriv dit fornavn, og bestil fra telefonen. Ingen konto, ingen app.",
     bartenderLogin: "Bartender Login",
     guestLogin: "Gæst Login",
     createBar: "Opret Ny Bar",

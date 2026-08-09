@@ -18,37 +18,37 @@ const STATUS_TILES: Array<{
   {
     status: "new",
     label: "New",
-    dot: "bg-yellow-500",
-    tint: "bg-yellow-50",
-    text: "text-yellow-700",
+    dot: "bg-surface-sunken0",
+    tint: "bg-surface-sunken",
+    text: "text-text-muted",
   },
   {
     status: "accepted",
     label: "Accepted",
-    dot: "bg-blue-500",
-    tint: "bg-blue-50",
-    text: "text-blue-700",
+    dot: "bg-surface-sunken0",
+    tint: "bg-surface-sunken",
+    text: "text-text",
   },
   {
     status: "rejected",
     label: "Rejected",
-    dot: "bg-red-500",
-    tint: "bg-red-50",
-    text: "text-red-700",
+    dot: "bg-status-rejected-bg0",
+    tint: "bg-status-rejected-bg",
+    text: "text-danger",
   },
   {
     status: "ready",
     label: "Ready",
-    dot: "bg-green-500",
-    tint: "bg-green-50",
-    text: "text-green-700",
+    dot: "bg-surface-sunken0",
+    tint: "bg-surface-sunken",
+    text: "text-text",
   },
   {
     status: "processed",
     label: "Completed",
-    dot: "bg-gray-500",
-    tint: "bg-gray-50",
-    text: "text-gray-700",
+    dot: "bg-surface-sunken0",
+    tint: "bg-surface-sunken",
+    text: "text-text",
   },
 ];
 
@@ -77,12 +77,12 @@ const AnalyticsTab: React.FC = () => {
 
   if (!analytics) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-        <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+      <div className="bg-surface-raised rounded-md border p-8 text-center">
+        <BarChart3 className="w-16 h-16 mx-auto mb-4 text-text-muted" />
+        <h3 className="text-lg font-medium text-text mb-2">
           Loading Analytics...
         </h3>
-        <p className="text-gray-600">Gathering data from your orders</p>
+        <p className="text-text-muted">Gathering data from your orders</p>
       </div>
     );
   }
@@ -96,27 +96,27 @@ const AnalyticsTab: React.FC = () => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          icon={<BarChart3 className="w-6 h-6 text-blue-600" />}
-          tint="bg-blue-100"
+          icon={<BarChart3 className="w-6 h-6 text-text-muted" />}
+          tint="bg-surface-sunken"
           label={t("totalOrders")}
           value={analytics.totalOrders}
         />
         <StatCard
-          icon={<TrendingUp className="w-6 h-6 text-green-600" />}
-          tint="bg-green-100"
+          icon={<TrendingUp className="w-6 h-6 text-text-muted" />}
+          tint="bg-surface-sunken"
           label={t("ordersToday")}
           value={analytics.ordersToday}
         />
         <StatCard
-          icon={<Coffee className="w-6 h-6 text-purple-600" />}
-          tint="bg-purple-100"
+          icon={<Coffee className="w-6 h-6 text-text-muted" />}
+          tint="bg-surface-sunken"
           label="Top Drink"
           value={topDrink || "N/A"}
           small
         />
         <StatCard
-          icon={<Clock className="w-6 h-6 text-yellow-600" />}
-          tint="bg-yellow-100"
+          icon={<Clock className="w-6 h-6 text-text-muted" />}
+          tint="bg-surface-sunken"
           label="Peak Hour"
           value={analytics.peakHours[0]?.hour || "N/A"}
           small
@@ -125,7 +125,7 @@ const AnalyticsTab: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RankedBars
-          icon={<Star className="w-5 h-5 text-yellow-500 mr-2" />}
+          icon={<Star className="w-5 h-5 text-text-muted mr-2" />}
           heading={t("popularDrinks")}
           rows={analytics.popularDrinks.map((d) => ({
             label: d.drink_title,
@@ -133,11 +133,11 @@ const AnalyticsTab: React.FC = () => {
           }))}
           emptyIcon={<Coffee className="w-12 h-12 mx-auto mb-3 opacity-50" />}
           emptyMessage="No order data yet"
-          barColour="bg-blue-600"
+          barColour="bg-text"
         />
 
         <RankedBars
-          icon={<Clock className="w-5 h-5 text-green-500 mr-2" />}
+          icon={<Clock className="w-5 h-5 text-text-muted mr-2" />}
           heading={t("peakHours")}
           rows={analytics.peakHours.map((h) => ({
             label: h.hour,
@@ -145,21 +145,21 @@ const AnalyticsTab: React.FC = () => {
           }))}
           emptyIcon={<Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />}
           emptyMessage="No peak hour data yet"
-          barColour="bg-green-600"
+          barColour="bg-text"
         />
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-6">
+      <div className="bg-surface-raised rounded-md border p-6">
+        <h3 className="text-lg font-semibold text-text mb-6">
           Order Status Distribution
         </h3>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {STATUS_TILES.map(({ status, label, dot, tint, text }) => (
-            <div key={status} className={`${tint} rounded-lg p-4 text-center`}>
+            <div key={status} className={`${tint} rounded-md p-4 text-center`}>
               <div className={`w-4 h-4 ${dot} rounded-full mx-auto mb-2`} />
               <p className={`text-sm font-medium ${text}`}>{label}</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-text">
                 {orders.filter((order) => order.status === status).length}
               </p>
             </div>
@@ -167,8 +167,8 @@ const AnalyticsTab: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-6">
+      <div className="bg-surface-raised rounded-md border p-6">
+        <h3 className="text-lg font-semibold text-text mb-6">
           Recent Activity Summary
         </h3>
 

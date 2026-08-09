@@ -103,12 +103,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
-        <h4 className="font-semibold text-gray-700">
+        <h4 className="font-semibold text-text">
           {targetBar ? `Login to ${targetBar.name}` : 'Bar Login'}
         </h4>
         <button
           onClick={onBack}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="text-sm text-text-muted hover:text-text"
         >
           ← {targetBar ? 'Change Bar' : 'Back'}
         </button>
@@ -119,10 +119,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <div className="grid grid-cols-1 gap-3">
           <button
             onClick={() => setUserType("bartender")}
-            className={`w-full py-3 rounded-lg transition-colors font-medium flex items-center justify-center space-x-2 ${
+            className={`w-full py-3 rounded-md transition-colors font-medium flex items-center justify-center space-x-2 ${
               userType === "bartender"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                ? "bg-text text-text-inverse"
+                : "bg-surface-sunken text-text hover:bg-border"
             }`}
           >
             <LogIn className="w-4 h-4" />
@@ -130,10 +130,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
           </button>
           <button
             onClick={() => setUserType("guest")}
-            className={`w-full py-3 rounded-lg transition-colors font-medium flex items-center justify-center space-x-2 ${
+            className={`w-full py-3 rounded-md transition-colors font-medium flex items-center justify-center space-x-2 ${
               userType === "guest"
-                ? "bg-green-600 text-white"
-                : "bg-green-100 text-green-700 hover:bg-green-200"
+                ? "bg-text text-text-inverse"
+                : "bg-surface-sunken text-text hover:bg-border"
             }`}
           >
             <LogIn className="w-4 h-4" />
@@ -154,13 +154,13 @@ const LoginForm: React.FC<LoginFormProps> = ({
               onChange={(e) =>
                 setLoginForm((prev) => ({ ...prev, password: e.target.value }))
               }
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent pr-10"
+              className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent pr-10"
               onKeyPress={(e) => e.key === "Enter" && handleLogin()}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+              className="absolute right-3 top-3 text-text-muted hover:text-text"
             >
               {showPassword ? (
                 <EyeOff className="w-5 h-5" />
@@ -179,7 +179,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
               onChange={(e) =>
                 setLoginForm((prev) => ({ ...prev, name: e.target.value }))
               }
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
               onKeyPress={(e) => e.key === "Enter" && handleLogin()}
             />
           )}
@@ -192,7 +192,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
               !loginForm.password ||
               (userType === "guest" && !loginForm.name)
             }
-            className="w-full bg-gray-800 text-white py-3 rounded-lg hover:bg-gray-900 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-text text-text-inverse py-3 rounded-md hover:bg-neutral-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? t("loading") : t("login")}
           </button>
@@ -200,7 +200,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           {/* Cancel Button */}
           <button
             onClick={resetUserType}
-            className="w-full text-gray-600 py-2 hover:text-gray-800 transition-colors"
+            className="w-full text-text-muted py-2 hover:text-text transition-colors"
           >
             {t("cancel")}
           </button>

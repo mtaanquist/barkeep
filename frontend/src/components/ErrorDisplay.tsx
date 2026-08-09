@@ -12,12 +12,12 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, onRetry }) => {
   const t = useTranslation(language);
 
   return (
-    <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full text-center">
-        <div className="text-red-600 mb-6">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+    <div className="min-h-screen bg-status-rejected-bg flex items-center justify-center p-4">
+      <div className="bg-surface-raised rounded-md shadow-float p-6 max-w-md w-full text-center">
+        <div className="text-danger mb-6">
+          <div className="w-16 h-16 bg-status-rejected-bg rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-8 h-8 text-red-600"
+              className="w-8 h-8 text-danger"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -31,17 +31,17 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, onRetry }) => {
             </svg>
           </div>
           <h2 className="text-xl font-bold mb-2">{t("error")}</h2>
-          <p className="text-gray-700 mb-6">{error}</p>
+          <p className="text-text mb-6">{error}</p>
           <div className="space-y-3">
             <button
               onClick={onRetry}
-              className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium"
+              className="w-full bg-danger text-danger-contrast px-4 py-2 rounded-md hover:bg-danger-hover transition-colors font-medium"
             >
               {t("retry")}
             </button>
             <button
               onClick={() => window.location.reload()}
-              className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+              className="w-full bg-disabled-bg text-text px-4 py-2 rounded-md hover:bg-border transition-colors font-medium"
             >
               Reload Page
             </button>
