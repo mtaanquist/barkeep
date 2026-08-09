@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  body { margin:0; background:#8b8b86; }
+  button, input, textarea, select { font-family: inherit; }
+  a { color:#101214; }
+  a:hover { color:#000; }
+  @keyframes bk-beacon {
+    0%,100% { box-shadow:0 0 0 0 rgba(224,180,0,0.55), 0 0 0 1px rgba(16,18,20,0.18); }
+    50%     { box-shadow:0 0 0 12px rgba(224,180,0,0.00), 0 0 0 1px rgba(16,18,20,0.18); }
+  }
+  @keyframes bk-beacon-dark {
+    0%,100% { box-shadow:0 0 0 0 rgba(242,201,10,0.50), 0 0 34px rgba(242,201,10,0.20); }
+    50%     { box-shadow:0 0 0 14px rgba(242,201,10,0.00), 0 0 54px rgba(242,201,10,0.34); }
+  }
+  @keyframes bk-sweep { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+</style>
+</helmet>
+
+<section style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF;--accent:#E0B400;--accent-hover:#C79F00;--accent-contrast:#101214;--danger:#B3261E;--danger-contrast:#FFFFFF;--disabled-bg:#EDEEEF;--disabled-border:#C9CCCE;--disabled-fg:#5C6165;--overlay:rgba(16,18,20,0.45);--s-new-bg:#F7F8F8;--s-new-bd:#101214;--s-new-fg:#101214;--s-acc-bg:#E4E7E9;--s-acc-bd:#6B7075;--s-acc-fg:#33383D;--s-rej-bg:#FBEAE8;--s-rej-bd:#B3261E;--s-rej-fg:#8C1D18;--s-rdy-bg:#E0B400;--s-rdy-bd:#A88600;--s-rdy-fg:#101214;--s-prc-bg:#EDEEEF;--s-prc-bd:#C9CCCE;--s-prc-fg:#5C6165;--photo:repeating-linear-gradient(90deg,#DFE1E2 0 8px,#D5D8DA 8px 16px); padding:56px; display:flex; flex-direction:column; gap:22px; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; color:#101214; width:max-content;">
+
+  <header style="display:flex; flex-direction:column; gap:8px; max-width:900px;">
+    <div style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.16em; text-transform:uppercase; color:#33383D;">Barkeep · Back Bar · guest order status</div>
+    <h1 style="margin:0; font-weight:700; font-size:32px; line-height:1.12; letter-spacing:-0.02em;">The card that sits at the top of the menu until the drink is in your hand</h1>
+    <p style="margin:0; font-size:14px; line-height:1.55; color:#2b2b26; max-width:80ch; text-wrap:pretty;">One component, five states, built from <code style="font-family:ui-monospace,Menlo,monospace; font-size:12.5px; background:#e2e2dd; padding:1px 5px;">tokens.css</code> and the existing kit — status pill, card, dialog, button. It never navigates: it changes under the guest's thumb. Progress is carried by a four-step track, not by colour, so four of the five states can stay on the neutral ramp and <strong>ready</strong> can own the accent alone. Danish shipped, English under each block.</p>
+  </header>
+
+  <!-- ==================== ANATOMY ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">Anatomy &amp; the progress track</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">
+        <strong style="font-weight:600;">Track</strong> — four segments, 6px tall, 3px apart, full card width: <em>Modtaget · Laves · Klar · Afhentet</em>. Segments the order has reached — including the one it is sitting in — are solid <code style="font-family:ui-monospace,Menlo,monospace;">text</code>; the ones ahead are <code style="font-family:ui-monospace,Menlo,monospace;">border</code>. Filled count <em>is</em> the step number: one of four is new, two is being made, three is ready. No third treatment for "current", because at a glance a half-filled bar reads as an ambiguous fourth colour. Position in the sequence is legible at a glance, upside down, at arm's length — no reading required.<br>
+        <strong style="font-weight:600;">Body</strong> — mono kicker (order id · time), <code style="font-family:ui-monospace,Menlo,monospace;">text-heading</code> drink name, then the status <em>in words</em> at <code style="font-family:ui-monospace,Menlo,monospace;">text-body</code>. The pill repeats the state as a token so it matches the bartender's rail exactly.<br>
+        <strong style="font-weight:600;">Action</strong> — one 56px full-width cancel, <code style="font-family:ui-monospace,Menlo,monospace;">border</code> outline, never a <code style="font-family:ui-monospace,Menlo,monospace;">danger</code> fill: cancelling your own drink is not a destructive act, it is a change of mind. It is present in new, accepted and ready, and gone in processed and rejected — the card's footer rule disappears with it, so the card physically shrinks when the order is closed.
+      </p>
+    </div>
+    <div style="background:var(--surface-sunken); padding:26px 24px 30px; display:flex; gap:36px; align-items:flex-start;">
+      <div style="width:358px; background:var(--surface-raised); border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+        <div style="display:flex; gap:3px; padding:0;">
+          <span style="flex:1; height:6px; background:var(--text);"></span>
+          <span style="flex:1; height:6px; background:var(--text);"></span>
+          <span style="flex:1; height:6px; background:var(--border);"></span>
+          <span style="flex:1; height:6px; background:var(--border);"></span>
+        </div>
+        <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+          <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14 · 22:16</span>
+          <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">ACCEPTERET</span>
+        </div>
+        <div style="padding:6px 16px 14px; display:flex; flex-direction:column; gap:4px;">
+          <h3 style="margin:0; font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</h3>
+          <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Astrid er i gang med din drink.</p>
+        </div>
+        <div style="padding:12px 16px 14px; border-top:1px solid var(--border);">
+          <button style="width:100%; height:56px; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér bestilling</button>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px; width:520px; padding-top:2px;">
+        <div style="display:flex; gap:3px;">
+          <span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span>
+        </div>
+        <div style="display:flex; gap:3px;">
+          <span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span>
+        </div>
+        <div style="display:flex; gap:3px;">
+          <span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:rgba(16,18,20,0.28);"></span>
+        </div>
+        <div style="display:flex; gap:3px;">
+          <span style="flex:1; height:6px; background:var(--s-prc-bd);"></span><span style="flex:1; height:6px; background:var(--s-prc-bd);"></span><span style="flex:1; height:6px; background:var(--s-prc-bd);"></span><span style="flex:1; height:6px; background:var(--s-prc-bd);"></span>
+        </div>
+        <div style="display:flex; gap:3px;">
+          <span style="flex:1; height:6px; background:var(--s-rej-bd);"></span><span style="flex:1; height:6px; background:repeating-linear-gradient(90deg,var(--border) 0 4px,transparent 4px 8px);"></span><span style="flex:1; height:6px; background:repeating-linear-gradient(90deg,var(--border) 0 4px,transparent 4px 8px);"></span><span style="flex:1; height:6px; background:repeating-linear-gradient(90deg,var(--border) 0 4px,transparent 4px 8px);"></span>
+        </div>
+        <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:var(--text-muted); text-wrap:pretty;">Top to bottom: <strong style="font-weight:600; color:var(--text);">new</strong> (1 of 4), <strong style="font-weight:600; color:var(--text);">accepted</strong> (2 of 4), <strong style="font-weight:600; color:var(--text);">ready</strong> (3 of 4, drawn in ink on the accent card), <strong style="font-weight:600; color:var(--text);">processed</strong> (4 of 4, the whole track drops to <code style="font-family:ui-monospace,Menlo,monospace;">status-processed-border</code> so a finished order stops competing with the menu), <strong style="font-weight:600; color:var(--text);">rejected</strong> (the run stops and the remaining segments become dashed — the sequence was interrupted, not completed).</p>
+      </div>
+    </div>
+    <div style="padding:12px 24px; border-top:1px solid #dedcd4; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: Received · Being made · Ready · Collected — “Astrid is making your drink.” · Cancel order</div>
+  </div>
+
+  <!-- ==================== FIVE STATES — LIGHT ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">Five states · light</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">Shown at ship width, 358px, the width the card has inside a 390 phone. Four of the five are quiet cards on the neutral ramp: the guest is browsing the menu, and a drink that is merely <em>ordered</em> has no right to shout. Ready is the exception and takes the whole card.</p>
+    </div>
+    <div style="background:var(--surface-sunken); padding:24px; display:grid; grid-template-columns:repeat(3,358px); gap:24px; justify-content:start;">
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">1 · NEW</span>
+        <div style="background:var(--surface-raised); border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span></div>
+          <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14 · 22:16</span>
+            <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span>
+          </div>
+          <div style="padding:6px 16px 14px; display:flex; flex-direction:column; gap:4px;">
+            <h3 style="margin:0; font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</h3>
+            <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Sendt til baren. Venter på at de tager den.</p>
+          </div>
+          <div style="padding:12px 16px 14px; border-top:1px solid var(--border);"><button style="width:100%; height:56px; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér bestilling</button></div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">2 · ACCEPTED</span>
+        <div style="background:var(--surface-raised); border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span></div>
+          <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14 · 22:16</span>
+            <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">ACCEPTERET</span>
+          </div>
+          <div style="padding:6px 16px 14px; display:flex; flex-direction:column; gap:4px;">
+            <h3 style="margin:0; font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</h3>
+            <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Astrid er i gang med din drink.</p>
+          </div>
+          <div style="padding:12px 16px 14px; border-top:1px solid var(--border);"><button style="width:100%; height:56px; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér bestilling</button></div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">3 · READY</span>
+        <div style="background:var(--accent); border:1px solid var(--s-rdy-bd); border-radius:3px; overflow:hidden; animation:bk-beacon 1.8s cubic-bezier(0.2,0,0,1) infinite;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:rgba(16,18,20,0.28);"></span></div>
+          <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--accent-contrast);">#14 · 22:16</span>
+            <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--accent-contrast); color:var(--accent); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">KLAR</span>
+          </div>
+          <div style="padding:2px 16px 16px; display:flex; flex-direction:column; gap:2px;">
+            <span style="font-weight:700; font-size:40px; line-height:1.05; letter-spacing:-0.025em; color:var(--accent-contrast);">Hent den i baren</span>
+            <span style="font-weight:600; font-size:17px; line-height:1.35; letter-spacing:-0.005em; color:var(--accent-contrast);">Negroni Sbagliato · sig “fjorten”</span>
+          </div>
+          <div style="padding:12px 16px 14px; border-top:1px solid rgba(16,18,20,0.28);"><button style="width:100%; height:56px; border:1px solid var(--accent-contrast); border-radius:3px; background:transparent; color:var(--accent-contrast); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér bestilling</button></div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">4 · PROCESSED</span>
+        <div style="background:var(--s-prc-bg); border:1px solid var(--s-prc-bd); border-radius:3px; overflow:hidden;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--s-prc-bd);"></span><span style="flex:1; height:6px; background:var(--s-prc-bd);"></span><span style="flex:1; height:6px; background:var(--s-prc-bd);"></span><span style="flex:1; height:6px; background:var(--s-prc-bd);"></span></div>
+          <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--s-prc-fg);">#14 · 22:16 → 22:31</span>
+            <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-prc-bg); border:1px solid var(--s-prc-bd); color:var(--s-prc-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">EKSPEDERET</span>
+          </div>
+          <div style="padding:6px 16px 16px; display:flex; flex-direction:column; gap:4px;">
+            <h3 style="margin:0; font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--s-prc-fg);">Negroni Sbagliato</h3>
+            <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--s-prc-fg);">Afhentet. Skål.</p>
+          </div>
+        </div>
+        <p style="margin:2px 0 0; font-weight:400; font-size:12px; line-height:1.5; color:var(--text-muted); max-width:34ch;">No footer, no action: the card is a receipt. It fades out of the menu after 60 seconds and moves to <em>Mine bestillinger</em>.</p>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">5 · REJECTED</span>
+        <div style="background:var(--s-rej-bg); border:1px solid var(--s-rej-bd); border-radius:3px; overflow:hidden;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--s-rej-bd);"></span><span style="flex:1; height:6px; background:repeating-linear-gradient(90deg,rgba(179,38,30,0.45) 0 4px,transparent 4px 8px);"></span><span style="flex:1; height:6px; background:repeating-linear-gradient(90deg,rgba(179,38,30,0.45) 0 4px,transparent 4px 8px);"></span><span style="flex:1; height:6px; background:repeating-linear-gradient(90deg,rgba(179,38,30,0.45) 0 4px,transparent 4px 8px);"></span></div>
+          <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--s-rej-fg);">#14 · 22:16</span>
+            <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-rej-bg); border:1px solid var(--s-rej-bd); color:var(--s-rej-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">AFVIST</span>
+          </div>
+          <div style="padding:6px 16px 14px; display:flex; flex-direction:column; gap:4px;">
+            <h3 style="margin:0; font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</h3>
+            <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Baren kunne ikke lave den — de er løbet tør for prosecco.</p>
+          </div>
+          <div style="padding:12px 16px 14px; border-top:1px solid var(--s-rej-bd); display:flex; gap:10px;">
+            <button style="flex:1; height:56px; border:1px solid var(--border-strong); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Vælg noget andet</button>
+            <button style="width:96px; height:56px; border:1px solid var(--border); border-radius:3px; background:transparent; color:var(--text-muted); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Luk</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div style="padding:12px 24px; border-top:1px solid #dedcd4; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: Sent to the bar. Waiting for them to pick it up. · Astrid is making your drink. · Come and get it — say “fourteen” · Collected. Cheers. · The bar couldn’t make this one — they’ve run out of prosecco. · Pick something else / Dismiss</div>
+  </div>
+
+  <!-- ==================== FIVE STATES — DARK ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">Five states · dark</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">Dark is the real room, not a preference. Three things change beyond token swaps: ready’s halo becomes an outward <em>glow</em> rather than a hard ring, because on near-black a ring reads as a border and a glow reads as a lamp; processed drops to <code style="font-family:ui-monospace,Menlo,monospace;">surface-sunken</code> so a finished order sinks below the page instead of floating on it; and rejected keeps its salmon foreground but never gets a fill brighter than the accent — nothing in the product is allowed to out-shine READY.</p>
+    </div>
+    <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--accent:#F2C90A;--accent-contrast:#101214;--s-new-bg:#1E2124;--s-new-bd:#F2F4F5;--s-new-fg:#F2F4F5;--s-acc-bg:#22262A;--s-acc-bd:#6B7075;--s-acc-fg:#C6CBCF;--s-rej-bg:#2A1614;--s-rej-bd:#E0685C;--s-rej-fg:#F4AFA4;--s-rdy-bg:#F2C90A;--s-rdy-bd:#F2C90A;--s-rdy-fg:#101214;--s-prc-bg:#17191B;--s-prc-bd:#26292C;--s-prc-fg:#8B9095; background:var(--surface); padding:24px; display:grid; grid-template-columns:repeat(3,358px); gap:24px; justify-content:start;">
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">1 · NEW</span>
+        <div style="background:var(--surface-raised); border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span></div>
+          <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14 · 22:16</span>
+            <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span>
+          </div>
+          <div style="padding:6px 16px 14px; display:flex; flex-direction:column; gap:4px;">
+            <h3 style="margin:0; font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</h3>
+            <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Sendt til baren. Venter på at de tager den.</p>
+          </div>
+          <div style="padding:12px 16px 14px; border-top:1px solid var(--border);"><button style="width:100%; height:56px; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér bestilling</button></div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">2 · ACCEPTED</span>
+        <div style="background:var(--surface-raised); border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span></div>
+          <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14 · 22:16</span>
+            <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">ACCEPTERET</span>
+          </div>
+          <div style="padding:6px 16px 14px; display:flex; flex-direction:column; gap:4px;">
+            <h3 style="margin:0; font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</h3>
+            <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Astrid er i gang med din drink.</p>
+          </div>
+          <div style="padding:12px 16px 14px; border-top:1px solid var(--border);"><button style="width:100%; height:56px; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér bestilling</button></div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">3 · READY</span>
+        <div style="background:var(--accent); border:1px solid var(--accent); border-radius:3px; overflow:hidden; animation:bk-beacon-dark 1.8s cubic-bezier(0.2,0,0,1) infinite;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:rgba(16,18,20,0.28);"></span></div>
+          <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--accent-contrast);">#14 · 22:16</span>
+            <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--accent-contrast); color:var(--accent); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">KLAR</span>
+          </div>
+          <div style="padding:2px 16px 16px; display:flex; flex-direction:column; gap:2px;">
+            <span style="font-weight:700; font-size:40px; line-height:1.05; letter-spacing:-0.025em; color:var(--accent-contrast);">Hent den i baren</span>
+            <span style="font-weight:600; font-size:17px; line-height:1.35; letter-spacing:-0.005em; color:var(--accent-contrast);">Negroni Sbagliato · sig “fjorten”</span>
+          </div>
+          <div style="padding:12px 16px 14px; border-top:1px solid rgba(16,18,20,0.28);"><button style="width:100%; height:56px; border:1px solid var(--accent-contrast); border-radius:3px; background:transparent; color:var(--accent-contrast); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér bestilling</button></div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">4 · PROCESSED</span>
+        <div style="background:var(--s-prc-bg); border:1px solid var(--s-prc-bd); border-radius:3px; overflow:hidden;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--s-prc-fg);"></span><span style="flex:1; height:6px; background:var(--s-prc-fg);"></span><span style="flex:1; height:6px; background:var(--s-prc-fg);"></span><span style="flex:1; height:6px; background:var(--s-prc-fg);"></span></div>
+          <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--s-prc-fg);">#14 · 22:16 → 22:31</span>
+            <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-prc-bg); border:1px solid var(--s-prc-bd); color:var(--s-prc-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">EKSPEDERET</span>
+          </div>
+          <div style="padding:6px 16px 16px; display:flex; flex-direction:column; gap:4px;">
+            <h3 style="margin:0; font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--s-prc-fg);">Negroni Sbagliato</h3>
+            <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--s-prc-fg);">Afhentet. Skål.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">5 · REJECTED</span>
+        <div style="background:var(--s-rej-bg); border:1px solid var(--s-rej-bd); border-radius:3px; overflow:hidden;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--s-rej-bd);"></span><span style="flex:1; height:6px; background:repeating-linear-gradient(90deg,rgba(224,104,92,0.45) 0 4px,transparent 4px 8px);"></span><span style="flex:1; height:6px; background:repeating-linear-gradient(90deg,rgba(224,104,92,0.45) 0 4px,transparent 4px 8px);"></span><span style="flex:1; height:6px; background:repeating-linear-gradient(90deg,rgba(224,104,92,0.45) 0 4px,transparent 4px 8px);"></span></div>
+          <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+            <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--s-rej-fg);">#14 · 22:16</span>
+            <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-rej-bg); border:1px solid var(--s-rej-bd); color:var(--s-rej-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">AFVIST</span>
+          </div>
+          <div style="padding:6px 16px 14px; display:flex; flex-direction:column; gap:4px;">
+            <h3 style="margin:0; font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</h3>
+            <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--s-rej-fg);">Baren kunne ikke lave den — de er løbet tør for prosecco.</p>
+          </div>
+          <div style="padding:12px 16px 14px; border-top:1px solid var(--s-rej-bd); display:flex; gap:10px;">
+            <button style="flex:1; height:56px; border:1px solid var(--text); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Vælg noget andet</button>
+            <button style="width:96px; height:56px; border:1px solid var(--border); border-radius:3px; background:transparent; color:var(--text-muted); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Luk</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== READY IN CONTEXT ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">Ready — five mechanisms, no confetti</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">
+        A phone comes out of a pocket into a dark loud room and is glanced at for under a second, often at a bad angle. The old green card with a 🎉 fails that glance twice: green is a mood, not a signal, and an emoji is 20px of detail. Instead the whole screen changes state:<br>
+        <strong style="font-weight:600;">1 · The card takes the accent.</strong> It is the only accent fill in the entire product, so the yellow <em>is</em> the message. 9.6:1 in light, 11.6:1 in dark.<br>
+        <strong style="font-weight:600;">2 · The menu behind it dims.</strong> Everything below the card drops to 35% and its Order buttons go disabled — the card becomes the only lit object on the screen, which is what the eye finds first at low light.<br>
+        <strong style="font-weight:600;">3 · The instruction is the headline.</strong> 40px, two words of verb: <em>Hent den i baren</em>. The drink name demotes to the line under it, and a spoken pickup token — “sig fjorten” — replaces reading a number off a screen at a crowded bar.<br>
+        <strong style="font-weight:600;">4 · A slow halo, 1.8s.</strong> One breath per cycle, no colour change, no bounce: motion in peripheral vision is what catches a glance, and slow motion survives being seen at 15fps through a pocket. It stops after 30 seconds — a beacon that never stops is noise.<br>
+        <strong style="font-weight:600;">5 · The device does the rest.</strong> Vibration on state entry and a system notification with the same words, so the mechanism doesn’t depend on the app being open or on sound.
+      </p>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr;">
+      <div style="background:var(--surface-sunken); padding:24px; display:flex; flex-direction:column; gap:8px; align-items:center;">
+        <span style="align-self:flex-start; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">LIGHT · READY IN CONTEXT</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font:700 10px/1 ui-monospace,Menlo,monospace; color:var(--text-muted);"><span>22:31</span><span>▮▮▮</span></div>
+          <div style="padding:10px 16px 12px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:2px;">
+            <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span>
+            <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+          </div>
+          <div style="padding:16px; background:var(--surface-sunken); border-bottom:1px solid var(--border);">
+            <div style="background:var(--accent); border:1px solid var(--s-rdy-bd); border-radius:3px; overflow:hidden; animation:bk-beacon 1.8s cubic-bezier(0.2,0,0,1) infinite;">
+              <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:rgba(16,18,20,0.28);"></span></div>
+              <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+                <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--accent-contrast);">#14 · 22:16</span>
+                <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--accent-contrast); color:var(--accent); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">KLAR</span>
+              </div>
+              <div style="padding:2px 16px 16px; display:flex; flex-direction:column; gap:2px;">
+                <span style="font-weight:700; font-size:40px; line-height:1.05; letter-spacing:-0.025em; color:var(--accent-contrast);">Hent den i baren</span>
+                <span style="font-weight:600; font-size:17px; line-height:1.35; letter-spacing:-0.005em; color:var(--accent-contrast);">Negroni Sbagliato · sig “fjorten”</span>
+              </div>
+              <div style="padding:12px 16px 14px; border-top:1px solid rgba(16,18,20,0.28);"><button style="width:100%; height:56px; border:1px solid var(--accent-contrast); border-radius:3px; background:transparent; color:var(--accent-contrast); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér bestilling</button></div>
+            </div>
+          </div>
+          <div style="flex:1; padding:16px; display:flex; flex-direction:column; gap:12px; opacity:0.35;">
+            <div style="display:flex; gap:8px;">
+              <span style="height:44px; padding:0 16px; display:inline-flex; align-items:center; border:1px solid var(--text); border-radius:9999px; background:var(--text); color:var(--text-inverse); font-weight:600; font-size:14px; line-height:1;">Alle 42</span>
+              <span style="height:44px; padding:0 16px; display:inline-flex; align-items:center; border:1px solid var(--border); border-radius:9999px; font-weight:600; font-size:14px; line-height:1;">Klassikere 12</span>
+            </div>
+            <div style="border:1px solid var(--border); border-radius:3px; overflow:hidden; background:var(--surface-raised);">
+              <div style="height:120px; background:var(--photo);"></div>
+              <div style="padding:12px 14px; display:flex; flex-direction:column; gap:6px;">
+                <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Hyldeblomst-spritz</span>
+                <span style="font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Hyldeblomst, danskvand, agurk.</span>
+              </div>
+              <div style="display:flex; border-top:1px solid var(--border);">
+                <span style="width:132px; height:64px; display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); font-weight:600; font-size:15px; line-height:1.2;">Se opskrift</span>
+                <span style="flex:1; height:64px; display:flex; align-items:center; justify-content:center; background:var(--disabled-bg); color:var(--disabled-fg); font-weight:700; font-size:17px; line-height:1.2;">Bestil</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--accent:#F2C90A;--accent-contrast:#101214;--disabled-bg:#17191B;--disabled-fg:#8B9095;--photo:repeating-linear-gradient(90deg,#26292C 0 8px,#22262A 8px 16px); background:var(--surface); padding:24px; display:flex; flex-direction:column; gap:8px; align-items:center;">
+        <span style="align-self:flex-start; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">DARK · READY IN CONTEXT</span>
+        <div style="width:390px; height:720px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font:700 10px/1 ui-monospace,Menlo,monospace; color:var(--text-muted);"><span>22:31</span><span>▮▮▮</span></div>
+          <div style="padding:10px 16px 12px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:2px;">
+            <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span>
+            <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+          </div>
+          <div style="padding:16px; background:var(--surface-sunken); border-bottom:1px solid var(--border);">
+            <div style="background:var(--accent); border:1px solid var(--accent); border-radius:3px; overflow:hidden; animation:bk-beacon-dark 1.8s cubic-bezier(0.2,0,0,1) infinite;">
+              <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:rgba(16,18,20,0.28);"></span></div>
+              <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+                <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--accent-contrast);">#14 · 22:16</span>
+                <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--accent-contrast); color:var(--accent); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">KLAR</span>
+              </div>
+              <div style="padding:2px 16px 16px; display:flex; flex-direction:column; gap:2px;">
+                <span style="font-weight:700; font-size:40px; line-height:1.05; letter-spacing:-0.025em; color:var(--accent-contrast);">Hent den i baren</span>
+                <span style="font-weight:600; font-size:17px; line-height:1.35; letter-spacing:-0.005em; color:var(--accent-contrast);">Negroni Sbagliato · sig “fjorten”</span>
+              </div>
+              <div style="padding:12px 16px 14px; border-top:1px solid rgba(16,18,20,0.28);"><button style="width:100%; height:56px; border:1px solid var(--accent-contrast); border-radius:3px; background:transparent; color:var(--accent-contrast); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér bestilling</button></div>
+            </div>
+          </div>
+          <div style="flex:1; padding:16px; display:flex; flex-direction:column; gap:12px; opacity:0.35;">
+            <div style="display:flex; gap:8px;">
+              <span style="height:44px; padding:0 16px; display:inline-flex; align-items:center; border:1px solid var(--text); border-radius:9999px; background:var(--text); color:var(--text-inverse); font-weight:600; font-size:14px; line-height:1;">Alle 42</span>
+              <span style="height:44px; padding:0 16px; display:inline-flex; align-items:center; border:1px solid var(--border); border-radius:9999px; color:var(--text); font-weight:600; font-size:14px; line-height:1;">Klassikere 12</span>
+            </div>
+            <div style="border:1px solid var(--border); border-radius:3px; overflow:hidden; background:var(--surface-raised);">
+              <div style="height:120px; background:var(--photo);"></div>
+              <div style="padding:12px 14px; display:flex; flex-direction:column; gap:6px;">
+                <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hyldeblomst-spritz</span>
+                <span style="font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Hyldeblomst, danskvand, agurk.</span>
+              </div>
+              <div style="display:flex; border-top:1px solid var(--border);">
+                <span style="width:132px; height:64px; display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); color:var(--text); font-weight:600; font-size:15px; line-height:1.2;">Se opskrift</span>
+                <span style="flex:1; height:64px; display:flex; align-items:center; justify-content:center; background:var(--disabled-bg); color:var(--disabled-fg); font-weight:700; font-size:17px; line-height:1.2;">Bestil</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:12px 24px; border-top:1px solid #dedcd4; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: Come and get it · Negroni Sbagliato · say “fourteen” · Cancel order. The dimmed menu below is not decoration — its Order buttons really are disabled while an order is live, so dimming and disabling say the same thing.</div>
+  </div>
+
+  <!-- ==================== TRANSITION ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">The change, frame by frame — accepted → ready</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">The guest is already looking at this card when the bartender taps a button 6 metres away. Nothing may jump, and nothing may be missed. Total 400ms on <code style="font-family:ui-monospace,Menlo,monospace;">ease-standard</code>, three overlapping moves, and the card’s height never changes — so the menu underneath does not shift under a thumb that is mid-scroll.</p>
+    </div>
+    <div style="background:var(--surface-sunken); padding:24px; display:grid; grid-template-columns:repeat(4,296px); gap:20px; justify-content:start;">
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="background:var(--surface-raised); border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span></div>
+          <div style="padding:12px 14px 4px; display:flex; align-items:center; gap:8px;"><span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14 · 22:16</span><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">ACCEPTERET</span></div>
+          <div style="padding:4px 14px 14px;"><span style="display:block; font-weight:700; font-size:19px; line-height:1.2; letter-spacing:-0.015em;">Negroni Sbagliato</span><span style="display:block; margin-top:4px; font-weight:400; font-size:14px; line-height:1.5; color:var(--text-muted);">Astrid er i gang.</span></div>
+          <div style="padding:10px 14px 12px; border-top:1px solid var(--border);"><span style="display:flex; align-items:center; justify-content:center; height:48px; border:1px solid var(--border); border-radius:3px; font-weight:600; font-size:14px; line-height:1.25;">Annullér bestilling</span></div>
+        </div>
+        <span style="font:700 10px/1.5 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">0ms · REST</span>
+        <p style="margin:0; font-weight:400; font-size:12px; line-height:1.5; color:var(--text-muted);">Two of four, quiet card. The server push has just landed.</p>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="background:var(--surface-raised); border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--border); overflow:hidden;"><span style="display:block; width:55%; height:6px; background:var(--text);"></span></span><span style="flex:1; height:6px; background:var(--border);"></span></div>
+          <div style="padding:12px 14px 4px; display:flex; align-items:center; gap:8px;"><span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14 · 22:16</span><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; opacity:0.35;">ACCEPTERET</span></div>
+          <div style="padding:4px 14px 14px;"><span style="display:block; font-weight:700; font-size:19px; line-height:1.2; letter-spacing:-0.015em; opacity:0.4; transform:translateY(-3px);">Negroni Sbagliato</span><span style="display:block; margin-top:4px; font-weight:400; font-size:14px; line-height:1.5; color:var(--text-muted); opacity:0.4;">Astrid er i gang.</span></div>
+          <div style="padding:10px 14px 12px; border-top:1px solid var(--border);"><span style="display:flex; align-items:center; justify-content:center; height:48px; border:1px solid var(--border); border-radius:3px; font-weight:600; font-size:14px; line-height:1.25;">Annullér bestilling</span></div>
+        </div>
+        <span style="font:700 10px/1.5 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">0–160ms · TRACK SWEEPS, TEXT LEAVES</span>
+        <p style="margin:0; font-weight:400; font-size:12px; line-height:1.5; color:var(--text-muted);">Segment three fills left-to-right — the eye is pulled to the track first, which is where the answer is. The old words fade up and out over the same 160ms; the pill dims but keeps its box.</p>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="background:#F5E7A8; border:1px solid var(--s-rdy-bd); border-radius:3px; overflow:hidden;">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:rgba(16,18,20,0.28);"></span></div>
+          <div style="padding:12px 14px 4px; display:flex; align-items:center; gap:8px;"><span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--accent-contrast);">#14 · 22:16</span><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--accent-contrast); color:#F5E7A8; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">KLAR</span></div>
+          <div style="padding:2px 14px 14px;"><span style="display:block; font-weight:700; font-size:32px; line-height:1.05; letter-spacing:-0.025em; color:var(--accent-contrast); opacity:0.55; transform:translateY(3px);">Hent den i baren</span><span style="display:block; margin-top:2px; font-weight:600; font-size:15px; line-height:1.35; color:var(--accent-contrast); opacity:0.55;">Negroni Sbagliato · sig “fjorten”</span></div>
+          <div style="padding:10px 14px 12px; border-top:1px solid rgba(16,18,20,0.28);"><span style="display:flex; align-items:center; justify-content:center; height:48px; border:1px solid var(--accent-contrast); border-radius:3px; color:var(--accent-contrast); font-weight:600; font-size:14px; line-height:1.25;">Annullér bestilling</span></div>
+        </div>
+        <span style="font:700 10px/1.5 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">160–320ms · SURFACE CROSSFADES</span>
+        <p style="margin:0; font-weight:400; font-size:12px; line-height:1.5; color:var(--text-muted);">The card’s background crosses from <code style="font-family:ui-monospace,Menlo,monospace;">surface-raised</code> to <code style="font-family:ui-monospace,Menlo,monospace;">accent</code> while the new headline rises 3px into place. Colour and words arrive together, so neither can be read as the whole message on its own.</p>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="background:var(--accent); border:1px solid var(--s-rdy-bd); border-radius:3px; overflow:hidden; box-shadow:0 0 0 10px rgba(224,180,0,0.28);">
+          <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:var(--accent-contrast);"></span><span style="flex:1; height:6px; background:rgba(16,18,20,0.28);"></span></div>
+          <div style="padding:12px 14px 4px; display:flex; align-items:center; gap:8px;"><span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--accent-contrast);">#14 · 22:16</span><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--accent-contrast); color:var(--accent); font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">KLAR</span></div>
+          <div style="padding:2px 14px 14px;"><span style="display:block; font-weight:700; font-size:32px; line-height:1.05; letter-spacing:-0.025em; color:var(--accent-contrast);">Hent den i baren</span><span style="display:block; margin-top:2px; font-weight:600; font-size:15px; line-height:1.35; color:var(--accent-contrast);">Negroni Sbagliato · sig “fjorten”</span></div>
+          <div style="padding:10px 14px 12px; border-top:1px solid rgba(16,18,20,0.28);"><span style="display:flex; align-items:center; justify-content:center; height:48px; border:1px solid var(--accent-contrast); border-radius:3px; color:var(--accent-contrast); font-weight:600; font-size:14px; line-height:1.25;">Annullér bestilling</span></div>
+        </div>
+        <span style="font:700 10px/1.5 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">400ms → LOOP · HALO</span>
+        <p style="margin:0; font-weight:400; font-size:12px; line-height:1.5; color:var(--text-muted);">The halo blooms once on arrival, then settles into the 1.8s breath, and the menu below dims to 35% across the same 400ms. One haptic tap fires at 0ms, not at the end.</p>
+      </div>
+
+    </div>
+    <div style="padding:12px 24px; border-top:1px solid #dedcd4; font-weight:400; font-size:12px; line-height:1.6; color:#4B5055; display:flex; flex-direction:column; gap:4px;">
+      <span><strong style="font-weight:600;">The other transitions use the same grammar, shorter.</strong> new → accepted and ready → processed are 160ms: track segment sweeps, words crossfade, no surface change, no halo. rejected is the one interruption — it enters at 240ms with a 4px downward settle instead of a rise, the only movement in the system that goes down.</span>
+      <span><strong style="font-weight:600;">prefers-reduced-motion:</strong> sweeps and rises become instant crossfades at <code style="font-family:ui-monospace,Menlo,monospace;">duration-quick</code>; the halo becomes a static 3px accent ring. Nothing is lost, because the halo was never carrying the message alone.</span>
+    </div>
+  </div>
+
+  <!-- ==================== ORDER PLACED ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">“Order placed” — the confirmation is the card arriving</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">No toast, no full-screen success page, no interstitial to dismiss. Tapping <em>Bestil</em> scrolls the menu to the top and the status card drops in from under the header over <code style="font-family:ui-monospace,Menlo,monospace;">duration-enter</code> — the guest watches their tap become the thing that will now live at the top of their screen. For its first 4 seconds the card wears a confirmation strip that then retires, leaving the plain <em>new</em> state; the strip is the only place the word “sendt” appears, because after 4 seconds it is no longer news. Every Order button on the menu goes disabled in the same 160ms with one line of explanation, so the disabled state never looks like a bug.</p>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr;">
+      <div style="background:var(--surface-sunken); padding:24px; display:flex; flex-direction:column; gap:8px; align-items:center;">
+        <span style="align-self:flex-start; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">LIGHT · 0–4s AFTER TAPPING BESTIL</span>
+        <div style="width:390px; height:640px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font:700 10px/1 ui-monospace,Menlo,monospace; color:var(--text-muted);"><span>22:16</span><span>▮▮▮</span></div>
+          <div style="padding:10px 16px 12px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:2px;">
+            <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span>
+            <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+          </div>
+          <div style="padding:16px; background:var(--surface-sunken); border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:10px;">
+            <div style="background:var(--surface-raised); border:1px solid var(--border-strong); border-radius:3px; overflow:hidden; box-shadow:0 1px 2px rgba(16,18,20,0.10), 0 8px 24px rgba(16,18,20,0.10);">
+              <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span></div>
+              <div style="padding:12px 16px; background:var(--text); color:var(--text-inverse); display:flex; align-items:center; gap:10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span style="flex:1; font-weight:600; font-size:15px; line-height:1.25; letter-spacing:-0.005em;">Bestilling sendt til baren</span>
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">22:16</span>
+              </div>
+              <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+                <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14</span>
+                <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span>
+              </div>
+              <div style="padding:6px 16px 14px; display:flex; flex-direction:column; gap:4px;">
+                <h3 style="margin:0; font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</h3>
+                <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Venter på at baren tager den.</p>
+              </div>
+              <div style="padding:12px 16px 14px; border-top:1px solid var(--border);"><button style="width:100%; height:56px; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér bestilling</button></div>
+            </div>
+          </div>
+          <div style="flex:1; padding:16px; display:flex; flex-direction:column; gap:12px;">
+            <span style="font-weight:600; font-size:14px; line-height:1.25; letter-spacing:-0.005em; color:var(--text-muted);">Du har en bestilling i gang — du kan bestille igen, når den er ekspederet.</span>
+            <div style="border:1px solid var(--border); border-radius:3px; overflow:hidden; background:var(--surface-raised);">
+              <div style="padding:12px 14px; display:flex; flex-direction:column; gap:6px;">
+                <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em;">Hyldeblomst-spritz</span>
+                <span style="font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Hyldeblomst, danskvand, agurk.</span>
+              </div>
+              <div style="display:flex; border-top:1px solid var(--border);">
+                <span style="width:132px; height:64px; display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); font-weight:600; font-size:15px; line-height:1.2;">Se opskrift</span>
+                <span style="flex:1; height:64px; display:flex; align-items:center; justify-content:center; background:var(--disabled-bg); border-left:1px solid var(--disabled-border); color:var(--disabled-fg); font-weight:700; font-size:17px; line-height:1.2;">Bestil</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--disabled-bg:#17191B;--disabled-border:#26292C;--disabled-fg:#8B9095;--s-new-bg:#1E2124;--s-new-bd:#F2F4F5;--s-new-fg:#F2F4F5; background:var(--surface); padding:24px; display:flex; flex-direction:column; gap:8px; align-items:center;">
+        <span style="align-self:flex-start; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">DARK · 0–4s AFTER TAPPING BESTIL</span>
+        <div style="width:390px; height:640px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font:700 10px/1 ui-monospace,Menlo,monospace; color:var(--text-muted);"><span>22:16</span><span>▮▮▮</span></div>
+          <div style="padding:10px 16px 12px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:2px;">
+            <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span>
+            <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+          </div>
+          <div style="padding:16px; background:var(--surface-sunken); border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:10px;">
+            <div style="background:var(--surface-raised); border:1px solid var(--border-strong); border-radius:3px; overflow:hidden; box-shadow:0 0 0 1px var(--border), 0 12px 32px rgba(0,0,0,0.60);">
+              <div style="display:flex; gap:3px;"><span style="flex:1; height:6px; background:var(--text);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span><span style="flex:1; height:6px; background:var(--border);"></span></div>
+              <div style="padding:12px 16px; background:var(--text); color:var(--text-inverse); display:flex; align-items:center; gap:10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span style="flex:1; font-weight:600; font-size:15px; line-height:1.25; letter-spacing:-0.005em;">Bestilling sendt til baren</span>
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">22:16</span>
+              </div>
+              <div style="padding:14px 16px 4px; display:flex; align-items:center; gap:10px;">
+                <span style="flex:1; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14</span>
+                <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span>
+              </div>
+              <div style="padding:6px 16px 14px; display:flex; flex-direction:column; gap:4px;">
+                <h3 style="margin:0; font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</h3>
+                <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Venter på at baren tager den.</p>
+              </div>
+              <div style="padding:12px 16px 14px; border-top:1px solid var(--border);"><button style="width:100%; height:56px; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:15px; line-height:1.25; cursor:pointer;">Annullér bestilling</button></div>
+            </div>
+          </div>
+          <div style="flex:1; padding:16px; display:flex; flex-direction:column; gap:12px;">
+            <span style="font-weight:600; font-size:14px; line-height:1.25; letter-spacing:-0.005em; color:var(--text-muted);">Du har en bestilling i gang — du kan bestille igen, når den er ekspederet.</span>
+            <div style="border:1px solid var(--border); border-radius:3px; overflow:hidden; background:var(--surface-raised);">
+              <div style="padding:12px 14px; display:flex; flex-direction:column; gap:6px;">
+                <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hyldeblomst-spritz</span>
+                <span style="font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Hyldeblomst, danskvand, agurk.</span>
+              </div>
+              <div style="display:flex; border-top:1px solid var(--border);">
+                <span style="width:132px; height:64px; display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); color:var(--text); font-weight:600; font-size:15px; line-height:1.2;">Se opskrift</span>
+                <span style="flex:1; height:64px; display:flex; align-items:center; justify-content:center; background:var(--disabled-bg); border-left:1px solid var(--disabled-border); color:var(--disabled-fg); font-weight:700; font-size:17px; line-height:1.2;">Bestil</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:12px 24px; border-top:1px solid #dedcd4; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: Order sent to the bar · Waiting for the bar to pick it up · You have an order in progress — you can order again once it’s been collected. The confirmation strip is <code style="font-family:ui-monospace,Menlo,monospace;">text</code>/<code style="font-family:ui-monospace,Menlo,monospace;">text-inverse</code>, never <code style="font-family:ui-monospace,Menlo,monospace;">accent</code> and never green: “sent” is an acknowledgement, not a signal to act. Only READY is allowed to be yellow.</div>
+  </div>
+
+  <!-- ==================== SURPRISE ME REVEAL ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font-weight:700; font-size:18px; line-height:1; letter-spacing:-0.015em;">“Overrask mig” — the reveal</h2>
+      <p style="margin:0; font-weight:400; font-size:12.5px; line-height:1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">The dialog component, unchanged: <code style="font-family:ui-monospace,Menlo,monospace;">overlay</code> backdrop, <code style="font-family:ui-monospace,Menlo,monospace;">surface-raised</code> panel, <code style="font-family:ui-monospace,Menlo,monospace;">radius-lg</code>, <code style="font-family:ui-monospace,Menlo,monospace;">shadow-float</code>. What makes it a reveal is the copy and the order of the three actions: the drink name arrives at <code style="font-family:ui-monospace,Menlo,monospace;">text-display</code> — bigger than it ever appears on a menu card — under a mono kicker that says who chose. <strong style="font-weight:600;">Bestil</strong> is the 64px accent action and sits at the bottom where the thumb already is; <strong style="font-weight:600;">Prøv en anden</strong> is an outlined 56px re-roll directly above it, because rejecting the suggestion is the second most likely thing a guest does, not a corner case; <strong style="font-weight:600;">Annullér</strong> is a plain 44px text button, quiet but never hidden behind an X alone. Re-rolling swaps only the photo, name and ingredients — panel size and button positions are frozen, so the third re-roll is as fast to tap as the first.</p>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr;">
+      <div style="background:var(--surface-sunken); padding:24px; display:flex; flex-direction:column; gap:8px; align-items:center;">
+        <span style="align-self:flex-start; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">LIGHT · REVEAL</span>
+        <div style="width:390px; height:640px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+          <div style="height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font:700 10px/1 ui-monospace,Menlo,monospace; color:var(--text-muted);"><span>22:14</span><span>▮▮▮</span></div>
+          <div style="padding:10px 16px 12px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:2px;">
+            <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span>
+            <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+          </div>
+          <div style="flex:1;"></div>
+          <div style="position:absolute; inset:0; background:var(--overlay);"></div>
+          <div style="position:absolute; left:16px; right:16px; top:96px; background:var(--surface-raised); border:1px solid var(--border); border-radius:6px; box-shadow:0 1px 2px rgba(16,18,20,0.10), 0 8px 24px rgba(16,18,20,0.10); overflow:hidden; display:flex; flex-direction:column;">
+            <div style="height:140px; background:var(--photo); border-bottom:1px solid var(--border);"></div>
+            <div style="padding:16px 18px 8px; display:flex; flex-direction:column; gap:6px;">
+              <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">BAREN HAR VALGT TIL DIG</span>
+              <h3 style="margin:0; font-weight:700; font-size:28px; line-height:1.1; letter-spacing:-0.02em; color:var(--text);">Paper Plane</h3>
+              <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Bourbon, Aperol, Amaro Nonino og citron. Serveres uden is.</p>
+            </div>
+            <div style="padding:12px 18px 18px; display:flex; flex-direction:column; gap:10px;">
+              <button style="width:100%; height:64px; border:1px solid var(--accent); border-radius:3px; background:var(--accent); color:var(--accent-contrast); font-weight:700; font-size:17px; line-height:1.2; letter-spacing:-0.01em; cursor:pointer;">Bestil Paper Plane</button>
+              <button style="width:100%; height:56px; border:1px solid var(--border-strong); border-radius:3px; background:var(--surface-raised); color:var(--text); font-weight:600; font-size:15px; line-height:1.25; display:flex; align-items:center; justify-content:center; gap:9px; cursor:pointer;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"></rect><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"></path><path d="M6 18h.01"></path><path d="M10 14h.01"></path><path d="M15 6h.01"></path><path d="M18 9h.01"></path></svg>
+                Prøv en anden
+              </button>
+              <button style="width:100%; height:44px; border:none; background:transparent; color:var(--text-muted); font-weight:600; font-size:14px; line-height:1.25; cursor:pointer;">Annullér</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--accent:#F2C90A;--accent-contrast:#101214;--overlay:rgba(0,0,0,0.72);--photo:repeating-linear-gradient(90deg,#26292C 0 8px,#22262A 8px 16px); background:var(--surface); padding:24px; display:flex; flex-direction:column; gap:8px; align-items:center;">
+        <span style="align-self:flex-start; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">DARK · REVEAL</span>
+        <div style="width:390px; height:640px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; position:relative; display:flex; flex-direction:column;">
+          <div style="height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font:700 10px/1 ui-monospace,Menlo,monospace; color:var(--text-muted);"><span>22:14</span><span>▮▮▮</span></div>
+          <div style="padding:10px 16px 12px; border-bottom:1px solid var(--border); display:flex; flex-direction:column; gap:2px;">
+            <span style="font-weight:700; font-size:21px; line-height:1.2; letter-spacing:-0.015em; color:var(--text);">Hos Astrid &amp; Mikkel</span>
+            <span style="font-weight:400; font-size:13px; line-height:1.4; color:var(--text-muted);">Velkommen, Kasper</span>
+          </div>
+          <div style="flex:1;"></div>
+          <div style="position:absolute; inset:0; background:var(--overlay);"></div>
+          <div style="position:absolute; left:16px; right:16px; top:96px; background:var(--surface-raised); border:1px solid var(--border); border-radius:6px; box-shadow:0 0 0 1px var(--border), 0 12px 32px rgba(0,0,0,0.60); overflow:hidden; display:flex; flex-direction:column;">
+            <div style="height:140px; background:var(--photo); border-bottom:1px solid var(--border);"></div>
+            <div style="padding:16px 18px 8px; display:flex; flex-direction:column; gap:6px;">
+              <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">BAREN HAR VALGT TIL DIG</span>
+              <h3 style="margin:0; font-weight:700; font-size:28px; line-height:1.1; letter-spacing:-0.02em; color:var(--text);">Paper Plane</h3>
+              <p style="margin:0; font-weight:400; font-size:15px; line-height:1.5; color:var(--text-muted);">Bourbon, Aperol, Amaro Nonino og citron. Serveres uden is.</p>
+            </div>
+            <div style="padding:12px 18px 18px; display:flex; flex-direction:column; gap:10px;">
+              <button style="width:100%; height:64px; border:1px solid var(--accent); border-radius:3px; background:var(--accent); color:var(--accent-contrast); font-weight:700; font-size:17px; line-height:1.2; letter-spacing:-0.01em; cursor:pointer;">Bestil Paper Plane</button>
+              <button style="width:100%; height:56px; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font-weight:600; font-size:15px; line-height:1.25; display:flex; align-items:center; justify-content:center; gap:9px; cursor:pointer;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"></rect><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"></path><path d="M6 18h.01"></path><path d="M10 14h.01"></path><path d="M15 6h.01"></path><path d="M18 9h.01"></path></svg>
+                Prøv en anden
+              </button>
+              <button style="width:100%; height:44px; border:none; background:transparent; color:var(--text-muted); font-weight:600; font-size:14px; line-height:1.25; cursor:pointer;">Annullér</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:12px 24px; border-top:1px solid #dedcd4; font-weight:400; font-size:12px; line-height:1.5; color:#4B5055;">EN: THE BAR PICKED FOR YOU · Order Paper Plane · Try another · Cancel. The accent on this button is the one place it appears outside READY — permitted because the dialog owns the whole screen: it can’t be confused with a ready order sitting in a menu behind it.</div>
+  </div>
+
+</section>
+
+</x-dc>
+</body>
+</html>
+

@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>
+  body { margin:0; background:#8b8b86; }
+  a { color:#101214; }
+  a:hover { color:#000; }
+  @keyframes bk-arrive-light { 0% { background:rgba(224,180,0,0.22); } 100% { background:transparent; } }
+  @keyframes bk-arrive-dark { 0% { background:rgba(242,201,10,0.16); } 100% { background:transparent; } }
+</style>
+</helmet>
+
+<section style="--surface:#FFFFFF;--surface-raised:#FFFFFF;--surface-sunken:#E9EAEA;--border:#C9CCCE;--border-strong:#101214;--text:#101214;--text-muted:#4B5055;--text-inverse:#FFFFFF;--accent:#E0B400;--accent-contrast:#101214;--danger:#B3261E;--danger-contrast:#FFFFFF;--disabled-bg:#EDEEEF;--disabled-border:#C9CCCE;--disabled-fg:#5C6165;--s-new-bg:#F7F8F8;--s-new-bd:#101214;--s-new-fg:#101214;--s-acc-bg:#E4E7E9;--s-acc-bd:#6B7075;--s-acc-fg:#33383D;--s-rej-bg:#FBEAE8;--s-rej-bd:#B3261E;--s-rej-fg:#8C1D18;--s-rdy-bg:#E0B400;--s-rdy-bd:#A88600;--s-rdy-fg:#101214;--s-prc-bg:#EDEEEF;--s-prc-bd:#C9CCCE;--s-prc-fg:#5C6165; padding:56px; display:flex; flex-direction:column; gap:22px; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; color:#101214; width:max-content;">
+
+  <header style="display:flex; flex-direction:column; gap:8px; max-width:900px;">
+    <div style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.16em; text-transform:uppercase; color:#33383D;">Barkeep · Back Bar · bartender queue</div>
+    <h1 style="margin:0; font:700 32px/1.12; letter-spacing:-0.02em;">The queue, read at arm’s length with both hands full</h1>
+    <p style="margin:0; font-size:14px; line-height:1.55; color:#2b2b26; max-width:80ch; text-wrap:pretty;">The guest card is a signal; this is an instrument. Same tokens, opposite job: nothing here decorates, every row answers <em>what do I do next and where do I tap</em>. Two sizes — 1280 desktop and 820 tablet landscape, the one that is actually propped against a bottle rail. Danish shipped, English under each block.</p>
+  </header>
+
+  <!-- ==================== RULES ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font:700 18px/1; letter-spacing:-0.015em;">Four rules the whole queue is built on</h2>
+      <p style="margin:0; font:400 12.5px/1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">
+        <strong style="font-weight:600;">1 · Two of five statuses get a tint. Three don’t.</strong> A row fill is expensive: five tinted fills make a rainbow, and in dark mode five near-black tints are indistinguishable at arm’s length anyway. So status is carried by a 4px left rail (<code style="font-family:ui-monospace,Menlo,monospace;">border-width-rail</code>) plus the pill — <em>new</em> gets an ink rail, <em>accepted</em> a mid-grey rail, both on plain <code style="font-family:ui-monospace,Menlo,monospace;">surface-raised</code>. Only <strong style="font-weight:600;">ready</strong> takes a fill (<code style="font-family:ui-monospace,Menlo,monospace;">accent</code> rail + a 6%-accent row wash) and only <strong style="font-weight:600;">rejected</strong> takes the red one, and it is on screen for 8 seconds before it leaves. A queue of eight is therefore mostly white paper with two lit rows.<br>
+        <strong style="font-weight:600;">2 · One primary action per row, always in the same place, always the same shape.</strong> Rightmost, 220×56, filled <code style="font-family:ui-monospace,Menlo,monospace;">text</code>/<code style="font-family:ui-monospace,Menlo,monospace;">text-inverse</code>, verb only: <em>Accepter → Meld klar → Ekspederet</em>. Muscle memory finds the right edge of the row; the label tells you which verb you’re firing. Never <code style="font-family:ui-monospace,Menlo,monospace;">accent</code>: yellow means <em>this drink is ready</em>, and a yellow button on a row that isn’t ready breaks that promise.<br>
+        <strong style="font-weight:600;">3 · Reject is a different shape, a different size, and 20px away.</strong> 56×56 square, outline only, icon only, separated from the primary by a gap wider than a fingertip. Shape and position distinguish it even in the dark, and it is the only control on the row that opens a confirm dialog — so a mis-tap costs one more tap, not one drink.<br>
+        <strong style="font-weight:600;">4 · The list never reorders under a hand.</strong> Oldest at the top, arrivals appended at the bottom, always. Nothing ever jumps above the row being worked. The only thing that moves on arrival is a count in the header and a single hairline flash down the new row’s rail.
+      </p>
+    </div>
+    <div style="background:var(--surface-sunken); padding:24px; display:flex; flex-direction:column; gap:12px;">
+      <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">ROW ANATOMY · 1280</span>
+      <div style="width:1232px; background:var(--surface-raised); border:1px solid var(--border); border-radius:3px; display:flex; align-items:stretch; overflow:hidden;">
+        <span style="width:4px; background:var(--s-acc-bd); flex:none;"></span>
+        <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;">
+          <span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:16</span>
+          <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14 · 4 MIN</span>
+        </div>
+        <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;">
+          <span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</span>
+          <span style="font:400 15px/1.4; color:var(--text-muted);">Kasper Ø.</span>
+        </div>
+        <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;">
+          <span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">ACCEPTERET</span>
+        </div>
+        <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+          <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+          <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Meld klar</button>
+        </div>
+      </div>
+      <div style="width:1232px; display:flex; font:500 10.5px/1.4 ui-monospace,Menlo,monospace; color:var(--text-muted);">
+        <span style="width:4px; flex:none;"></span>
+        <span style="width:104px; flex:none; padding-left:16px;">RAIL 4 +<br>TIME · ID · AGE</span>
+        <span style="flex:1; padding-left:20px;">DRINK (heading) OVER GUEST (body) — the drink is what gets made, the name is who to call out</span>
+        <span style="width:200px; flex:none; padding-left:12px;">STATUS PILL<br>fixed column</span>
+        <span style="width:332px; flex:none; padding-left:16px;">REJECT 56² OUTLINE · 20px GAP · PRIMARY 220×56 FILLED</span>
+      </div>
+    </div>
+    <div style="padding:12px 24px; border-top:1px solid #dedcd4; font:400 12px/1.5; color:#4B5055;">EN: Accept · Mark ready · Collected · Reject. Age (“4 MIN”) is mono and sits under the time, so a queue can be triaged by how long people have been waiting without reading names.</div>
+  </div>
+
+  <!-- ==================== 1280 LIGHT · 8 ORDERS ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font:700 18px/1; letter-spacing:-0.015em;">1280 · light · eight in the queue, one recipe open</h2>
+      <p style="margin:0; font:400 12.5px/1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">The busy case. Two rows carry colour — one ready, one just rejected and on its way out — and the other six are paper. The open recipe belongs to the row being poured: it pushes the rows below it down and nothing else changes, because the recipe is opened deliberately and the bartender is standing still while they read it. Recipes are 17px minimum: this is read at 70cm with a bottle in one hand.</p>
+    </div>
+    <div style="background:var(--surface-sunken); padding:24px; display:flex; justify-content:center;">
+      <div style="width:1280px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+        <div style="padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px;">
+          <h3 style="margin:0; font:700 28px/1.1; letter-spacing:-0.02em; color:var(--text);">Bestillinger</h3>
+          <span style="display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px 0 10px; border-radius:9999px; background:var(--text); color:var(--text-inverse); font:600 13px/1;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:9999px; background:var(--text-inverse); color:var(--text); font:700 11px/1 ui-monospace,Menlo,monospace;">8</span>aktive</span>
+          <span style="display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px 0 10px; border-radius:9999px; background:var(--accent); color:var(--accent-contrast); font:600 13px/1;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:9999px; background:var(--accent-contrast); color:var(--accent); font:700 11px/1 ui-monospace,Menlo,monospace;">1</span>klar til afhentning</span>
+          <span style="flex:1;"></span>
+          <button style="height:56px; padding:0 18px; border:1px solid var(--border-strong); border-radius:3px; background:var(--surface-raised); color:var(--text); font:600 15px/1.25; display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <span style="width:34px; height:20px; border-radius:9999px; background:var(--text); display:flex; align-items:center; justify-content:flex-end; padding:0 2px;"><span style="width:16px; height:16px; border-radius:9999px; background:var(--text-inverse);"></span></span>
+            Vis opskrifter
+          </button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; background:var(--surface);">
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:11</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#11 · 9 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Espresso Martini</span><span style="font:400 15px/1.4; color:var(--text-muted);">Sofie B.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; background:rgba(224,180,0,0.06);">
+            <span style="width:4px; background:var(--accent); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:12</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#12 · 8 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Gin &amp; Tonic</span><span style="font:400 15px/1.4; color:var(--text-muted);">Mette L.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-rdy-bg); border:1px solid var(--s-rdy-bd); color:var(--s-rdy-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">KLAR TIL AFHENTNING</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:transparent; color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Ekspederet</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-top:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-acc-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:16</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14 · 4 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</span><span style="font:400 15px/1.4; color:var(--text-muted);">Kasper Ø.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">ACCEPTERET</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Meld klar</button>
+            </div>
+          </div>
+
+          <div style="display:flex; border-bottom:1px solid var(--border); background:var(--surface-sunken);">
+            <span style="width:4px; background:var(--s-acc-bd); flex:none;"></span>
+            <div style="flex:1; padding:18px 24px 22px 120px; display:grid; grid-template-columns:1fr 1.4fr 0.8fr; gap:32px;">
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">INGREDIENSER</span>
+                <div style="display:flex; flex-direction:column; gap:8px; font:600 17px/1.3; color:var(--text);">
+                  <span style="display:flex; gap:12px;"><span style="width:56px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">3 cl</span>Campari</span>
+                  <span style="display:flex; gap:12px;"><span style="width:56px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">3 cl</span>Rød vermouth</span>
+                  <span style="display:flex; gap:12px;"><span style="width:56px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">6 cl</span>Prosecco</span>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">FREMGANGSMÅDE</span>
+                <ol style="margin:0; padding-left:22px; display:flex; flex-direction:column; gap:8px; font:400 17px/1.4; color:var(--text);">
+                  <li>Fyld glasset med is.</li>
+                  <li>Hæld Campari og vermouth i, rør ti gange.</li>
+                  <li>Top med prosecco, rør én gang.</li>
+                </ol>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">GLAS &amp; PYNT</span>
+                <span style="font:400 17px/1.4; color:var(--text);">Tumbler, iskoldt.<br>Appelsinskive.</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-acc-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:17</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#15 · 3 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Hyldeblomst-spritz med agurk</span><span style="font:400 15px/1.4; color:var(--text-muted);">Jonas H.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">ACCEPTERET</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Meld klar</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border); background:var(--s-rej-bg);">
+            <span style="width:4px; background:var(--s-rej-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--s-rej-fg);">22:18</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--s-rej-fg);">#16 · 2 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Mojito</span><span style="font:400 15px/1.4; color:var(--s-rej-fg);">Line P. · afvist, ingen mynte</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-rej-bg); border:1px solid var(--s-rej-bd); color:var(--s-rej-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">AFVIST</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <span style="width:56px; flex:none;"></span>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font:600 15px/1.25; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;">Fortryd <span style="font-family:ui-monospace,Menlo,monospace; font-size:13px; color:var(--text-muted);">8s</span></button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:19</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#17 · 1 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Paper Plane</span><span style="font:400 15px/1.4; color:var(--text-muted);">Astrid V.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:19</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#18 · 1 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Æblemost, uden alkohol</span><span style="font:400 15px/1.4; color:var(--text-muted);">Emil T.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:20</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#19 · NU</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Dark ’n’ Stormy</span><span style="font:400 15px/1.4; color:var(--text-muted);">Rasmus K.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="padding:18px 24px 8px; display:flex; align-items:center; gap:12px; border-top:1px solid var(--border); background:var(--surface-sunken);">
+          <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">SIDSTE 10 EKSPEDEREDE</span>
+          <span style="flex:1; height:1px; background:var(--border);"></span>
+        </div>
+        <div style="padding:8px 24px 20px; background:var(--surface-sunken); display:flex; flex-direction:column;">
+          <div style="display:flex; align-items:center; gap:20px; height:40px; border-bottom:1px solid var(--border); font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:96px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace; letter-spacing:0.08em;">22:09</span><span style="width:88px; flex:none; font:700 12px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em;">#10</span><span style="flex:1; color:var(--text-muted);">Old Fashioned</span><span style="width:180px; flex:none;">Mikkel A.</span><span style="width:120px; flex:none; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">EKSPEDERET</span></div>
+          <div style="display:flex; align-items:center; gap:20px; height:40px; border-bottom:1px solid var(--border); font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:96px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace; letter-spacing:0.08em;">22:06</span><span style="width:88px; flex:none; font:700 12px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em;">#09</span><span style="flex:1; color:var(--text-muted);">Aperol Spritz</span><span style="width:180px; flex:none;">Freja N.</span><span style="width:120px; flex:none; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">EKSPEDERET</span></div>
+          <div style="display:flex; align-items:center; gap:20px; height:40px; border-bottom:1px solid var(--border); font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:96px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace; letter-spacing:0.08em;">22:02</span><span style="width:88px; flex:none; font:700 12px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em;">#08</span><span style="flex:1; color:var(--text-muted);">Whisky Sour</span><span style="width:180px; flex:none;">Sofie B.</span><span style="width:120px; flex:none; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">EKSPEDERET</span></div>
+          <div style="display:flex; align-items:center; gap:20px; height:40px; font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:96px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace; letter-spacing:0.08em;">21:58</span><span style="width:88px; flex:none; font:700 12px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em;">#07</span><span style="flex:1; color:var(--text-muted);">Mojito</span><span style="width:180px; flex:none;">Line P.</span><span style="width:120px; flex:none; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--s-rej-fg);">AFVIST</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:12px 24px; border-top:1px solid #dedcd4; font:400 12px/1.5; color:#4B5055;">EN: Orders · 8 active · 1 ready for pickup · Show recipes · INGREDIENTS / METHOD / GLASS &amp; GARNISH · Undo 8s · LAST 10 COMPLETED. History is a 40px row on <code style="font-family:ui-monospace,Menlo,monospace;">surface-sunken</code> with no buttons at all — it is a log, and it must never be mistaken for something that needs action.</div>
+  </div>
+
+  <!-- ==================== 1280 DARK ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font:700 18px/1; letter-spacing:-0.015em;">1280 · dark</h2>
+      <p style="margin:0; font:400 12.5px/1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">The same queue at the same moment. Dark does the tint question a favour: the accent rail and the 8%-accent wash on the ready row are the only bright things in the panel, so the row you have to hand over is findable in peripheral vision. Rejected’s warm near-black (<code style="font-family:ui-monospace,Menlo,monospace;">status-rejected-bg</code> #2A1614) is a value shift, not a colour shift — visible up close, invisible from across the bar, which is exactly right for a row that is leaving.</p>
+    </div>
+    <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--accent:#F2C90A;--accent-contrast:#101214;--danger:#E0685C;--s-new-bg:#1E2124;--s-new-bd:#F2F4F5;--s-new-fg:#F2F4F5;--s-acc-bg:#22262A;--s-acc-bd:#6B7075;--s-acc-fg:#C6CBCF;--s-rej-bg:#2A1614;--s-rej-bd:#E0685C;--s-rej-fg:#F4AFA4;--s-rdy-bg:#F2C90A;--s-rdy-bd:#F2C90A;--s-rdy-fg:#101214;--s-prc-bg:#17191B;--s-prc-bd:#26292C;--s-prc-fg:#8B9095; background:var(--surface-sunken); padding:24px; display:flex; justify-content:center;">
+      <div style="width:1280px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+        <div style="padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px;">
+          <h3 style="margin:0; font:700 28px/1.1; letter-spacing:-0.02em; color:var(--text);">Bestillinger</h3>
+          <span style="display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px 0 10px; border-radius:9999px; background:var(--text); color:var(--text-inverse); font:600 13px/1;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:9999px; background:var(--text-inverse); color:var(--text); font:700 11px/1 ui-monospace,Menlo,monospace;">8</span>aktive</span>
+          <span style="display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px 0 10px; border-radius:9999px; background:var(--accent); color:var(--accent-contrast); font:600 13px/1;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:9999px; background:var(--accent-contrast); color:var(--accent); font:700 11px/1 ui-monospace,Menlo,monospace;">1</span>klar til afhentning</span>
+          <span style="flex:1;"></span>
+          <button style="height:56px; padding:0 18px; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font:600 15px/1.25; display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <span style="width:34px; height:20px; border-radius:9999px; background:var(--text); display:flex; align-items:center; justify-content:flex-end; padding:0 2px;"><span style="width:16px; height:16px; border-radius:9999px; background:var(--text-inverse);"></span></span>
+            Vis opskrifter
+          </button>
+        </div>
+        <div style="display:flex; flex-direction:column;">
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:11</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#11 · 9 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Espresso Martini</span><span style="font:400 15px/1.4; color:var(--text-muted);">Sofie B.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border); background:rgba(242,201,10,0.08);">
+            <span style="width:4px; background:var(--accent); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:12</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#12 · 8 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Gin &amp; Tonic</span><span style="font:400 15px/1.4; color:var(--text-muted);">Mette L.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-rdy-bg); border:1px solid var(--s-rdy-bd); color:var(--s-rdy-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">KLAR TIL AFHENTNING</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Ekspederet</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch;">
+            <span style="width:4px; background:var(--s-acc-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:16</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14 · 4 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</span><span style="font:400 15px/1.4; color:var(--text-muted);">Kasper Ø.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">ACCEPTERET</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Meld klar</button>
+            </div>
+          </div>
+
+          <div style="display:flex; border-bottom:1px solid var(--border); background:var(--surface-sunken);">
+            <span style="width:4px; background:var(--s-acc-bd); flex:none;"></span>
+            <div style="flex:1; padding:18px 24px 22px 120px; display:grid; grid-template-columns:1fr 1.4fr 0.8fr; gap:32px;">
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">INGREDIENSER</span>
+                <div style="display:flex; flex-direction:column; gap:8px; font:600 17px/1.3; color:var(--text);">
+                  <span style="display:flex; gap:12px;"><span style="width:56px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">3 cl</span>Campari</span>
+                  <span style="display:flex; gap:12px;"><span style="width:56px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">3 cl</span>Rød vermouth</span>
+                  <span style="display:flex; gap:12px;"><span style="width:56px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">6 cl</span>Prosecco</span>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">FREMGANGSMÅDE</span>
+                <ol style="margin:0; padding-left:22px; display:flex; flex-direction:column; gap:8px; font:400 17px/1.4; color:var(--text);">
+                  <li>Fyld glasset med is.</li>
+                  <li>Hæld Campari og vermouth i, rør ti gange.</li>
+                  <li>Top med prosecco, rør én gang.</li>
+                </ol>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">GLAS &amp; PYNT</span>
+                <span style="font:400 17px/1.4; color:var(--text);">Tumbler, iskoldt.<br>Appelsinskive.</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border); background:var(--s-rej-bg);">
+            <span style="width:4px; background:var(--s-rej-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--s-rej-fg);">22:18</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--s-rej-fg);">#16 · 2 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Mojito</span><span style="font:400 15px/1.4; color:var(--s-rej-fg);">Line P. · afvist, ingen mynte</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-rej-bg); border:1px solid var(--s-rej-bd); color:var(--s-rej-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">AFVIST</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <span style="width:56px; flex:none;"></span>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:transparent; color:var(--text); font:600 15px/1.25; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;">Fortryd <span style="font-family:ui-monospace,Menlo,monospace; font-size:13px; color:var(--text-muted);">8s</span></button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:19</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#17 · 1 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Paper Plane</span><span style="font:400 15px/1.4; color:var(--text-muted);">Astrid V.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; letter-spacing:0.04em; color:var(--text);">22:20</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#19 · NU</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px; min-width:0;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Dark ’n’ Stormy</span><span style="font:400 15px/1.4; color:var(--text-muted);">Rasmus K.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+        </div>
+        <div style="padding:18px 24px 8px; display:flex; align-items:center; gap:12px; border-top:1px solid var(--border); background:var(--surface-sunken);">
+          <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">SIDSTE 10 EKSPEDEREDE</span>
+          <span style="flex:1; height:1px; background:var(--border);"></span>
+        </div>
+        <div style="padding:8px 24px 20px; background:var(--surface-sunken); display:flex; flex-direction:column;">
+          <div style="display:flex; align-items:center; gap:20px; height:40px; border-bottom:1px solid var(--border); font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:96px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace; letter-spacing:0.08em;">22:09</span><span style="width:88px; flex:none; font:700 12px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em;">#10</span><span style="flex:1;">Old Fashioned</span><span style="width:180px; flex:none;">Mikkel A.</span><span style="width:120px; flex:none; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">EKSPEDERET</span></div>
+          <div style="display:flex; align-items:center; gap:20px; height:40px; border-bottom:1px solid var(--border); font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:96px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace; letter-spacing:0.08em;">22:06</span><span style="width:88px; flex:none; font:700 12px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em;">#09</span><span style="flex:1;">Aperol Spritz</span><span style="width:180px; flex:none;">Freja N.</span><span style="width:120px; flex:none; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">EKSPEDERET</span></div>
+          <div style="display:flex; align-items:center; gap:20px; height:40px; font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:96px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace; letter-spacing:0.08em;">21:58</span><span style="width:88px; flex:none; font:700 12px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em;">#07</span><span style="flex:1;">Mojito</span><span style="width:180px; flex:none;">Line P.</span><span style="width:120px; flex:none; font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--s-rej-fg);">AFVIST</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 820 TABLET ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font:700 18px/1; letter-spacing:-0.015em;">820 · tablet landscape · the realistic case</h2>
+      <p style="margin:0; font:400 12.5px/1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">At 820 the status column is the first thing to go — the pill moves under the drink name, on the same line as the guest, and the rail plus the primary verb carry the state instead. Actions keep their exact geometry (56² reject, 20px gap, filled primary) because that is the muscle memory; the primary narrows to 180px, which still fits <em>Ekspederet</em> at 17px. Recipes at this width become two columns, method left, ingredients and glass stacked right, and the type does not shrink: 17px is the floor.</p>
+    </div>
+    <div style="display:flex; flex-direction:column;">
+      <div style="background:var(--surface-sunken); padding:24px; display:flex; flex-direction:column; gap:8px; align-items:center;">
+        <span style="align-self:flex-start; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">LIGHT · 820</span>
+        <div style="width:820px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+            <h3 style="margin:0; font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Bestillinger</h3>
+            <span style="display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px 0 10px; border-radius:9999px; background:var(--text); color:var(--text-inverse); font:600 13px/1;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:9999px; background:var(--text-inverse); color:var(--text); font:700 11px/1 ui-monospace,Menlo,monospace;">8</span>aktive</span>
+            <span style="flex:1;"></span>
+            <button style="height:56px; padding:0 14px; border:1px solid var(--border-strong); border-radius:3px; background:var(--surface-raised); color:var(--text); font:600 15px/1.25; display:flex; align-items:center; gap:10px; cursor:pointer;"><span style="width:34px; height:20px; border-radius:9999px; background:var(--text); display:flex; align-items:center; justify-content:flex-end; padding:0 2px;"><span style="width:16px; height:16px; border-radius:9999px; background:var(--text-inverse);"></span></span>Opskrifter</button>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:84px; flex:none; padding:14px 0 14px 14px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:11</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">9 MIN</span></div>
+            <div style="flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:5px; min-width:0;">
+              <span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Espresso Martini</span>
+              <span style="display:flex; align-items:center; gap:10px;"><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span><span style="font:400 15px/1.4; color:var(--text-muted);">Sofie B. · #11</span></span>
+            </div>
+            <div style="flex:none; padding:14px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:180px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border); background:rgba(224,180,0,0.06);">
+            <span style="width:4px; background:var(--accent); flex:none;"></span>
+            <div style="width:84px; flex:none; padding:14px 0 14px 14px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:12</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">8 MIN</span></div>
+            <div style="flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:5px; min-width:0;">
+              <span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Gin &amp; Tonic</span>
+              <span style="display:flex; align-items:center; gap:10px;"><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--s-rdy-bg); border:1px solid var(--s-rdy-bd); color:var(--s-rdy-fg); font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">KLAR TIL AFHENTNING</span><span style="font:400 15px/1.4; color:var(--text-muted);">Mette L. · #12</span></span>
+            </div>
+            <div style="flex:none; padding:14px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:transparent; color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:180px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Ekspederet</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch;">
+            <span style="width:4px; background:var(--s-acc-bd); flex:none;"></span>
+            <div style="width:84px; flex:none; padding:14px 0 14px 14px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:16</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">4 MIN</span></div>
+            <div style="flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:5px; min-width:0;">
+              <span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</span>
+              <span style="display:flex; align-items:center; gap:10px;"><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">ACCEPTERET</span><span style="font:400 15px/1.4; color:var(--text-muted);">Kasper Ø. · #14</span></span>
+            </div>
+            <div style="flex:none; padding:14px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:180px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Meld klar</button>
+            </div>
+          </div>
+
+          <div style="display:flex; border-bottom:1px solid var(--border); background:var(--surface-sunken);">
+            <span style="width:4px; background:var(--s-acc-bd); flex:none;"></span>
+            <div style="flex:1; padding:16px 18px 20px 98px; display:grid; grid-template-columns:1.3fr 1fr; gap:28px;">
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">FREMGANGSMÅDE</span>
+                <ol style="margin:0; padding-left:22px; display:flex; flex-direction:column; gap:8px; font:400 17px/1.4; color:var(--text);">
+                  <li>Fyld glasset med is.</li>
+                  <li>Hæld Campari og vermouth i, rør ti gange.</li>
+                  <li>Top med prosecco, rør én gang.</li>
+                </ol>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:16px;">
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">INGREDIENSER</span>
+                  <div style="display:flex; flex-direction:column; gap:6px; font:600 17px/1.3; color:var(--text);">
+                    <span style="display:flex; gap:12px;"><span style="width:52px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">3 cl</span>Campari</span>
+                    <span style="display:flex; gap:12px;"><span style="width:52px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">3 cl</span>Rød vermouth</span>
+                    <span style="display:flex; gap:12px;"><span style="width:52px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">6 cl</span>Prosecco</span>
+                  </div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                  <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">GLAS &amp; PYNT</span>
+                  <span style="font:400 17px/1.4; color:var(--text);">Tumbler, iskoldt. Appelsinskive.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:84px; flex:none; padding:14px 0 14px 14px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:19</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">1 MIN</span></div>
+            <div style="flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:5px; min-width:0;">
+              <span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Paper Plane</span>
+              <span style="display:flex; align-items:center; gap:10px;"><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span><span style="font:400 15px/1.4; color:var(--text-muted);">Astrid V. · #17</span></span>
+            </div>
+            <div style="flex:none; padding:14px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:180px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--accent:#F2C90A;--accent-contrast:#101214;--danger:#E0685C;--s-new-bg:#1E2124;--s-new-bd:#F2F4F5;--s-new-fg:#F2F4F5;--s-acc-bg:#22262A;--s-acc-bd:#6B7075;--s-acc-fg:#C6CBCF;--s-rdy-bg:#F2C90A;--s-rdy-bd:#F2C90A;--s-rdy-fg:#101214; background:var(--surface-sunken); padding:24px; display:flex; flex-direction:column; gap:8px; align-items:center;">
+        <span style="align-self:flex-start; font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">DARK · 820</span>
+        <div style="width:820px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden; display:flex; flex-direction:column;">
+          <div style="padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;">
+            <h3 style="margin:0; font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Bestillinger</h3>
+            <span style="display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px 0 10px; border-radius:9999px; background:var(--text); color:var(--text-inverse); font:600 13px/1;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:9999px; background:var(--text-inverse); color:var(--text); font:700 11px/1 ui-monospace,Menlo,monospace;">8</span>aktive</span>
+            <span style="flex:1;"></span>
+            <button style="height:56px; padding:0 14px; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--text); font:600 15px/1.25; display:flex; align-items:center; gap:10px; cursor:pointer;"><span style="width:34px; height:20px; border-radius:9999px; background:var(--text); display:flex; align-items:center; justify-content:flex-end; padding:0 2px;"><span style="width:16px; height:16px; border-radius:9999px; background:var(--text-inverse);"></span></span>Opskrifter</button>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:84px; flex:none; padding:14px 0 14px 14px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:11</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">9 MIN</span></div>
+            <div style="flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:5px; min-width:0;">
+              <span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Espresso Martini</span>
+              <span style="display:flex; align-items:center; gap:10px;"><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span><span style="font:400 15px/1.4; color:var(--text-muted);">Sofie B. · #11</span></span>
+            </div>
+            <div style="flex:none; padding:14px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:180px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border); background:rgba(242,201,10,0.08);">
+            <span style="width:4px; background:var(--accent); flex:none;"></span>
+            <div style="width:84px; flex:none; padding:14px 0 14px 14px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:12</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">8 MIN</span></div>
+            <div style="flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:5px; min-width:0;">
+              <span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Gin &amp; Tonic</span>
+              <span style="display:flex; align-items:center; gap:10px;"><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--s-rdy-bg); border:1px solid var(--s-rdy-bd); color:var(--s-rdy-fg); font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">KLAR TIL AFHENTNING</span><span style="font:400 15px/1.4; color:var(--text-muted);">Mette L. · #12</span></span>
+            </div>
+            <div style="flex:none; padding:14px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:180px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Ekspederet</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch;">
+            <span style="width:4px; background:var(--s-acc-bd); flex:none;"></span>
+            <div style="width:84px; flex:none; padding:14px 0 14px 14px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:16</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">4 MIN</span></div>
+            <div style="flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:5px; min-width:0;">
+              <span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</span>
+              <span style="display:flex; align-items:center; gap:10px;"><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">ACCEPTERET</span><span style="font:400 15px/1.4; color:var(--text-muted);">Kasper Ø. · #14</span></span>
+            </div>
+            <div style="flex:none; padding:14px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:180px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Meld klar</button>
+            </div>
+          </div>
+
+          <div style="display:flex; border-bottom:1px solid var(--border); background:var(--surface-sunken);">
+            <span style="width:4px; background:var(--s-acc-bd); flex:none;"></span>
+            <div style="flex:1; padding:16px 18px 20px 98px; display:grid; grid-template-columns:1.3fr 1fr; gap:28px;">
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">FREMGANGSMÅDE</span>
+                <ol style="margin:0; padding-left:22px; display:flex; flex-direction:column; gap:8px; font:400 17px/1.4; color:var(--text);">
+                  <li>Fyld glasset med is.</li>
+                  <li>Hæld Campari og vermouth i, rør ti gange.</li>
+                  <li>Top med prosecco, rør én gang.</li>
+                </ol>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:16px;">
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">INGREDIENSER</span>
+                  <div style="display:flex; flex-direction:column; gap:6px; font:600 17px/1.3; color:var(--text);">
+                    <span style="display:flex; gap:12px;"><span style="width:52px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">3 cl</span>Campari</span>
+                    <span style="display:flex; gap:12px;"><span style="width:52px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">3 cl</span>Rød vermouth</span>
+                    <span style="display:flex; gap:12px;"><span style="width:52px; flex:none; font-family:ui-monospace,Menlo,monospace; color:var(--text-muted);">6 cl</span>Prosecco</span>
+                  </div>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                  <span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">GLAS &amp; PYNT</span>
+                  <span style="font:400 17px/1.4; color:var(--text);">Tumbler, iskoldt. Appelsinskive.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:84px; flex:none; padding:14px 0 14px 14px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:19</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.1em; color:var(--text-muted);">1 MIN</span></div>
+            <div style="flex:1; padding:14px 16px; display:flex; flex-direction:column; gap:5px; min-width:0;">
+              <span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Paper Plane</span>
+              <span style="display:flex; align-items:center; gap:10px;"><span style="display:inline-flex; align-items:center; height:26px; padding:0 8px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span><span style="font:400 15px/1.4; color:var(--text-muted);">Astrid V. · #17</span></span>
+            </div>
+            <div style="flex:none; padding:14px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border-strong); border-radius:3px; background:transparent; color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:180px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="padding:12px 24px; border-top:1px solid #dedcd4; font:400 12px/1.5; color:#4B5055;">Both 820 views are drawn at 1:1. EN: Orders · 8 active · Recipes · METHOD / INGREDIENTS / GLASS &amp; GARNISH.</div>
+  </div>
+
+  <!-- ==================== ONE · EMPTY · ARRIVING ==================== -->
+  <div style="background:#fbfaf7; border:1px solid #cfcfc7; width:1352px;">
+    <div style="padding:18px 24px; border-bottom:1px solid #dedcd4; display:flex; flex-direction:column; gap:6px;">
+      <h2 style="margin:0; font:700 18px/1; letter-spacing:-0.015em;">One order · empty · and an order arriving mid-pour</h2>
+      <p style="margin:0; font:400 12.5px/1.6; color:#4B5055; max-width:112ch; text-wrap:pretty;">
+        <strong style="font-weight:600;">One order</strong> keeps the full row geometry — the primary button does not grow to fill the panel, because the hand learns one target size and one target position. The panel just gets short.<br>
+        <strong style="font-weight:600;">Empty</strong> is not a celebration and not an illustration: the count reads 0, one line says the bar is caught up, and the last completed orders stay on screen — the most useful thing in an empty queue is proof of what just went out.<br>
+        <strong style="font-weight:600;">Arrival</strong> is the one live event that must not steal focus. The new row is appended at the bottom, never inserted; the header count ticks 3 → 4; the new row’s rail flashes accent once and fades to ink over 900ms; and if the queue is scrolled past the bottom, a 44px pill appears at the foot of the list — <em>1 ny nedenfor</em> — instead of scrolling anything. No sound, no toast over the queue, no reordering. The row being poured does not move by a pixel.
+      </p>
+    </div>
+    <div style="background:var(--surface-sunken); padding:24px; display:flex; flex-direction:column; gap:24px;">
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">LIGHT · ONE ORDER</span>
+        <div style="width:1280px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+          <div style="padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px;">
+            <h3 style="margin:0; font:700 28px/1.1; letter-spacing:-0.02em; color:var(--text);">Bestillinger</h3>
+            <span style="display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px 0 10px; border-radius:9999px; background:var(--text); color:var(--text-inverse); font:600 13px/1;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:9999px; background:var(--text-inverse); color:var(--text); font:700 11px/1 ui-monospace,Menlo,monospace;">1</span>aktiv</span>
+          </div>
+          <div style="display:flex; align-items:stretch;">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:20</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#19 · NU</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Dark ’n’ Stormy</span><span style="font:400 15px/1.4; color:var(--text-muted);">Rasmus K.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:628px 628px; gap:24px;">
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">LIGHT · EMPTY</span>
+          <div style="background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+            <div style="padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px;">
+              <h3 style="margin:0; font:700 28px/1.1; letter-spacing:-0.02em; color:var(--text);">Bestillinger</h3>
+              <span style="display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px 0 10px; border-radius:9999px; background:var(--disabled-bg); border:1px solid var(--disabled-border); color:var(--disabled-fg); font:600 13px/1;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:9999px; background:var(--disabled-fg); color:var(--surface); font:700 11px/1 ui-monospace,Menlo,monospace;">0</span>aktive</span>
+            </div>
+            <div style="padding:44px 24px; display:flex; flex-direction:column; gap:8px; align-items:center; text-align:center;">
+              <span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Ingen bestillinger lige nu</span>
+              <span style="font:400 15px/1.5; color:var(--text-muted); max-width:44ch;">Nye bestillinger lander nederst i listen, så snart gæsterne sender dem.</span>
+            </div>
+            <div style="padding:14px 24px 8px; border-top:1px solid var(--border); background:var(--surface-sunken); display:flex; align-items:center; gap:12px;"><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">SIDSTE 10 EKSPEDEREDE</span><span style="flex:1; height:1px; background:var(--border);"></span></div>
+            <div style="padding:4px 24px 18px; background:var(--surface-sunken); display:flex; flex-direction:column;">
+              <div style="display:flex; align-items:center; gap:16px; height:40px; border-bottom:1px solid var(--border); font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:76px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace;">22:19</span><span style="flex:1;">Dark ’n’ Stormy</span><span style="width:140px; flex:none;">Rasmus K.</span></div>
+              <div style="display:flex; align-items:center; gap:16px; height:40px; border-bottom:1px solid var(--border); font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:76px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace;">22:14</span><span style="flex:1;">Gin &amp; Tonic</span><span style="width:140px; flex:none;">Mette L.</span></div>
+              <div style="display:flex; align-items:center; gap:16px; height:40px; font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:76px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace;">22:09</span><span style="flex:1;">Old Fashioned</span><span style="width:140px; flex:none;">Mikkel A.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="--surface:#141618;--surface-raised:#1E2124;--surface-sunken:#0A0B0C;--border:#26292C;--border-strong:#3D4247;--text:#F2F4F5;--text-muted:#A2A7AB;--text-inverse:#0A0B0C;--disabled-bg:#17191B;--disabled-border:#26292C;--disabled-fg:#8B9095;--s-prc-fg:#8B9095; display:flex; flex-direction:column; gap:8px;">
+          <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:#4B5055;">DARK · EMPTY</span>
+          <div style="background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+            <div style="padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px;">
+              <h3 style="margin:0; font:700 28px/1.1; letter-spacing:-0.02em; color:var(--text);">Bestillinger</h3>
+              <span style="display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px 0 10px; border-radius:9999px; background:var(--disabled-bg); border:1px solid var(--disabled-border); color:var(--disabled-fg); font:600 13px/1;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:9999px; background:var(--disabled-fg); color:var(--surface); font:700 11px/1 ui-monospace,Menlo,monospace;">0</span>aktive</span>
+            </div>
+            <div style="padding:44px 24px; display:flex; flex-direction:column; gap:8px; align-items:center; text-align:center;">
+              <span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Ingen bestillinger lige nu</span>
+              <span style="font:400 15px/1.5; color:var(--text-muted); max-width:44ch;">Nye bestillinger lander nederst i listen, så snart gæsterne sender dem.</span>
+            </div>
+            <div style="padding:14px 24px 8px; border-top:1px solid var(--border); background:var(--surface-sunken); display:flex; align-items:center; gap:12px;"><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">SIDSTE 10 EKSPEDEREDE</span><span style="flex:1; height:1px; background:var(--border);"></span></div>
+            <div style="padding:4px 24px 18px; background:var(--surface-sunken); display:flex; flex-direction:column;">
+              <div style="display:flex; align-items:center; gap:16px; height:40px; border-bottom:1px solid var(--border); font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:76px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace;">22:19</span><span style="flex:1;">Dark ’n’ Stormy</span><span style="width:140px; flex:none;">Rasmus K.</span></div>
+              <div style="display:flex; align-items:center; gap:16px; height:40px; border-bottom:1px solid var(--border); font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:76px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace;">22:14</span><span style="flex:1;">Gin &amp; Tonic</span><span style="width:140px; flex:none;">Mette L.</span></div>
+              <div style="display:flex; align-items:center; gap:16px; height:40px; font:400 15px/1.3; color:var(--s-prc-fg);"><span style="width:76px; flex:none; font:700 13px/1 ui-monospace,Menlo,monospace;">22:09</span><span style="flex:1;">Old Fashioned</span><span style="width:140px; flex:none;">Mikkel A.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <span style="font:700 10px/1 ui-monospace,Menlo,monospace; letter-spacing:0.14em; color:var(--text-muted);">LIGHT · 0–900ms AFTER AN ORDER ARRIVES (#20, APPENDED)</span>
+        <div style="width:1280px; background:var(--surface); border:1px solid var(--border); border-radius:3px; overflow:hidden;">
+          <div style="padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:16px;">
+            <h3 style="margin:0; font:700 28px/1.1; letter-spacing:-0.02em; color:var(--text);">Bestillinger</h3>
+            <span style="display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px 0 10px; border-radius:9999px; background:var(--text); color:var(--text-inverse); font:600 13px/1;"><span style="display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:9999px; background:var(--text-inverse); color:var(--text); font:700 11px/1 ui-monospace,Menlo,monospace;">4</span>aktive</span>
+            <span style="font:600 14px/1.25; letter-spacing:-0.005em; color:var(--text-muted);">3 → 4</span>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-acc-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:16</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#14 · 4 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Negroni Sbagliato</span><span style="font:400 15px/1.4; color:var(--text-muted);">Kasper Ø. · i gang</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-acc-bg); border:1px solid var(--s-acc-bd); color:var(--s-acc-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">ACCEPTERET</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Meld klar</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:19</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#17 · 1 MIN</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Paper Plane</span><span style="font:400 15px/1.4; color:var(--text-muted);">Astrid V.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; border-bottom:1px solid var(--border);">
+            <span style="width:4px; background:var(--s-new-bd); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:20</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#19 · NU</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Dark ’n’ Stormy</span><span style="font:400 15px/1.4; color:var(--text-muted);">Rasmus K.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:stretch; animation:bk-arrive-light 900ms cubic-bezier(0.2,0,0,1) 1;">
+            <span style="width:4px; background:var(--accent); flex:none;"></span>
+            <div style="width:104px; flex:none; padding:16px 0 16px 16px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 15px/1.2 ui-monospace,Menlo,monospace; color:var(--text);">22:21</span><span style="font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em; color:var(--text-muted);">#20 · NU</span></div>
+            <div style="flex:1; padding:16px 20px; display:flex; flex-direction:column; gap:3px;"><span style="font:700 21px/1.2; letter-spacing:-0.015em; color:var(--text);">Whisky Sour</span><span style="font:400 15px/1.4; color:var(--text-muted);">Freja N.</span></div>
+            <div style="width:200px; flex:none; padding:16px 12px; display:flex; align-items:center;"><span style="display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:2px; background:var(--s-new-bg); border:1px solid var(--s-new-bd); color:var(--s-new-fg); font:700 11px/1 ui-monospace,Menlo,monospace; letter-spacing:0.12em;">NY</span></div>
+            <div style="flex:none; padding:16px; display:flex; align-items:center; gap:20px;">
+              <button style="width:56px; height:56px; flex:none; border:1px solid var(--border); border-radius:3px; background:var(--surface-raised); color:var(--danger); display:flex; align-items:center; justify-content:center; cursor:pointer;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+              <button style="width:220px; height:56px; flex:none; border:1px solid var(--text); border-radius:3px; background:var(--text); color:var(--text-inverse); font:700 17px/1.2; letter-spacing:-0.01em; cursor:pointer;">Accepter</button>
+            </div>
+          </div>
+
+          <div style="padding:12px 24px 16px; display:flex; justify-content:center; border-top:1px solid var(--border); background:var(--surface-sunken);">
+            <button style="height:44px; padding:0 18px; border:1px solid var(--border-strong); border-radius:9999px; background:var(--surface-raised); color:var(--text); font:600 14px/1; display:flex; align-items:center; gap:10px; cursor:pointer;"><span style="width:8px; height:8px; border-radius:9999px; background:var(--accent);"></span>1 ny nedenfor</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div style="padding:12px 24px; border-top:1px solid #dedcd4; font:400 12px/1.6; color:#4B5055; display:flex; flex-direction:column; gap:4px;">
+      <span>EN: No orders right now · New orders land at the bottom of the list as soon as guests send them. · 1 new below · 1 active.</span>
+      <span>The arrival rail flash is the <em>only</em> use of accent that is not a ready order, and it is temporary: after 900ms the rail is ink like every other new row, so a queue left alone for a minute has exactly one yellow thing in it again.</span>
+    </div>
+  </div>
+
+</section>
+
+</x-dc>
+</body>
+</html>
+
