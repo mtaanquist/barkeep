@@ -1,4 +1,4 @@
-# Working on the home bar
+# Working on Barkeep
 
 A small self-hosted bar. Guests browse a menu and order drinks; the bartender
 works the queue. Orders update live.

@@ -82,7 +82,7 @@ describe("drink photos", () => {
 
 describe("web pages", () => {
   it("sends the app for unknown addresses when pages are bundled", async () => {
-    const frontendDir = makeTempDir("home-bar-frontend-");
+    const frontendDir = makeTempDir("barkeep-frontend-");
     fs.writeFileSync(path.join(frontendDir, "index.html"), "<!doctype html>ok");
 
     const app = createApp({
@@ -98,7 +98,7 @@ describe("web pages", () => {
   });
 
   it("still answers unknown api addresses with an error", async () => {
-    const frontendDir = makeTempDir("home-bar-frontend-");
+    const frontendDir = makeTempDir("barkeep-frontend-");
     fs.writeFileSync(path.join(frontendDir, "index.html"), "<!doctype html>ok");
 
     const app = createApp({

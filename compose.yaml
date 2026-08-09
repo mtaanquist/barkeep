@@ -1,7 +1,7 @@
 services:
-  home-bar:
-    image: ghcr.io/mtaanquist/home-bar-system:latest
-    container_name: home-bar
+  barkeep:
+    image: ghcr.io/mtaanquist/barkeep:latest
+    container_name: barkeep
     restart: unless-stopped
     init: true
     ports:

@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
 
 const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+// Kept under the old name for the same reason as STORAGE_PREFIX.
 export const ACTIVITY_KEY = "homeBarSystem_lastActivity";
 
 export const useSessionManager = () => {

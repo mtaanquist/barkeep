@@ -1,57 +1,67 @@
-# Home Bar System
+# Barkeep
 
-A small self-hosted bar for a party. Guests pick a drink from a menu on their
-phone, the host works through the orders, and everyone's screen keeps itself up
-to date.
+Drinks on tap for your guests. Barkeep puts your bar's menu on everyone's
+phone, takes their orders, and keeps you on top of what to make next.
 
-It is meant for a garden bar among friends, not a shop. There are no accounts
-and no payments. A guest types their name, picks a drink, and waits.
+You run it yourself, on a machine at home. It is built for a party among
+friends, not for a shop: there are no accounts and nothing to pay. A guest
+scans a code, types their name, picks a drink, and waits.
 
-## What it does
+## How an evening goes
 
-### For guests
+You set up a bar and add the drinks you are pouring, each with a photo and a
+recipe. You print or show the QR code.
 
-- Browse the menu on a phone, grouped by category or by base spirit
-- See what is available right now; anything out of stock is not offered
-- Mark drinks as favourites, which then appear at the top of the menu
-- Order one drink at a time, and watch it move from ordered to being made to
-  ready
-- Cancel an order, as long as it has not been handed over
-- "Surprise me" picks a drink at random, with a try-again button
-- Look back at what they have had, and order the same again
-- Read the recipe, if the host has chosen to share it for that drink
+Guests scan it, give a name, and get the menu. They pick something. It lands in
+your queue.
 
-### For the host
+You accept it, make it, and mark it ready. Their phone keeps up as you go, so
+nobody has to ask whether their drink is coming. When you run out of something,
+you mark it out of stock and it stops being offered.
+
+## What guests get
+
+- A menu on their phone, grouped by category or by base spirit
+- Only what is actually available; anything out of stock is not offered
+- Favourites, which move to the top of their menu
+- One drink at a time, tracked from ordered to being made to ready
+- The ability to cancel, up until you hand it over
+- A "surprise me" button that picks something at random, with a try again
+- A list of what they have had, and a way to order the same thing again
+- The recipe, on the drinks you choose to share it for
+
+## What you get
 
 - A queue of orders to accept, mark ready, and mark done, oldest first
-- Optionally accept every order automatically, for when the bar is busy
-- Add drinks with a photo, a recipe, a base spirit, and a short description
-- Crop and reposition a photo so it sits nicely on the card
-- Choose per drink whether guests can read the recipe or only the description
-- Mark a drink as out of stock without deleting it
-- Sort drinks into categories
-- A QR code, to show or print, that takes a guest straight to the bar's menu
-- Simple figures: total orders, orders today, most popular drinks, busiest
-  hours
+- The option to accept everything automatically when the bar gets busy
+- Drinks with a photo, a recipe, a base spirit, and a short description for
+  guests
+- A cropping tool, so a photo sits nicely on the card
+- A choice, per drink, of whether guests see the recipe or only the description
+- Out of stock as a toggle, so you do not have to delete anything
+- Categories, for grouping the menu how you like
+- A QR code to show or print
+- Simple figures: orders in total and today, the most popular drinks, and when
+  the rush was
 
-### Both
+## Both
 
 - English and Danish, though some of the host's own screens are still English
   only
-- Screens update on their own as orders come and go, with no refreshing
-- If the connection drops, the browser reconnects by itself. Guests are only
-  told something is wrong if it stays down.
+- Everything updates on its own as orders come and go, with nothing to refresh
+- If a phone loses signal it reconnects by itself, and only says something is
+  wrong if it stays that way
 
 ## Running it
 
-Everything is one container: the menu pages, the API, the live updates, and the
-drink photos are all served on a single port.
+Barkeep is one container. The menu, the API, the live updates and the drink
+photos are all served on a single port.
 
 ```yaml
 services:
-  home-bar:
-    image: ghcr.io/mtaanquist/home-bar-system:latest
-    container_name: home-bar
+  barkeep:
+    image: ghcr.io/mtaanquist/barkeep:latest
+    container_name: barkeep
     restart: unless-stopped
     init: true
     ports:
@@ -61,65 +71,64 @@ services:
       - ./uploads:/app/uploads
 ```
 
-[`compose.yaml`](compose.yaml) is the same thing with a healthcheck and the
-optional settings included.
+[`compose.yaml`](compose.yaml) is the same with a healthcheck and the optional
+settings filled in.
 
 ```sh
 docker compose up -d
 ```
 
-The port is bound to `127.0.0.1`, so only the machine itself can reach the bar.
-That is deliberate: put a reverse proxy in front to open it up. See
-[Putting a proxy in front](#putting-a-proxy-in-front) below.
+The port is bound to `127.0.0.1`, so only the machine itself can reach Barkeep.
+That is on purpose: put a reverse proxy in front to open it up, as below.
 
-Change the first number if something else on the machine already uses 3000, and
-point the proxy at whatever you chose. The second number is the port inside the
+Change the first number if something on the machine already uses 3000, and
+point the proxy at whatever you chose. The second number is inside the
 container and is better left alone.
 
 Two folders need to survive an upgrade:
 
-| Folder     | Holds                                         |
-| ---------- | --------------------------------------------- |
-| `data/`    | the database, one SQLite file                 |
-| `uploads/` | drink photos                                  |
+| Folder     | Holds                         |
+| ---------- | ----------------------------- |
+| `data/`    | the database, one SQLite file |
+| `uploads/` | drink photos                  |
 
-Back both up together. The database refers to photos by filename.
+Back both up together. The database refers to photos by filename, so they only
+make sense as a pair.
 
-### The first bar
+### Setting up your bar
 
-Open the address in a browser and create a bar. You choose two passwords: one
-for yourself, and one you give to guests. They are the only thing separating
-the two views, which is on purpose for a party.
+Open the address in a browser and create a bar. You pick two passwords: one for
+yourself, and one you give to guests. Those are the only thing between the two
+views, which is about the right amount of security for a party in a garden.
 
-Print the QR code from the settings and guests can reach the menu by pointing a
-camera at it.
+The QR code is in the settings. Show it on a screen, or print it and leave it
+on the bar.
 
 ### Image tags
 
-| Tag                | Built from                                          |
-| ------------------ | --------------------------------------------------- |
-| `latest`           | `main`, which is what the bar should normally run    |
-| `staging`          | the working branch, for trying a change out first    |
-| `v1.2.3`, `v1.2`   | release tags                                         |
-| `sha-abc1234`      | any single build, for pinning to an exact commit     |
+| Tag              | Built from                                     |
+| ---------------- | ---------------------------------------------- |
+| `latest`         | the released version, and what to normally run |
+| `staging`        | the working branch, to try a change out first  |
+| `v1.2.3`, `v1.2` | a specific release                             |
+| `sha-abc1234`    | a single build, to pin to an exact commit      |
 
-Images are built for both Intel and ARM machines, so a Raspberry Pi works as
-well as a NUC.
+Images are built for Intel and ARM, so a Raspberry Pi works as well as a NUC.
 
 ### Settings
 
-All optional. The defaults suit a single container behind a proxy on the same
+All optional. The defaults suit one container behind a proxy on the same
 machine.
 
-| Variable      | Default                | What it does                                                                        |
-| ------------- | ---------------------- | ----------------------------------------------------------------------------------- |
-| `PORT`        | `3000`                 | Port inside the container.                                                            |
-| `DB_PATH`     | `/app/data/bar.db`     | Where the database file lives.                                                        |
-| `UPLOADS_DIR` | `/app/uploads`         | Where drink photos live.                                                              |
-| `PUBLIC_URL`  | taken from the request  | The web address to put in QR codes. Only needed if guests reach the bar on a different address than the one it sees. |
-| `PUID`/`PGID` | unset, runs as root     | Run as an ordinary user instead. Ownership of the two folders is fixed on start.      |
-| `TRUST_PROXY` | this machine and the local network | Which proxies may say what address a guest used. Widening this lets an outsider point QR codes elsewhere. |
-| `TZ`          | `UTC`                  | Which clock "today" is measured against, which matters for the daily figures.         |
+| Variable      | Default                            | What it does                                                                                                      |
+| ------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `PORT`        | `3000`                             | Port inside the container.                                                                                          |
+| `DB_PATH`     | `/app/data/bar.db`                 | Where the database file lives.                                                                                      |
+| `UPLOADS_DIR` | `/app/uploads`                     | Where drink photos live.                                                                                            |
+| `PUBLIC_URL`  | taken from the request             | The address to put in QR codes. Needed only if guests reach Barkeep on a different address than the one it sees.     |
+| `PUID`/`PGID` | unset, runs as root                | Run as an ordinary user instead. Ownership of the two folders is fixed on start.                                    |
+| `TRUST_PROXY` | this machine and the local network | Which proxies may say what address a guest used. Widening this would let an outsider point your QR codes elsewhere. |
+| `TZ`          | `UTC`                              | Which clock "today" is measured against, which decides what counts as today's orders.                               |
 
 ### Putting a proxy in front
 
@@ -131,7 +140,7 @@ bar.example.com {
 }
 ```
 
-Caddy needs nothing else. It passes the live updates through as they are.
+Caddy needs nothing else. It passes the live updates straight through.
 
 If the proxy runs in its own container, share a network with it instead of
 publishing a port at all. Create the network once, outside either stack:
@@ -144,7 +153,7 @@ Then drop the `ports:` block from `compose.yaml` and add:
 
 ```yaml
 services:
-  home-bar:
+  barkeep:
     networks: [edge]
 
 networks:
@@ -152,33 +161,31 @@ networks:
     external: true
 ```
 
-The proxy joins the same network and points at `home-bar:3000`. The bar is then
+The proxy joins the same network and points at `barkeep:3000`. Barkeep is then
 not reachable from outside Docker at all.
 
-### Knowing it is working
+### Checking it is up
 
 The container reports its own health, so `docker ps` and Dockge show whether
-the bar is actually answering rather than merely running. `/api/health` is the
+Barkeep is actually answering rather than merely running. `/api/health` is the
 same check if you want to watch it yourself.
 
 ### Upgrading
 
-Pull the new image and start it. The database is brought up to date on the way
-up, in the same container, so there is nothing to run by hand and nothing left
-sitting in a stopped state afterwards.
+Pull the new image and start it. Any changes to the database are made on the
+way up, inside the same container, so there is nothing to run by hand.
 
-Changes to the database are recorded once they have been applied, along with a
-fingerprint of the file that made them. If one of those files is later edited,
-the bar refuses to start and says which one, rather than running on with the
-database and the code disagreeing.
+Each applied change is recorded with a fingerprint of the file that made it. If
+one of those files is later altered, Barkeep stops and names it rather than
+running on with the database and the code disagreeing.
 
-Photos that no drink refers to are cleared out on start, but only if they are
-more than a day old, so a photo uploaded while someone is still filling in the
-form is left alone.
+Photos no drink refers to are cleared out at startup, but only once they are
+more than a day old, so one uploaded while you are still filling in the form is
+safe.
 
 ## Development
 
-The two halves run separately while developing, with the menu pages proxying
+The two halves run separately while you work on them, with the menu proxying
 `/api` and `/uploads` through to the server.
 
 ```sh
@@ -201,23 +208,22 @@ cd backend  && npm test && npm run lint && npm run typecheck
 cd frontend && npm test && npm run lint && npm run typecheck && npm run build
 ```
 
-Both halves are TypeScript, and the shapes the API sends live in one file
-(`shared/types.d.ts`) that both import, so changing one side without the other
+Both halves are TypeScript. The shapes the API sends live in one file,
+`shared/types.d.ts`, that both import, so changing one side without the other
 is a build error. Both linters fail on a warning.
 
 The tests for the pages run against a stand-in browser, so they need neither a
-server nor a real browser.
+server nor a real one.
 
 ### Changing the database
 
-Add a dated `.sql` file to `backend/src/db/migrations/`. It is applied once, in
-a transaction, on the next start, oldest first. Never edit one that has already
+Add a dated `.sql` file to `backend/src/db/migrations/`. It runs once, inside a
+transaction, on the next start, oldest first. Never edit one that has already
 run; add another instead.
 
-`CLAUDE.md` has the rest of the working notes: how the pieces fit, what the
-tests are for, and what not to commit.
+[`CLAUDE.md`](CLAUDE.md) has the rest of the working notes.
 
-## How it is put together
+## How it is built
 
 ```
 Browser -> :3000 -> /api/*      the API
@@ -228,15 +234,12 @@ Browser -> :3000 -> /api/*      the API
                     SQLite, one file, in data/
 ```
 
-One container on one address. That is the whole shape of it, and it is
-deliberate: an earlier split across separate containers and a proxy kept
-drifting out of step with the code, and three separate bugs came from it.
+One container on one address, which keeps the whole thing small enough to hold
+in your head and leaves nothing to configure between the parts.
 
-Live updates go one way only, from the server to the browser, over a long-lived
-request. The browser reconnects on its own when it drops, which is the main
-reason for doing it this way. The two-way version it replaced had to hand-roll
-reconnection and gave up after three tries, so a phone that slept for a minute
-stopped receiving orders until someone refreshed it.
+Live updates travel one way, from the server to the browser, over a long-lived
+request. The browser handles reconnecting itself, which matters when a phone
+sleeps in someone's pocket halfway through the evening.
 
-SQLite is a good fit here and not something this will outgrow. A party is a
-handful of people ordering drinks over an evening.
+SQLite suits this well. A party is a handful of people ordering drinks over an
+evening, and one file is far easier to back up than a database server.

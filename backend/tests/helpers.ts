@@ -11,7 +11,7 @@ import type { Db } from "../src/db/queries.js";
 const tempDirs: string[] = [];
 
 /** A scratch folder that gets cleaned up after the test file finishes. */
-export function makeTempDir(prefix = "home-bar-test-"): string {
+export function makeTempDir(prefix = "barkeep-test-"): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
   tempDirs.push(dir);
   return dir;
@@ -44,10 +44,10 @@ export interface TestApp {
 /** The app, wired to a throwaway database and uploads folder. */
 export function makeTestApp(): TestApp {
   const db = makeTestDatabase();
-  const uploadsDir = makeTempDir("home-bar-uploads-");
+  const uploadsDir = makeTempDir("barkeep-uploads-");
   // Pointed at a folder with no web pages in it, so the tests only ever see
   // the API and never the single-page-app catch-all.
-  const frontendDir = makeTempDir("home-bar-frontend-");
+  const frontendDir = makeTempDir("barkeep-frontend-");
 
   return { app: createApp({ db, uploadsDir, frontendDir }), db, uploadsDir };
 }
