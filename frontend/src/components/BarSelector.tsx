@@ -41,12 +41,12 @@ const BarSelector: React.FC<BarSelectorProps> = ({
       {availableBars.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold text-text">Select Existing Bar</h4>
+            <h4 className="font-semibold text-text">{t("selectBar")}</h4>
             <button
               onClick={fetchBars}
               disabled={loadingBars}
               className="p-1 text-text-muted hover:text-text"
-              title="Refresh bars list"
+              title={t("refreshBars")}
             >
               <RefreshCw
                 className={`w-4 h-4 ${loadingBars ? "animate-spin" : ""}`}

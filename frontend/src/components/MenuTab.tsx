@@ -107,9 +107,9 @@ const MenuTab: React.FC = () => {
               onChange={(e) => setSortBy(e.target.value as "alphabetical" | "category" | "default")}
               className="px-3 py-2 border border-border rounded-md text-sm focus:ring-2 focus:border-transparent"
             >
-              <option value="default">Sort: Default</option>
-              <option value="alphabetical">Sort: Alphabetical</option>
-              <option value="category">Sort: Category</option>
+              <option value="default">{t("sortDefault")}</option>
+              <option value="alphabetical">{t("sortAlphabetical")}</option>
+              <option value="category">{t("sortCategory")}</option>
             </select>
             <button
               onClick={() => setEditingDrink("new")}
@@ -127,10 +127,10 @@ const MenuTab: React.FC = () => {
         <div className="bg-surface-raised rounded-md border p-8 text-center">
           <Package className="w-16 h-16 mx-auto mb-4 text-text-muted" />
           <h3 className="text-lg font-medium text-text mb-2">
-            No drinks yet
+            {t("noDrinks")}
           </h3>
           <p className="text-text-muted mb-4">
-            Start building your menu by adding your first drink
+            {t("noDrinksHelp")}
           </p>
           <button
             onClick={() => setEditingDrink("new")}
@@ -201,14 +201,14 @@ const MenuTab: React.FC = () => {
                       className="flex-1 bg-surface-sunken text-text py-2 px-3 rounded-md text-sm hover:bg-border transition-colors flex items-center justify-center space-x-1"
                     >
                       <Edit3 className="w-3 h-3" />
-                      <span>Edit</span>
+                      <span>{t("edit")}</span>
                     </button>
                     <button
                       onClick={() => setViewingRecipe(drink)}
                       className="flex-1 bg-surface-sunken text-text py-2 px-3 rounded-md text-sm hover:bg-border transition-colors flex items-center justify-center space-x-1"
                     >
                       <Eye className="w-3 h-3" />
-                      <span>View</span>
+                      <span>{t("view")}</span>
                     </button>
                   </div>
 
@@ -226,12 +226,12 @@ const MenuTab: React.FC = () => {
                       {drink.in_stock ? (
                         <>
                           <PackageX className="w-3 h-3" />
-                          <span>Out of Stock</span>
+                          <span>{t("outOfStock")}</span>
                         </>
                       ) : (
                         <>
                           <Package className="w-3 h-3" />
-                          <span>In Stock</span>
+                          <span>{t("inStock")}</span>
                         </>
                       )}
                     </button>
@@ -260,7 +260,7 @@ const MenuTab: React.FC = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-text-muted">
-                  Total Drinks
+                  {t("totalDrinks")}
                 </p>
                 <p className="text-2xl font-bold text-text">
                   {drinks.length}
@@ -275,7 +275,7 @@ const MenuTab: React.FC = () => {
                 <Package className="w-6 h-6 text-text-muted" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-text-muted">In Stock</p>
+                <p className="text-sm font-medium text-text-muted">{t("inStock")}</p>
                 <p className="text-2xl font-bold text-text">
                   {inStockDrinks.length}
                 </p>
@@ -290,7 +290,7 @@ const MenuTab: React.FC = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm font-medium text-text-muted">
-                  Out of Stock
+                  {t("outOfStock")}
                 </p>
                 <p className="text-2xl font-bold text-text">
                   {outOfStockDrinks.length}

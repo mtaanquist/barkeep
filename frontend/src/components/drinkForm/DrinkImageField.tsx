@@ -89,7 +89,7 @@ const DrinkImageField: React.FC<DrinkImageFieldProps> = ({
               <p className="mb-2 text-sm text-text-muted">
                 <span className="font-semibold">{t("uploadImage")}</span>
               </p>
-              <p className="text-xs text-text-muted">PNG, JPG, GIF up to 5MB</p>
+              <p className="text-xs text-text-muted">{t("imageHelp")}</p>
             </div>
             <input
               type="file"
@@ -139,7 +139,7 @@ const DrinkImageField: React.FC<DrinkImageFieldProps> = ({
               className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-text bg-surface-raised border border-border rounded-md hover:bg-surface-sunken transition-colors"
             >
               <Crop className="w-4 h-4" />
-              <span>Crop &amp; Position</span>
+              <span>{t("cropImage")}</span>
             </button>
           </div>
         )}

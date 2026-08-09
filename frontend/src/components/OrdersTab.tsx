@@ -132,7 +132,7 @@ const OrdersTab: React.FC = () => {
                 >
                   {pendingOrders.length}
                 </span>
-                active
+                {t("activeCount")}
               </span>
               {pendingOrders.length > 0 &&
                 pendingOrders.some((order) => order.drink_recipe) && (
@@ -143,12 +143,12 @@ const OrdersTab: React.FC = () => {
                     {showRecipes ? (
                       <>
                         <ChevronUp className="w-4 h-4" />
-                        <span>Hide Recipes</span>
+                        <span>{t("hideRecipes")}</span>
                       </>
                     ) : (
                       <>
                         <ChevronDown className="w-4 h-4" />
-                        <span>Show Recipes</span>
+                        <span>{t("showRecipes")}</span>
                       </>
                     )}
                   </button>
@@ -163,7 +163,7 @@ const OrdersTab: React.FC = () => {
               <Coffee className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p className="text-heading text-text">{t("noPendingOrders")}</p>
               <p className="text-body">
-                New orders will appear here in real-time
+                {t("ordersArriveHere")}
               </p>
             </div>
           ) : (
@@ -231,7 +231,7 @@ const OrdersTab: React.FC = () => {
                     {order.drink_recipe && showRecipes && (
                       <div className="mt-4 pt-4 border-t border-border">
                         <h4 className="font-mono text-caption uppercase text-text-muted mb-2">
-                          Recipe
+                          {t("recipe")}
                         </h4>
                         <div className="text-body text-text-muted whitespace-pre-wrap">
                           {order.drink_recipe}
@@ -250,7 +250,7 @@ const OrdersTab: React.FC = () => {
       {recentOrders.length > 0 && (
         <div className={PANEL}>
           <div className="p-4 border-b border-border">
-            <h3 className="text-heading">Recent Completed Orders</h3>
+            <h3 className="text-heading">{t("recentlyCompleted")}</h3>
           </div>
 
           <div className="divide-y divide-border">
@@ -275,7 +275,7 @@ const OrdersTab: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className={`${PANEL} p-4`}>
           <p className="font-mono text-caption uppercase text-text-muted">
-            Pending
+            {t("new")}
           </p>
           <p className="font-mono text-display mt-2">
             {orders.filter((o) => o.status === "new").length}
@@ -284,14 +284,14 @@ const OrdersTab: React.FC = () => {
 
         <div className={`${PANEL} p-4`}>
           <p className="font-mono text-caption uppercase text-text-muted">
-            Ready
+            {t("ready")}
           </p>
           <p className="font-mono text-display mt-2">{readyCount}</p>
         </div>
 
         <div className={`${PANEL} p-4`}>
           <p className="font-mono text-caption uppercase text-text-muted">
-            Completed Today
+            {t("completedToday")}
           </p>
           <p className="font-mono text-display mt-2">
             {

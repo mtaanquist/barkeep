@@ -21,6 +21,45 @@ export interface TranslationMap {
   qrArrival: string;
   yourName: string;
   startOrdering: string;
+  bartender: string;
+  loadingAnalytics: string;
+  gatheringData: string;
+  statusDistribution: string;
+  recentActivity: string;
+  selectBar: string;
+  refreshBars: string;
+  addCategory: string;
+  categoryName: string;
+  categoriesHelp: string;
+  noCategories: string;
+  noCategoriesHelp: string;
+  deleteCategory: string;
+  editCategory: string;
+  noCategory: string;
+  selectBaseSpirit: string;
+  guestDescriptionPlaceholder: string;
+  cropImage: string;
+  apply: string;
+  reset: string;
+  loadingEditor: string;
+  edit: string;
+  view: string;
+  noDrinks: string;
+  noDrinksHelp: string;
+  totalDrinks: string;
+  sortDefault: string;
+  sortAlphabetical: string;
+  sortCategory: string;
+  showRecipes: string;
+  hideRecipes: string;
+  ordersArriveHere: string;
+  recentlyCompleted: string;
+  activeCount: string;
+  completedToday: string;
+  barSettings: string;
+  barInformation: string;
+  autoAccept: string;
+  imageHelp: string;
   barNotFound: string;
   goHome: string;
   loadingBar: string;
@@ -141,6 +180,45 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     qrArrival: "You scanned the code, so you are already in. Type your first name to start ordering.",
     yourName: "Your name",
     startOrdering: "Start ordering",
+    bartender: "Bartender",
+    loadingAnalytics: "Fetching the reports…",
+    gatheringData: "Gathering the numbers from your orders",
+    statusDistribution: "Where the orders are",
+    recentActivity: "Lately",
+    selectBar: "Choose a bar",
+    refreshBars: "Refresh the list",
+    addCategory: "Add category",
+    categoryName: "Category name",
+    categoriesHelp: "Group the drinks so guests can find them.",
+    noCategories: "No categories yet",
+    noCategoriesHelp: "Add one to start grouping the drinks.",
+    deleteCategory: "Delete category",
+    editCategory: "Rename category",
+    noCategory: "No category",
+    selectBaseSpirit: "Choose a base spirit",
+    guestDescriptionPlaceholder: "Shown to guests. Optional.",
+    cropImage: "Crop and position",
+    apply: "Apply",
+    reset: "Reset",
+    loadingEditor: "Fetching the editor…",
+    edit: "Edit",
+    view: "View",
+    noDrinks: "No drinks yet",
+    noDrinksHelp: "Add the first one to start the menu.",
+    totalDrinks: "Drinks in total",
+    sortDefault: "Sort: as added",
+    sortAlphabetical: "Sort: A to Z",
+    sortCategory: "Sort: by category",
+    showRecipes: "Show recipes",
+    hideRecipes: "Hide recipes",
+    ordersArriveHere: "New orders turn up here on their own.",
+    recentlyCompleted: "Just served",
+    activeCount: "active",
+    completedToday: "Served today",
+    barSettings: "Bar settings",
+    barInformation: "About this bar",
+    autoAccept: "Take orders automatically",
+    imageHelp: "PNG or JPG, up to 5 MB.",
     barNotFound: "Bar not found",
     goHome: "Go to the front page",
     loadingBar: "Fetching the bar…",
@@ -261,6 +339,45 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     qrArrival: "Du har scannet koden, så du er inde. Skriv dit fornavn for at komme i gang.",
     yourName: "Dit navn",
     startOrdering: "Kom i gang",
+    bartender: "Bartender",
+    loadingAnalytics: "Henter rapporterne…",
+    gatheringData: "Samler tal fra bestillingerne",
+    statusDistribution: "Hvor bestillingerne er",
+    recentActivity: "På det seneste",
+    selectBar: "Vælg en bar",
+    refreshBars: "Opdatér listen",
+    addCategory: "Tilføj kategori",
+    categoryName: "Kategorinavn",
+    categoriesHelp: "Gruppér dine drinks, så gæsterne kan finde dem.",
+    noCategories: "Ingen kategorier endnu",
+    noCategoriesHelp: "Tilføj en for at begynde at gruppere dine drinks.",
+    deleteCategory: "Slet kategori",
+    editCategory: "Omdøb kategori",
+    noCategory: "Ingen kategori",
+    selectBaseSpirit: "Vælg basisspiritus",
+    guestDescriptionPlaceholder: "Vises for gæsterne. Valgfrit.",
+    cropImage: "Beskær og placér",
+    apply: "Brug",
+    reset: "Nulstil",
+    loadingEditor: "Henter editoren…",
+    edit: "Redigér",
+    view: "Se",
+    noDrinks: "Ingen drinks endnu",
+    noDrinksHelp: "Tilføj den første for at starte menuen.",
+    totalDrinks: "Drinks i alt",
+    sortDefault: "Sortér: som tilføjet",
+    sortAlphabetical: "Sortér: A til Å",
+    sortCategory: "Sortér: efter kategori",
+    showRecipes: "Vis opskrifter",
+    hideRecipes: "Skjul opskrifter",
+    ordersArriveHere: "Nye bestillinger dukker op her af sig selv.",
+    recentlyCompleted: "Netop serveret",
+    activeCount: "aktive",
+    completedToday: "Serveret i dag",
+    barSettings: "Barens indstillinger",
+    barInformation: "Om baren",
+    autoAccept: "Tag imod bestillinger automatisk",
+    imageHelp: "PNG eller JPG, op til 5 MB.",
     barNotFound: "Baren blev ikke fundet",
     goHome: "Gå til forsiden",
     loadingBar: "Henter baren…",

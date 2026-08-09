@@ -2,6 +2,8 @@ import React, { useState, useCallback, useEffect } from "react";
 import Cropper from "react-easy-crop";
 import { X, RotateCcw } from "lucide-react";
 import { Area } from "react-easy-crop";
+import { useApp } from "../hooks/useApp";
+import { useTranslation } from "../utils/translations";
 
 interface ImageCropperProps {
   imageUrl: string;
@@ -18,6 +20,9 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
   onSave,
   onCancel,
 }) => {
+  const { language } = useApp();
+  const t = useTranslation(language);
+
   const [crop, setCrop] = useState(initialCrop);
   const [zoom, setZoom] = useState(initialZoom);
 
@@ -50,7 +55,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
       <div className="bg-surface-raised border border-border rounded-lg shadow-float w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-bold text-text">Crop & Position Image</h2>
+          <h2 className="text-xl font-bold text-text">{t("cropImage")}</h2>
           <button
             onClick={onCancel}
             className="p-2 hover:bg-surface-sunken rounded-md transition-colors"
@@ -96,20 +101,20 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
               className="flex items-center space-x-2 px-4 py-2 text-text bg-surface-raised border border-border rounded-md hover:bg-surface-sunken transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
-              <span>Reset</span>
+              <span>{t("reset")}</span>
             </button>
             <div className="flex space-x-2 w-full sm:w-auto">
               <button
                 onClick={onCancel}
                 className="flex-1 sm:flex-none px-6 py-2 text-text bg-surface-raised border border-border rounded-md hover:bg-surface-sunken transition-colors"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 onClick={handleSave}
                 className="flex-1 sm:flex-none px-6 py-2 bg-text text-text-inverse rounded-md hover:bg-neutral-800 transition-colors"
               >
-                Apply
+                {t("apply")}
               </button>
             </div>
           </div>

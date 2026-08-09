@@ -144,7 +144,7 @@ const BartenderShell: React.FC = () => {
         <div className="px-4 pt-4 pb-3.5">
           <p className="text-heading truncate">{currentBar?.name}</p>
           <p className="font-mono text-caption uppercase text-text-muted mt-0.5">
-            Bartender
+            {t("bartender")}
           </p>
         </div>
 
@@ -196,7 +196,7 @@ const BartenderShell: React.FC = () => {
           <div className="min-w-0">
             <p className="text-heading truncate">{currentBar?.name}</p>
             <p className="font-mono text-caption uppercase text-text-muted">
-              Bartender
+              {t("bartender")}
             </p>
           </div>
           <div className="flex items-center gap-1">

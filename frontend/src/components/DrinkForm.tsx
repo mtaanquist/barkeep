@@ -177,7 +177,7 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
                   className={INPUT}
                   required
                 >
-                  <option value="">Select base spirit</option>
+                  <option value="">{t("selectBaseSpirit")}</option>
                   {BASE_SPIRITS.map((spirit) => (
                     <option key={spirit} value={spirit}>
                       {spirit}
@@ -192,7 +192,7 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
                   onChange={(e) => update({ categoryId: e.target.value })}
                   className={INPUT}
                 >
-                  <option value="">No category</option>
+                  <option value="">{t("noCategory")}</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -232,7 +232,7 @@ const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onClose }) => {
                   value={form.guestDescription}
                   onChange={(e) => update({ guestDescription: e.target.value })}
                   rows={4}
-                  placeholder="Optional description shown to guests..."
+                  placeholder={t("guestDescriptionPlaceholder")}
                   className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:border-transparent resize-vertical"
                 />
               </Field>

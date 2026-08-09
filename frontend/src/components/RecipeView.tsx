@@ -189,7 +189,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
               onClick={onClose}
               className="w-full sm:w-auto px-6 py-2 bg-text text-text-inverse rounded-md hover:bg-neutral-800 transition-colors"
             >
-              Close Recipe
+              {t("close")}
             </button>
           </div>
         </div>

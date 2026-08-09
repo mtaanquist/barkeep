@@ -2,16 +2,20 @@ import React, { useState } from "react";
 import { Settings, Save } from "lucide-react";
 import { useApp } from "../hooks/useApp";
 import type { Bar } from "../types";
+import { useTranslation } from "../utils/translations";
 
 const SettingsTab: React.FC = () => {
   const {
     currentBar,
+    language,
     loading,
     setCurrentBar,
     setLoading,
     setError,
     apiCall,
   } = useApp();
+
+  const t = useTranslation(language);
   
   const [skipApproval, setSkipApproval] = useState(
     currentBar?.skip_approval === 1
@@ -53,7 +57,7 @@ const SettingsTab: React.FC = () => {
           <div className="flex items-center space-x-2">
             <Settings className="w-5 h-5 text-text-muted" />
             <h3 className="text-lg font-semibold text-text">
-              Bar Settings
+              {t("barSettings")}
             </h3>
           </div>
         </div>
@@ -75,7 +79,7 @@ const SettingsTab: React.FC = () => {
                 htmlFor="skip-approval"
                 className="font-medium text-text cursor-pointer"
               >
-                Auto-accept drink orders
+                {t("autoAccept")}
               </label>
               <p className="text-sm text-text-muted mt-1">
                 When enabled, new drink orders will be automatically accepted and skip the manual approval step. 
@@ -84,18 +88,18 @@ const SettingsTab: React.FC = () => {
             </div>
           </div>
 
-          {/* Bar Information */}
+          {/* {t("barInformation")} */}
           <div className="pt-6 border-t border-border">
             <h4 className="text-sm font-semibold text-text mb-3">
-              Bar Information
+              {t("barInformation")}
             </h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-text-muted">Bar Name:</span>
+                <span className="text-text-muted">{t("barName")}</span>
                 <span className="font-medium text-text">{currentBar?.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-text-muted">Language:</span>
+                <span className="text-text-muted">{t("language")}</span>
                 <span className="font-medium text-text">
                   {currentBar?.language === "en" ? "English" : "Danish"}
                 </span>
