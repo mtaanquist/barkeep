@@ -48,7 +48,9 @@ describe("a drink on the menu", () => {
   it("shows a drink with no picture without breaking", () => {
     render(<DrinkCard {...cardActions} drink={aDrink({ image_url: null })} />);
 
-    expect(screen.getByText("Negroni")).toBeInTheDocument();
+    // Without a picture the name is set large in the picture's place, so it
+    // appears twice; the heading is the one a screen reader announces.
+    expect(screen.getByRole("heading", { name: "Negroni" })).toBeInTheDocument();
     expect(screen.queryByRole("img")).toBeNull();
   });
 });
@@ -65,13 +67,15 @@ describe("a section of the menu", () => {
         {...cardActions}
         drinks={drinks}
         heading="Gin"
-        headingClass="text-blue-800"
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Gin" })).toBeInTheDocument();
-    expect(screen.getByText("Negroni")).toBeInTheDocument();
-    expect(screen.getByText("Aviation")).toBeInTheDocument();
+    // The heading carries a count alongside the name.
+    expect(screen.getByRole("heading", { name: "Gin · 2" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Negroni" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Aviation" })
+    ).toBeInTheDocument();
   });
 
   it("can be linked to from the menu on the left", () => {
@@ -81,7 +85,6 @@ describe("a section of the menu", () => {
         drinks={drinks}
         id="favourites"
         heading="Favourites"
-        headingClass="text-yellow-700"
       />
     );
 

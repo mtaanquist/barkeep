@@ -50,7 +50,9 @@ const showMenu = async () => {
       </AppProvider>
     </MemoryRouter>
   );
-  await screen.findAllByRole("button", { name: "Order" });
+  // Waits on a drink rather than on the Order button, because the button is
+  // relabelled once the guest has an order on the go.
+  await screen.findAllByRole("heading", { name: "Negroni" });
 };
 
 beforeEach(() => {
@@ -95,13 +97,20 @@ describe("ordering a drink", () => {
     orders = [anOrder({ id: 5, status: "accepted" })];
 
     await showMenu();
-    await screen.findByText("Your Order");
+    await screen.findByRole("region", { name: "Your Order" });
 
-    for (const button of screen.getAllByRole("button", { name: "Order" })) {
+    // The button says why it cannot be used, rather than going quietly grey
+    // and telling the guest only once they have tapped it.
+    const blocked = screen.getAllByRole("button", {
+      name: "You can only have one active order at a time",
+    });
+    expect(blocked.length).toBeGreaterThan(0);
+    for (const button of blocked) {
       expect(button).toBeDisabled();
     }
+    expect(screen.queryByRole("button", { name: "Order" })).toBeNull();
 
-    await userEvent.click(screen.getAllByRole("button", { name: "Order" })[0]);
+    await userEvent.click(blocked[0]);
     expect(api.calls.some((c) => c.method === "POST")).toBe(false);
   });
 

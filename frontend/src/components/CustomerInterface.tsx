@@ -161,7 +161,7 @@ const CustomerInterface: React.FC = () => {
     menu.favourites.length === 0;
 
   return (
-    <div className="customer-container min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-surface">
       {connectionError && !noticeDismissed && (
         <ConnectionLost
           onRetry={reconnect}
@@ -190,20 +190,18 @@ const CustomerInterface: React.FC = () => {
         />
       )}
 
-      <div className="customer-header bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 transition-colors duration-200">
+      <div className="bg-surface-raised border-b border-border sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="customer-text text-xl font-bold text-gray-800 dark:text-white">
-                🍸 {currentBar?.name}
-              </h1>
+          <div className="flex justify-between items-center gap-4">
+            <div className="min-w-0">
+              <h1 className="text-heading truncate">{currentBar?.name}</h1>
               <div className="flex items-center gap-4">
-                <p className="customer-text-secondary text-sm text-gray-600 dark:text-gray-400">
-                  Welcome, {customerName}!
+                <p className="font-mono text-caption uppercase text-text-muted truncate">
+                  {customerName}
                 </p>
                 <button
                   onClick={() => navigate("/customer/past-orders")}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium cursor-pointer"
+                  className="text-label text-text-muted transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
                 >
                   {t("pastOrders")}
                 </button>
@@ -211,7 +209,7 @@ const CustomerInterface: React.FC = () => {
             </div>
             <button
               onClick={clearSession}
-              className="customer-text-secondary text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm font-medium cursor-pointer"
+              className="text-label text-text-muted shrink-0 transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
             >
               {t("logout")}
             </button>
@@ -240,9 +238,9 @@ const CustomerInterface: React.FC = () => {
           )}
 
           {nothingToShow ? (
-            <div className="p-8 text-center text-gray-500">
+            <div className="p-8 text-center text-text-muted">
               <Coffee className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>No drinks available right now</p>
+              <p className="text-body">No drinks available right now</p>
             </div>
           ) : (
             <>
@@ -250,8 +248,7 @@ const CustomerInterface: React.FC = () => {
                 <DrinkGrid
                   id="favourites"
                   className="mb-8"
-                  heading={`⭐ ${t("favourites")}`}
-                  headingClass="text-yellow-700"
+                  heading={t("favourites")}
                   drinks={menu.favourites}
                   {...cardActions}
                 />
@@ -259,8 +256,7 @@ const CustomerInterface: React.FC = () => {
 
               {menu.filter.type === "category" && (
                 <DrinkGrid
-                  heading={`📁 ${menu.filter.value}`}
-                  headingClass="text-green-700"
+                  heading={menu.filter.value}
                   drinks={menu.filtered}
                   {...cardActions}
                 />
@@ -269,7 +265,6 @@ const CustomerInterface: React.FC = () => {
               {menu.filter.type === "spirit" && (
                 <DrinkGrid
                   heading={menu.filter.value}
-                  headingClass="text-blue-800"
                   drinks={menu.filtered}
                   {...cardActions}
                 />
@@ -281,8 +276,7 @@ const CustomerInterface: React.FC = () => {
                     <DrinkGrid
                       key={category}
                       id={`category-${category.replace(/[^a-zA-Z0-9]/g, "")}`}
-                      heading={`📁 ${category}`}
-                      headingClass="text-green-700"
+                      heading={category}
                       drinks={menu.byCategory[category]}
                       {...cardActions}
                     />
@@ -293,7 +287,6 @@ const CustomerInterface: React.FC = () => {
                       key={spirit}
                       id={`spirit-${spirit.replace(/[^a-zA-Z0-9]/g, "")}`}
                       heading={spirit}
-                      headingClass="text-blue-800"
                       drinks={menu.bySpirit[spirit]}
                       {...cardActions}
                     />

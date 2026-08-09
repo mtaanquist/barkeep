@@ -27,10 +27,17 @@ const DrinkCard: React.FC<DrinkCardProps> = ({
   const imageCropY = drink.image_crop_y || 0;
   const imageCropZoom = drink.image_crop_zoom || 1;
 
+  // A guest who cannot order should be able to see why without tapping.
+  const orderLabel = loading
+    ? t("loading")
+    : disabled
+      ? t("oneOrderLimit")
+      : t("order");
+
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md dark:hover:shadow-gray-900/20 transition-shadow">
-      {drink.image_url && (
-        <div className="aspect-video overflow-hidden bg-gray-100 relative">
+    <article className="flex flex-col bg-surface-raised border border-border rounded-md overflow-hidden">
+      {drink.image_url ? (
+        <div className="h-49 border-b border-border overflow-hidden relative">
           <div className="absolute inset-0 flex items-center justify-center">
             <img
               src={drink.image_url}
@@ -42,65 +49,67 @@ const DrinkCard: React.FC<DrinkCardProps> = ({
             />
           </div>
         </div>
+      ) : (
+        /* No photo is a look of its own, so a half-photographed menu still
+           reads as one grid. */
+        <div
+          className="h-28 px-3.5 flex items-center bg-surface-sunken border-b border-border overflow-hidden"
+          aria-hidden="true"
+        >
+          <span className="text-display">{drink.title}</span>
+        </div>
       )}
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="font-semibold text-gray-800 dark:text-white flex-1">{drink.title}</h3>
+
+      <div className="flex-1 px-3.5 py-3 flex flex-col gap-1.5">
+        <div className="flex items-start gap-2">
+          <h3 className="flex-1 text-heading break-words">{drink.title}</h3>
           {onToggleFavourite && (
             <button
               onClick={() => onToggleFavourite(drink)}
-              className="ml-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              title={drink.is_favourite ? "Remove from favourites" : "Add to favourites"}
+              className={`-mt-2.5 -mr-2 w-11 h-11 shrink-0 flex items-center justify-center rounded-md transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer ${
+                drink.is_favourite ? "text-text" : "text-text-muted"
+              }`}
+              title={
+                drink.is_favourite
+                  ? "Remove from favourites"
+                  : "Add to favourites"
+              }
             >
-              <Star 
-                className={`w-5 h-5 transition-colors ${
-                  drink.is_favourite 
-                    ? "text-yellow-500 fill-yellow-500" 
-                    : "text-gray-400 hover:text-yellow-500"
-                }`}
+              <Star
+                className={`w-5 h-5 ${drink.is_favourite ? "fill-current" : ""}`}
               />
             </button>
           )}
         </div>
-        
-        {/* Show guest description if available */}
+
         {drink.guest_description && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{drink.guest_description}</p>
+          <p className="text-body text-text-muted">{drink.guest_description}</p>
         )}
-        
-        <div className="flex flex-col space-y-2">
-          {/* Only show view recipe button if recipe is available to guests */}
-          {drink.recipe && (
-            <button
-              onClick={() => onViewRecipe(drink)}
-              className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 py-2 px-3 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            >
-              {t("viewRecipe")}
-            </button>
-          )}
+      </div>
+
+      <div className="flex border-t border-border">
+        {/* Only show view recipe button if recipe is available to guests */}
+        {drink.recipe && (
           <button
-            onClick={() => onOrder(drink)}
-            disabled={disabled || loading}
-            className={`w-full py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-              disabled || loading
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-600 text-white hover:bg-blue-700"
-            }`}
+            onClick={() => onViewRecipe(drink)}
+            className="w-33 h-16 shrink-0 border-r border-border text-label text-text transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
           >
-            {loading ? t("loading") : t("order")}
+            {t("viewRecipe")}
           </button>
-        </div>
+        )}
+        <button
+          onClick={() => onOrder(drink)}
+          disabled={disabled || loading}
+          className={`flex-1 h-16 px-3 transition-colors duration-(--duration-instant) ${
+            disabled || loading
+              ? "bg-disabled-bg text-disabled-fg text-label cursor-not-allowed"
+              : "bg-accent text-accent-contrast text-heading hover:bg-accent-hover cursor-pointer"
+          }`}
+        >
+          {orderLabel}
+        </button>
       </div>
-      <div
-        className="prose prose-sm text-gray-800 max-w-none"
-        style={
-          // Keeps the markdown readable on a light background.
-          { "--color-fg-default": "#222" } as React.CSSProperties
-        }
-      >
-        {/* Rendered markdown content here */}
-      </div>
-    </div>
+    </article>
   );
 };
 
