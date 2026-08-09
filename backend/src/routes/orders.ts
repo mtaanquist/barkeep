@@ -124,19 +124,25 @@ export default function createOrderRoutes(db: Db): Router {
       const bar = findBar(db, barId);
       const drink = findDrink(db, drinkId, barId);
 
+      // Last orders. What is already in still gets served; nothing new joins.
+      if (bar.orders_closed) {
+        throw HttpError.badRequest("The bar has stopped taking orders");
+      }
+
       if (!drink.in_stock) {
         throw HttpError.badRequest("Drink is currently out of stock");
       }
 
-      const waiting = one<Pick<Order, "id">>(
+      const waiting = count(
         db,
-        `SELECT id FROM orders
+        `SELECT COUNT(*) AS n FROM orders
          WHERE bar_id = ? AND customer_name = ? AND status IN (${OPEN})`,
         barId,
         customerName
       );
 
-      if (waiting) {
+      // How many a guest may have on the go is the bar's to decide.
+      if (waiting >= (bar.max_active_orders || 1)) {
         throw HttpError.badRequest("Customer already has a pending order");
       }
 

@@ -179,6 +179,20 @@ describe("ordering a drink", () => {
     ).toBeInTheDocument();
   });
 
+  // Last orders. The drinks stay on screen so a guest can see what they
+  // missed, but nothing can be ordered.
+  it("says so, and takes the buttons away, once the bar has closed", async () => {
+    signIn({ bar: aBar({ orders_closed: 1 }) });
+
+    await showMenu();
+
+    expect(screen.getByText("The bar has stopped taking orders")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Order" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: /Surprise me/ })
+    ).toBeDisabled();
+  });
+
   it("says so plainly when there is nothing on", async () => {
     menu = [];
 

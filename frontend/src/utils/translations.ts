@@ -66,6 +66,27 @@ export interface TranslationMap {
   autoAcceptHelp: string;
   sectionTheBar: string;
   barNameHelp: string;
+  ordersClosedLabel: string;
+  ordersClosedHelp: string;
+  barClosed: string;
+  barClosedHelp: string;
+  maxActiveOrders: string;
+  maxActiveOrdersHelp: string;
+  sectionAccess: string;
+  guestCode: string;
+  guestCodeHelp: string;
+  bartenderCode: string;
+  changeCode: string;
+  codeUnchanged: string;
+  guestLink: string;
+  rotateGuestLink: string;
+  rotateGuestLinkHelp: string;
+  confirmRotateGuestLink: string;
+  guestLinkRotated: string;
+  reportingWindow: string;
+  lastSevenDays: string;
+  lastThirtyDays: string;
+  lastNinetyDays: string;
   saveSettings: string;
   savingSettings: string;
   settingsSaved: string;
@@ -275,6 +296,31 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
       "Orders go straight to the queue as accepted, so nobody has to tap twice on a busy night.",
     sectionTheBar: "the bar",
     barNameHelp: "Shown at the top of the guest menu and on the QR page.",
+    ordersClosedLabel: "Stop taking orders",
+    ordersClosedHelp:
+      "Last orders. The queue keeps working, so anything already ordered still gets made.",
+    barClosed: "The bar has stopped taking orders",
+    barClosedHelp: "Anything you already ordered is still coming.",
+    maxActiveOrders: "Drinks at a time, per guest",
+    maxActiveOrdersHelp:
+      "Guests give their own name, so treat this as a courtesy rather than a lock.",
+    sectionAccess: "access",
+    guestCode: "Guest code",
+    guestCodeHelp: "Shared with guests along with the QR code.",
+    bartenderCode: "Bartender code",
+    changeCode: "Change",
+    codeUnchanged: "Leave blank to keep the one you have.",
+    guestLink: "Guest link",
+    rotateGuestLink: "Make a new link",
+    rotateGuestLinkHelp:
+      "The QR code stays valid until you do this. After it, print a new one.",
+    confirmRotateGuestLink:
+      "Make a new link? Every QR code already printed stops working.",
+    guestLinkRotated: "New link made. Print a new QR code.",
+    reportingWindow: "Showing",
+    lastSevenDays: "the last 7 days",
+    lastThirtyDays: "the last 30 days",
+    lastNinetyDays: "the last 90 days",
     saveSettings: "Save settings",
     savingSettings: "Saving…",
     settingsSaved: "Saved.",
@@ -485,6 +531,31 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
       "Bestillinger går direkte i køen som accepteret, så ingen skal trykke to gange på en travl aften.",
     sectionTheBar: "baren",
     barNameHelp: "Vises øverst på gæsternes menu og på QR-siden.",
+    ordersClosedLabel: "Stop med at tage imod bestillinger",
+    ordersClosedHelp:
+      "Sidste udkald. Køen virker stadig, så det der allerede er bestilt bliver lavet.",
+    barClosed: "Baren tager ikke imod flere bestillinger",
+    barClosedHelp: "Det du allerede har bestilt er stadig på vej.",
+    maxActiveOrders: "Drinks ad gangen, per gæst",
+    maxActiveOrdersHelp:
+      "Gæsterne skriver selv deres navn, så det er en høflighed mere end en lås.",
+    sectionAccess: "adgang",
+    guestCode: "Gæstekode",
+    guestCodeHelp: "Deles med gæsterne sammen med QR-koden.",
+    bartenderCode: "Bartenderkode",
+    changeCode: "Skift",
+    codeUnchanged: "Lad feltet stå tomt for at beholde den, du har.",
+    guestLink: "Gæstelink",
+    rotateGuestLink: "Lav et nyt link",
+    rotateGuestLinkHelp:
+      "QR-koden virker, indtil du gør det her. Bagefter skal du printe en ny.",
+    confirmRotateGuestLink:
+      "Lav et nyt link? Alle QR-koder, der allerede er printet, holder op med at virke.",
+    guestLinkRotated: "Nyt link lavet. Print en ny QR-kode.",
+    reportingWindow: "Viser",
+    lastSevenDays: "de sidste 7 dage",
+    lastThirtyDays: "de sidste 30 dage",
+    lastNinetyDays: "de sidste 90 dage",
     saveSettings: "Gem indstillinger",
     savingSettings: "Gemmer…",
     settingsSaved: "Gemt.",

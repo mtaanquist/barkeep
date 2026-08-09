@@ -9,35 +9,13 @@ import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 import LazyMDEditor from "./LazyMDEditor";
 import DrinkImageField, { type DrinkImage } from "./drinkForm/DrinkImageField";
-import Switch from "./bartender/Switch";
 import Field from "./Field";
+import ToggleRow from "./ToggleRow";
 
 type T = (key: keyof typeof translations.en) => string;
 
 const INPUT =
   "h-14 px-3.5 rounded-md border border-border bg-surface-raised text-body focus:outline-none focus:border-border-strong focus:shadow-focus";
-
-/** A switch with what it does written next to it. */
-const ToggleRow: React.FC<{
-  on: boolean;
-  onChange: (on: boolean) => void;
-  title: string;
-  help: string;
-}> = ({ on, onChange, title, help }) => (
-  <label className="flex items-center gap-3 p-3 rounded-md border border-border cursor-pointer">
-    <input
-      type="checkbox"
-      checked={on}
-      onChange={(e) => onChange(e.target.checked)}
-      className="sr-only"
-    />
-    <Switch on={on} />
-    <span className="flex-1 flex flex-col gap-0.5">
-      <span className="text-label">{title}</span>
-      <span className="text-body text-text-muted">{help}</span>
-    </span>
-  </label>
-);
 
 /**
  * A named part of the form. On a new drink everything but the first is

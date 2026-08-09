@@ -1,6 +1,7 @@
 import express, { type Router } from "express";
 import bcrypt from "bcrypt";
 import QRCode from "qrcode";
+import { randomBytes } from "node:crypto";
 
 import type {
   Bar,
@@ -25,6 +26,7 @@ import {
   one,
   publicBar,
   run,
+  type BarRow,
   type Db,
 } from "../db/queries.js";
 
@@ -37,8 +39,20 @@ const PASSWORD_RULES = {
 
 const HASH_ROUNDS = 12;
 
-/** The bar fields that are safe to list. */
-const PUBLIC_COLUMNS = "id, name, language, skip_approval, created_at";
+/** The bar fields that are safe to list. Never the token or the hashes. */
+const PUBLIC_COLUMNS =
+  "id, name, language, skip_approval, orders_closed, max_active_orders, created_at";
+
+/** One at a time is the point of the rule; a hundred is somebody's typo. */
+function requireOrderLimit(value: unknown): number {
+  const limit = Number(value);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 10) {
+    throw HttpError.badRequest(
+      "Orders at a time must be a whole number from 1 to 10"
+    );
+  }
+  return limit;
+}
 
 function requireLanguage(value: unknown): Language {
   if (!LANGUAGES.includes(value as Language)) {
@@ -47,9 +61,17 @@ function requireLanguage(value: unknown): Language {
   return value as Language;
 }
 
-/** The token a QR code carries. Not a secret — it only names the bar. */
-function guestToken(barId: number): string {
+/**
+ * The link every bar started with. Kept so codes printed before the token
+ * could be rotated still work, right up until someone rotates it.
+ */
+function originalToken(barId: number): string {
   return Buffer.from(`${barId}:guest_access`).toString("base64");
+}
+
+/** What this bar's QR code carries today. */
+function guestToken(bar: BarRow): string {
+  return bar.guest_token || originalToken(bar.id);
 }
 
 interface BarRoutesOptions {
@@ -150,6 +172,12 @@ export default function createBarRoutes({
           : undefined,
         skip_approval: wasSent(body, "skipApproval")
           ? toFlag(body["skipApproval"])
+          : undefined,
+        orders_closed: wasSent(body, "ordersClosed")
+          ? toFlag(body["ordersClosed"])
+          : undefined,
+        max_active_orders: wasSent(body, "maxActiveOrders")
+          ? requireOrderLimit(body["maxActiveOrders"])
           : undefined,
       };
 
@@ -256,6 +284,26 @@ export default function createBarRoutes({
     })
   );
 
+  // A new link for the QR code. Everyone still holding the old one is out,
+  // which is the point — a code that can never be retired means last year's
+  // guests can still read the menu.
+  router.post(
+    "/:id/rotate-guest-link",
+    route((req, res) => {
+      const barId = idParam(req, "id");
+      findBar(db, barId);
+
+      run(
+        db,
+        "UPDATE bars SET guest_token = ? WHERE id = ?",
+        randomBytes(24).toString("base64url"),
+        barId
+      );
+
+      res.json({ success: true });
+    })
+  );
+
   router.get(
     "/:id/qrcode",
     route(async (req, res) => {
@@ -265,7 +313,7 @@ export default function createBarRoutes({
       // Prefer a configured address, otherwise the one the request arrived on
       // so the code points back at this same server.
       const baseUrl = publicUrl || `${req.protocol}://${req.get("host")}`;
-      const url = `${baseUrl}/bar/${barId}?token=${guestToken(barId)}`;
+      const url = `${baseUrl}/bar/${barId}?token=${guestToken(bar)}`;
 
       const code = {
         barId: bar.id,
@@ -292,11 +340,11 @@ export default function createBarRoutes({
         label: "Customer name",
       });
 
-      if (token !== guestToken(barId)) {
+      const bar = findBar(db, barId);
+
+      if (token !== guestToken(bar)) {
         throw new HttpError(401, "Invalid or expired token");
       }
-
-      const bar = findBar(db, barId);
 
       res.json({
         success: true,

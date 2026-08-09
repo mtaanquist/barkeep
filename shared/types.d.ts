@@ -27,6 +27,10 @@ export interface Bar {
   name: string;
   language: Language;
   skip_approval: Flag;
+  /** Last orders: the bar serves what is in, but takes nothing new. */
+  orders_closed: Flag;
+  /** How many drinks one guest may have on the go at once. */
+  max_active_orders: number;
   created_at: string;
 }
 

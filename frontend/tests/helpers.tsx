@@ -9,6 +9,8 @@ export const aBar = (extra: Partial<Bar> = {}): Bar => ({
   name: "The Spotted Cow",
   language: "en",
   skip_approval: 0,
+  orders_closed: 0,
+  max_active_orders: 1,
   created_at: "2025-07-13 14:23:32",
   ...extra,
 });

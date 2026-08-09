@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { BarChart3, TrendingUp, Coffee, Clock, Star } from "lucide-react";
 import { useApp } from "../hooks/useApp";
 import type { OrderStatus } from "../types";
@@ -28,14 +28,20 @@ const AnalyticsTab: React.FC = () => {
   const t = useTranslation(language);
   const barId = currentBar?.id;
 
+  // The server has always accepted a window and the page never asked for
+  // one, so seven days was the only report anyone could see.
+  const [days, setDays] = useState(7);
+
   const fetchAnalytics = useCallback(async () => {
     if (!barId) return;
     try {
-      setAnalytics(await apiCall(`/orders/bar/${barId}/analytics`));
+      setAnalytics(
+        await apiCall(`/orders/bar/${barId}/analytics?days=${days}`)
+      );
     } catch (err) {
       console.error("Could not load the reports:", err);
     }
-  }, [barId, apiCall, setAnalytics]);
+  }, [barId, days, apiCall, setAnalytics]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -60,6 +66,24 @@ const AnalyticsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <h2 className="text-heading">{t("analytics")}</h2>
+        <label className="flex items-center gap-2 ml-auto">
+          <span className="font-mono text-caption uppercase text-text-muted">
+            {t("reportingWindow")}
+          </span>
+          <select
+            value={days}
+            onChange={(e) => setDays(Number(e.target.value))}
+            className="h-11 px-3 rounded-md border border-border bg-surface-raised text-label cursor-pointer focus:outline-none focus:border-border-strong focus:shadow-focus"
+          >
+            <option value={7}>{t("lastSevenDays")}</option>
+            <option value={30}>{t("lastThirtyDays")}</option>
+            <option value={90}>{t("lastNinetyDays")}</option>
+          </select>
+        </label>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           icon={<BarChart3 className="w-6 h-6 text-text-muted" />}

@@ -61,6 +61,9 @@ const CustomerInterface: React.FC = () => {
     return () => window.removeEventListener("keydown", close);
   }, [randomDrink]);
 
+  // Last orders: what is already in still arrives, nothing new goes in.
+  const closed = currentBar?.orders_closed === 1;
+
   const currentOrder = orders.find(
     (order) =>
       order.customer_name === customerName && IN_PROGRESS.includes(order.status)
@@ -151,7 +154,7 @@ const CustomerInterface: React.FC = () => {
     onViewRecipe: setViewingRecipe,
     onOrder: placeOrder,
     onToggleFavourite: toggleFavourite,
-    disabled: !!currentOrder || loading,
+    disabled: !!currentOrder || closed || loading,
     loading,
     t,
   };
@@ -235,11 +238,22 @@ const CustomerInterface: React.FC = () => {
           {...filters}
           favouriteCount={menu.favourites.length}
           totalCount={menu.inStock.length}
-          canSurprise={menu.inStock.length > 0 && !currentOrder && !loading}
+          canSurprise={
+            menu.inStock.length > 0 && !currentOrder && !closed && !loading
+          }
           onSurpriseMe={pickRandom}
         />
 
         <div className="flex-1 min-w-0 px-4 lg:px-6 py-6 space-y-8">
+          {closed && (
+            <div className="p-4 rounded-md border-2 border-border-strong bg-surface-sunken">
+              <p className="text-heading">{t("barClosed")}</p>
+              <p className="text-body text-text-muted mt-0.5">
+                {t("barClosedHelp")}
+              </p>
+            </div>
+          )}
+
           {nothingToShow ? (
             <div className="p-8 text-center text-text-muted">
               <Coffee className="w-12 h-12 mx-auto mb-3 opacity-50" />

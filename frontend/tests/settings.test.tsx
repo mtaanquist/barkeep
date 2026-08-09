@@ -91,6 +91,79 @@ describe("the bar's settings", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("Gemt.");
   });
 
+  it("sends last orders and the per-guest limit", async () => {
+    openSettings();
+
+    await userEvent.click(
+      await screen.findByRole("checkbox", { name: /Stop taking orders/ })
+    );
+
+    const limit = screen.getByLabelText(/Drinks at a time/);
+    await userEvent.clear(limit);
+    await userEvent.type(limit, "2");
+
+    await userEvent.click(screen.getByRole("button", { name: "Save settings" }));
+
+    await waitFor(() =>
+      expect(api.calls.some((call) => call.method === "PUT")).toBe(true)
+    );
+    expect(api.calls.find((call) => call.method === "PUT")?.body).toMatchObject({
+      ordersClosed: true,
+      maxActiveOrders: 2,
+    });
+  });
+
+  // Saving the bar's name must never wipe a code that was left blank.
+  it("leaves the codes alone unless a new one is typed", async () => {
+    openSettings();
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Save settings" })
+    );
+
+    await waitFor(() =>
+      expect(api.calls.some((call) => call.method === "PUT")).toBe(true)
+    );
+    const sent = api.calls.find((call) => call.method === "PUT")?.body as Record<
+      string,
+      unknown
+    >;
+    expect(sent).not.toHaveProperty("newGuestPassword");
+    expect(sent).not.toHaveProperty("newBartenderPassword");
+  });
+
+  it("sends a new guest code when one is typed", async () => {
+    openSettings();
+
+    await userEvent.type(
+      await screen.findByLabelText("Guest code"),
+      "fest2026"
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Save settings" }));
+
+    await waitFor(() =>
+      expect(api.calls.some((call) => call.method === "PUT")).toBe(true)
+    );
+    expect(api.calls.find((call) => call.method === "PUT")?.body).toMatchObject({
+      newGuestPassword: "fest2026",
+    });
+  });
+
+  // Everyone still holding the printed code is locked out, so it asks.
+  it("asks before making a new guest link, and does nothing if you say no", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    openSettings();
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Make a new link" })
+    );
+
+    expect(confirm).toHaveBeenCalled();
+    expect(api.calls.some((c) => c.path.includes("rotate-guest-link"))).toBe(
+      false
+    );
+  });
+
   it("keeps the language out of the signing-out link", async () => {
     openSettings();
 
