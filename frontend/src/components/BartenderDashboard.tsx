@@ -106,7 +106,7 @@ const BartenderDashboard: React.FC = () => {
   );
 
   return (
-    <div className="dashboard-container min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className="min-h-screen bg-surface-sunken transition-colors duration-(--duration-instant)">
       {connectionError && !noticeDismissed && (
         <ConnectionLost
           onRetry={reconnect}
@@ -115,14 +115,14 @@ const BartenderDashboard: React.FC = () => {
       )}
       
       {/* Header */}
-      <div className="dashboard-header bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+      <div className="bg-surface-raised border-b border-border transition-colors duration-(--duration-instant)">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
-              <h1 className="dashboard-text text-xl lg:text-2xl font-bold text-gray-800 dark:text-white">
+              <h1 className="text-xl lg:text-2xl font-bold text-text">
                 🍸 {currentBar?.name}
               </h1>
-              <span className="hidden sm:inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm font-medium rounded-full">
+              <span className="hidden sm:inline-block px-3 py-1 bg-surface-sunken text-text text-sm font-medium rounded-full">
                 Bartender
               </span>
             </div>
@@ -130,14 +130,14 @@ const BartenderDashboard: React.FC = () => {
               <button
                 onClick={handleGenerateQR}
                 disabled={qrLoading}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-2 px-4 py-2 bg-text text-text-inverse rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <QrCode className="w-4 h-4" />
                 <span className="hidden sm:inline">{t("generateQR")}</span>
               </button>
               <button
                 onClick={clearSession}
-                className="dashboard-text-secondary text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium"
+                className="text-text-muted hover:text-text font-medium"
               >
                 {t("logout")}
               </button>
@@ -147,60 +147,60 @@ const BartenderDashboard: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="dashboard-nav bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+      <div className="bg-surface-raised border-b border-border transition-colors duration-(--duration-instant)">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8 overflow-x-auto">
             <button
               onClick={() => setCurrentTab("orders")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-200 ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-(--duration-instant) ${
                 currentTab === "orders"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  ? "border-border-strong text-text-muted"
+                  : "border-transparent text-text-muted hover:text-text"
               }`}
             >
               {t("pendingOrders")}
               {pendingOrders.length > 0 && (
-                <span className="ml-2 bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-200 text-xs font-bold px-2 py-1 rounded-full">
+                <span className="ml-2 bg-status-rejected-bg text-danger text-xs font-bold px-2 py-1 rounded-full">
                   {pendingOrders.length}
                 </span>
               )}
             </button>
             <button
               onClick={() => setCurrentTab("menu")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-200 ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-(--duration-instant) ${
                 currentTab === "menu"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  ? "border-border-strong text-text-muted"
+                  : "border-transparent text-text-muted hover:text-text"
               }`}
             >
               {t("drinkMenu")}
             </button>
             <button
               onClick={() => setCurrentTab("analytics")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-200 ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-(--duration-instant) ${
                 currentTab === "analytics"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  ? "border-border-strong text-text-muted"
+                  : "border-transparent text-text-muted hover:text-text"
               }`}
             >
               {t("analytics")}
             </button>
             <button
               onClick={() => setCurrentTab("categories")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-200 ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-(--duration-instant) ${
                 currentTab === "categories"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  ? "border-border-strong text-text-muted"
+                  : "border-transparent text-text-muted hover:text-text"
               }`}
             >
               Categories
             </button>
             <button
               onClick={() => setCurrentTab("settings")}
-              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-200 ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors duration-(--duration-instant) ${
                 currentTab === "settings"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  ? "border-border-strong text-text-muted"
+                  : "border-transparent text-text-muted hover:text-text"
               }`}
             >
               {t("settings")}
@@ -223,7 +223,7 @@ const BartenderDashboard: React.FC = () => {
         <div className="fixed bottom-6 right-6 lg:hidden">
           <button
             onClick={() => setEditingDrink("new")}
-            className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+            className="bg-text text-text-inverse p-4 rounded-full shadow-float hover:bg-neutral-800 transition-colors"
           >
             <Plus className="w-6 h-6" />
           </button>
@@ -232,26 +232,26 @@ const BartenderDashboard: React.FC = () => {
 
       {/* QR Code Modal */}
       {showQRModal && qrData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-overlay flex items-center justify-center p-4 z-50">
+          <div className="bg-surface-raised border border-border rounded-lg shadow-float p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="text-center">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">
+              <h3 className="text-xl font-bold text-text mb-4">
                 {t("qrCodeTitle")} {qrData.barName}
               </h3>
-              <div className="mb-4 p-4 bg-white border border-gray-200 rounded-lg inline-block">
+              <div className="mb-4 p-4 bg-surface-raised border border-border rounded-md inline-block">
                 <img 
                   src={qrData.qrCode} 
                   alt="Bar QR Code" 
                   className="w-64 h-64 mx-auto"
                 />
               </div>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-text-muted mb-4">
                 {t("qrCodeInstructions")}
               </p>
-              <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <p className="text-sm text-gray-500 mb-2">{t("directLink")}</p>
-                <div className="bg-white p-3 rounded border relative">
-                  <code className="text-sm text-gray-800 break-words block leading-relaxed pr-12">
+              <div className="bg-surface-sunken p-4 rounded-md mb-4">
+                <p className="text-sm text-text-muted mb-2">{t("directLink")}</p>
+                <div className="bg-surface-raised p-3 rounded border relative">
+                  <code className="text-sm text-text break-words block leading-relaxed pr-12">
                     {qrData.url}
                   </code>
                   <button
@@ -268,7 +268,7 @@ const BartenderDashboard: React.FC = () => {
                         document.body.removeChild(textArea);
                       });
                     }}
-                    className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute top-2 right-2 p-1 text-text-muted hover:text-text-muted transition-colors"
                     title="Copy URL"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -287,13 +287,13 @@ const BartenderDashboard: React.FC = () => {
                     link.click();
                     document.body.removeChild(link);
                   }}
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 bg-text text-text-inverse px-4 py-2 rounded-md hover:bg-neutral-800 transition-colors"
                 >
                   {t("downloadQR")}
                 </button>
                 <button
                   onClick={() => setShowQRModal(false)}
-                  className="flex-1 bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="flex-1 bg-surface-sunken text-text px-4 py-2 rounded-md hover:bg-surface-sunken transition-colors"
                 >
                   {t("close")}
                 </button>

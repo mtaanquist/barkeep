@@ -47,8 +47,8 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden my-8">
+    <div className="fixed inset-0 bg-overlay flex items-center justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-surface-raised border border-border rounded-lg shadow-float w-full max-w-4xl max-h-[90vh] overflow-hidden my-8">
         {/* Header */}
         <div className="relative">
           {drink.image_url && (
@@ -76,7 +76,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
               <div className="flex-1">
                 <h1
                   className={`text-3xl lg:text-4xl font-bold mb-2 ${
-                    drink.image_url ? "text-white" : "text-gray-800"
+                    drink.image_url ? "text-sign-fg" : "text-text"
                   }`}
                 >
                   {drink.title}
@@ -84,7 +84,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
                 {drink.base_spirit && (
                   <div
                     className={`text-base font-medium mb-2 ${
-                      drink.image_url ? "text-white/90" : "text-blue-700"
+                      drink.image_url ? "text-sign-fg/90" : "text-text"
                     }`}
                   >
                     Base Spirit: {drink.base_spirit}
@@ -99,7 +99,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
                     {metadata.difficulty && (
                       <div
                         className={`flex items-center ${
-                          drink.image_url ? "text-white/90" : "text-gray-600"
+                          drink.image_url ? "text-sign-fg/90" : "text-text-muted"
                         }`}
                       >
                         <ChefHat className="w-4 h-4 mr-1" />
@@ -111,7 +111,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
                     {metadata.prepTime && (
                       <div
                         className={`flex items-center ${
-                          drink.image_url ? "text-white/90" : "text-gray-600"
+                          drink.image_url ? "text-sign-fg/90" : "text-text-muted"
                         }`}
                       >
                         <Clock className="w-4 h-4 mr-1" />
@@ -121,7 +121,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
                     {metadata.servings && (
                       <div
                         className={`flex items-center ${
-                          drink.image_url ? "text-white/90" : "text-gray-600"
+                          drink.image_url ? "text-sign-fg/90" : "text-text-muted"
                         }`}
                       >
                         <Users className="w-4 h-4 mr-1" />
@@ -137,10 +137,10 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
 
               <button
                 onClick={onClose}
-                className={`p-2 rounded-lg transition-colors ml-4 ${
+                className={`p-2 rounded-md transition-colors ml-4 ${
                   drink.image_url
-                    ? "bg-black/20 text-white hover:bg-black/40"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-black/20 text-sign-fg hover:bg-overlay"
+                    : "bg-surface-sunken text-text-muted hover:bg-surface-sunken"
                 }`}
               >
                 <X className="w-6 h-6" />
@@ -152,7 +152,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
         {/* Content */}
         <div className="p-6 lg:p-8 overflow-y-auto max-h-[50vh]">
           {/* Ensure the markdown container uses a readable color and prose styling */}
-          <div className="prose prose-sm text-gray-800 max-w-none">
+          <div className="prose prose-sm text-text max-w-none">
             <LazyMarkdownViewer
               source={drink.recipe ?? ""}
               style={
@@ -164,16 +164,16 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 p-6 bg-gray-50">
+        <div className="border-t border-border p-6 bg-surface-sunken">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-text-muted">
               <p>
                 Created on {new Date(drink.created_at).toLocaleDateString()}
               </p>
               <p className="flex items-center mt-1">
                 <span
                   className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                    drink.in_stock ? "bg-green-500" : "bg-red-500"
+                    drink.in_stock ? "bg-surface-sunken0" : "bg-status-rejected-bg0"
                   }`}
                 />
                 {drink.in_stock ? t("inStock") : t("outOfStock")}
@@ -182,7 +182,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
 
             <button
               onClick={onClose}
-              className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full sm:w-auto px-6 py-2 bg-text text-text-inverse rounded-md hover:bg-neutral-800 transition-colors"
             >
               Close Recipe
             </button>

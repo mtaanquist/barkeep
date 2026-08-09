@@ -67,24 +67,24 @@ const PastOrdersPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface-sunken">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+      <div className="bg-surface-raised border-b sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={handleGoBack}
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+                className="flex items-center gap-2 text-text-muted hover:text-text font-medium"
               >
                 <ArrowLeft className="w-5 h-5" />
                 Back to Menu
               </button>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">
+                <h1 className="text-xl font-bold text-text">
                   🍸 {currentBar?.name} - {t("pastOrders")}
                 </h1>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-text-muted">
                   Welcome, {customerName}!
                 </p>
               </div>

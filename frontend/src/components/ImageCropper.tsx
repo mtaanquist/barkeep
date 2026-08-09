@@ -47,20 +47,20 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-surface-raised border border-border rounded-lg shadow-float w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Crop & Position Image</h2>
+          <h2 className="text-xl font-bold text-text">Crop & Position Image</h2>
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-surface-sunken rounded-md transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Cropper Area */}
-        <div className="relative flex-1 bg-gray-900" style={{ minHeight: '400px' }}>
+        <div className="relative flex-1 bg-surface-sunken" style={{ minHeight: '400px' }}>
           <Cropper
             image={imageUrl}
             crop={crop}
@@ -73,9 +73,9 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
         </div>
 
         {/* Controls */}
-        <div className="p-4 border-t bg-gray-50 space-y-4">
+        <div className="p-4 border-t bg-surface-sunken space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-text mb-2">
               Zoom: {zoom.toFixed(2)}x
             </label>
             <input
@@ -85,7 +85,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
               step={0.1}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-2 bg-surface-sunken rounded-md appearance-none cursor-pointer"
             />
           </div>
 
@@ -93,7 +93,7 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 sm:space-x-4">
             <button
               onClick={handleReset}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 text-text bg-surface-raised border border-border rounded-md hover:bg-surface-sunken transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               <span>Reset</span>
@@ -101,13 +101,13 @@ const ImageCropper: React.FC<ImageCropperProps> = ({
             <div className="flex space-x-2 w-full sm:w-auto">
               <button
                 onClick={onCancel}
-                className="flex-1 sm:flex-none px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 sm:flex-none px-6 py-2 text-text bg-surface-raised border border-border rounded-md hover:bg-surface-sunken transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                className="flex-1 sm:flex-none px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex-1 sm:flex-none px-6 py-2 bg-text text-text-inverse rounded-md hover:bg-neutral-800 transition-colors"
               >
                 Apply
               </button>

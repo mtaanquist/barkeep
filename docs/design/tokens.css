@@ -43,6 +43,13 @@
   --bk-text-muted:     #4B5055; /* times, ingredients, secondary meta        */
   --bk-text-inverse:   #FFFFFF; /* type on --bk-text or on a dark fill       */
 
+  /* ---- THE SIGN (added during implementation) ----
+     The landing panel is ink-filled in BOTH schemes, so it cannot use the
+     neutral ramp, which flips by index. Deliberately absent from the dark
+     block below. */
+  --bk-sign:    #0A0B0C;
+  --bk-sign-fg: #FFFFFF;
+
   /* ---- ACCENT: the one high-vis signal colour in the product ---- */
   --bk-accent:          #E0B400; /* "a body must move" — READY, and nothing else */
   --bk-accent-hover:    #C79F00;
@@ -193,6 +200,8 @@
   --color-text:            var(--bk-text);
   --color-text-muted:      var(--bk-text-muted);
   --color-text-inverse:    var(--bk-text-inverse);
+  --color-sign:            var(--bk-sign);
+  --color-sign-fg:         var(--bk-sign-fg);
   --color-accent:          var(--bk-accent);
   --color-accent-hover:    var(--bk-accent-hover);
   --color-accent-contrast: var(--bk-accent-contrast);

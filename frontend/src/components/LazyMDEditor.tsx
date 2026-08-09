@@ -19,8 +19,8 @@ const LazyMDEditor: React.FC<LazyMDEditorProps> = (props) => {
   return (
     <Suspense
       fallback={
-        <div className="border border-gray-300 rounded-lg p-4 min-h-[200px] flex items-center justify-center bg-gray-50">
-          <div className="text-gray-500">Loading editor...</div>
+        <div className="border border-border rounded-md p-4 min-h-[200px] flex items-center justify-center bg-surface-sunken">
+          <div className="text-text-muted">Loading editor...</div>
         </div>
       }
     >
@@ -44,7 +44,7 @@ interface LazyMarkdownProps {
 const LazyMarkdownViewer: React.FC<LazyMarkdownProps> = (props) => {
   return (
     <Suspense
-      fallback={<div className="p-2 text-gray-500">Loading content...</div>}
+      fallback={<div className="p-2 text-text-muted">Loading content...</div>}
     >
       <LazyMarkdown {...props} />
     </Suspense>

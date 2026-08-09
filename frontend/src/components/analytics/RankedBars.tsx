@@ -28,14 +28,14 @@ const RankedBars: React.FC<RankedBarsProps> = ({
   const most = Math.max(0, ...top.map((row) => row.value));
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
+    <div className="bg-surface-raised rounded-md border p-6">
       <div className="flex items-center mb-6">
         {icon}
-        <h3 className="text-lg font-semibold text-gray-800">{heading}</h3>
+        <h3 className="text-lg font-semibold text-text">{heading}</h3>
       </div>
 
       {top.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-text-muted">
           {emptyIcon}
           <p>{emptyMessage}</p>
         </div>
@@ -44,15 +44,15 @@ const RankedBars: React.FC<RankedBarsProps> = ({
           {top.map((row, index) => (
             <div key={row.label} className="flex items-center justify-between">
               <div className="flex items-center space-x-3 flex-1 min-w-0">
-                <span className="text-sm font-medium text-gray-500 w-6">
+                <span className="text-sm font-medium text-text-muted w-6">
                   #{index + 1}
                 </span>
-                <span className="font-medium text-gray-800 truncate">
+                <span className="font-medium text-text truncate">
                   {row.label}
                 </span>
               </div>
               <div className="flex items-center space-x-3 ml-4">
-                <div className="w-24 bg-gray-200 rounded-full h-2">
+                <div className="w-24 bg-surface-sunken rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all duration-500 ${barColour}`}
                     style={{
@@ -60,7 +60,7 @@ const RankedBars: React.FC<RankedBarsProps> = ({
                     }}
                   />
                 </div>
-                <span className="text-sm text-gray-600 w-8 text-right">
+                <span className="text-sm text-text-muted w-8 text-right">
                   {row.value}
                 </span>
               </div>

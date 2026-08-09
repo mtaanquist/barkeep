@@ -47,6 +47,13 @@
   --bk-text-muted:     #4B5055; /* times, ingredients, secondary             */
   --bk-text-inverse:   #FFFFFF; /* type on a dark fill                       */
 
+  /* ---- THE SIGN ----
+     The panel on the way in. Ink in both schemes: it is not a surface that
+     follows the room, it is a painted sign, so it is deliberately left out
+     of the dark block below. */
+  --bk-sign:    #0A0B0C;
+  --bk-sign-fg: #FFFFFF;
+
   /* ---- ACCENT: the one bright colour in the product ---- */
   --bk-accent:          #E0B400; /* means READY, and nothing else */
   --bk-accent-hover:    #C79F00;
@@ -196,6 +203,8 @@
   --color-text:            var(--bk-text);
   --color-text-muted:      var(--bk-text-muted);
   --color-text-inverse:    var(--bk-text-inverse);
+  --color-sign:            var(--bk-sign);
+  --color-sign-fg:         var(--bk-sign-fg);
   --color-accent:          var(--bk-accent);
   --color-accent-hover:    var(--bk-accent-hover);
   --color-accent-contrast: var(--bk-accent-contrast);
