@@ -184,7 +184,7 @@ const CustomerInterface: React.FC = () => {
           {nothingToShow ? (
             <div className="p-8 text-center text-text-muted">
               <Coffee className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-body">No drinks available right now</p>
+              <p className="text-body">{t("noDrinksAvailable")}</p>
             </div>
           ) : (
             <>

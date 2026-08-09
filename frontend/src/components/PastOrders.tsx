@@ -62,7 +62,7 @@ const PastOrders: React.FC<PastOrdersProps> = ({
     return (
       <div className="text-center py-8">
         <Package className="w-12 h-12 mx-auto mb-3 opacity-50 text-text-muted" />
-        <p className="text-text-muted">No past orders found</p>
+        <p className="text-text-muted">{t("noPastOrders")}</p>
       </div>
     );
   }
@@ -125,7 +125,7 @@ const PastOrders: React.FC<PastOrdersProps> = ({
                   {!isInStock && drink && (
                     <div className="mb-3">
                       <span className="text-xs px-2 py-1 rounded-full bg-status-rejected-bg text-danger">
-                        Out of Stock
+                        {t("outOfStock")}
                       </span>
                     </div>
                   )}
@@ -138,7 +138,7 @@ const PastOrders: React.FC<PastOrdersProps> = ({
                         className="flex items-center gap-1 bg-surface-sunken text-text py-2 px-3 rounded-md text-sm hover:bg-border transition-colors"
                       >
                         <Eye className="w-4 h-4" />
-                        View Recipe
+                        {t("viewRecipe")}
                       </button>
                     )}
 

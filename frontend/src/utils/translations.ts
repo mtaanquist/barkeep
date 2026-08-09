@@ -9,6 +9,21 @@ export interface TranslationMap {
   categories: string;
   queue: string;
   copyLink: string;
+  noDrinksAvailable: string;
+  allDrinks: string;
+  filterDrinks: string;
+  baseSpirits: string;
+  noPastOrders: string;
+  addFavourite: string;
+  removeFavourite: string;
+  reloadPage: string;
+  welcomeToBar: string;
+  qrArrival: string;
+  yourName: string;
+  startOrdering: string;
+  barNotFound: string;
+  goHome: string;
+  loadingBar: string;
   bartenderLogin: string;
   guestLogin: string;
   createBar: string;
@@ -114,6 +129,21 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     categories: "Categories",
     queue: "The queue",
     copyLink: "Copy link",
+    noDrinksAvailable: "No drinks available right now",
+    allDrinks: "All drinks",
+    filterDrinks: "Filter drinks",
+    baseSpirits: "Base spirits",
+    noPastOrders: "No past orders yet",
+    addFavourite: "Add to favourites",
+    removeFavourite: "Remove from favourites",
+    reloadPage: "Reload the page",
+    welcomeToBar: "Welcome to the bar",
+    qrArrival: "You scanned the code, so you are already in. Type your first name to start ordering.",
+    yourName: "Your name",
+    startOrdering: "Start ordering",
+    barNotFound: "Bar not found",
+    goHome: "Go to the front page",
+    loadingBar: "Fetching the bar…",
     landingIntro:
       "Pick a bar, type your first name, and order from your phone. No account, no app.",
     bartenderLogin: "Bartender Login",
@@ -219,6 +249,21 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     categories: "Kategorier",
     queue: "Køen",
     copyLink: "Kopiér link",
+    noDrinksAvailable: "Ingen drinks lige nu",
+    allDrinks: "Alle drinks",
+    filterDrinks: "Filtrér drinks",
+    baseSpirits: "Basisspiritus",
+    noPastOrders: "Ingen tidligere bestillinger endnu",
+    addFavourite: "Tilføj til favoritter",
+    removeFavourite: "Fjern fra favoritter",
+    reloadPage: "Genindlæs siden",
+    welcomeToBar: "Velkommen i baren",
+    qrArrival: "Du har scannet koden, så du er inde. Skriv dit fornavn for at komme i gang.",
+    yourName: "Dit navn",
+    startOrdering: "Kom i gang",
+    barNotFound: "Baren blev ikke fundet",
+    goHome: "Gå til forsiden",
+    loadingBar: "Henter baren…",
     landingIntro:
       "Vælg en bar, skriv dit fornavn, og bestil fra telefonen. Ingen konto, ingen app.",
     bartenderLogin: "Bartender Login",

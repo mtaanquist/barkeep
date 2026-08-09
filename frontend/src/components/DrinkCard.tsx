@@ -71,8 +71,8 @@ const DrinkCard: React.FC<DrinkCardProps> = ({
               }`}
               title={
                 drink.is_favourite
-                  ? "Remove from favourites"
-                  : "Add to favourites"
+                  ? t("removeFavourite")
+                  : t("addFavourite")
               }
             >
               <Star

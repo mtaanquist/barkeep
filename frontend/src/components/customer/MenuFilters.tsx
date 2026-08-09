@@ -73,7 +73,7 @@ export const MenuSidebar: React.FC<SidebarProps> = ({
           onClick={() => onFilter({ type: "all" })}
           className={button(filter.type === "all")}
         >
-          All Drinks
+          {t("allDrinks")}
         </button>
       </li>
 
@@ -90,7 +90,7 @@ export const MenuSidebar: React.FC<SidebarProps> = ({
 
       {categories.length > 0 && (
         <>
-          <Divider label="Categories" />
+          <Divider label={t("categories")} />
           {categories.map((category) => (
             <li key={category}>
               <button
@@ -104,7 +104,7 @@ export const MenuSidebar: React.FC<SidebarProps> = ({
         </>
       )}
 
-      {spirits.length > 0 && <Divider label="Base Spirits" />}
+      {spirits.length > 0 && <Divider label={t("baseSpirits")} />}
 
       {spirits.map((spirit) => (
         <li key={spirit}>
@@ -134,7 +134,7 @@ export const MenuFilterSelect: React.FC<FilterProps> = ({
     <h2 className="text-heading">{t("availableDrinks")}</h2>
 
     <label className="block">
-      <span className="block text-label mb-2">Filter Drinks</span>
+      <span className="block text-label mb-2">{t("filterDrinks")}</span>
       {/* A real native select, so the phone's own list still opens. */}
       <span className="relative block">
         <select
@@ -154,9 +154,9 @@ export const MenuFilterSelect: React.FC<FilterProps> = ({
           }}
           className="appearance-none w-full h-14 pl-3.5 pr-11 rounded-md border border-border bg-surface-raised text-text text-body cursor-pointer focus:border-border-strong focus:outline-none focus:shadow-focus"
         >
-          <option value="all">All Drinks</option>
+          <option value="all">{t("allDrinks")}</option>
           {categories.length > 0 && (
-            <optgroup label="Categories">
+            <optgroup label={t("categories")}>
               {categories.map((category) => (
                 <option key={category} value={`category:${category}`}>
                   {category} ({byCategory[category].length})
@@ -164,7 +164,7 @@ export const MenuFilterSelect: React.FC<FilterProps> = ({
               ))}
             </optgroup>
           )}
-          <optgroup label="Base Spirits">
+          <optgroup label={t("baseSpirits")}>
             {spirits.map((spirit) => (
               <option key={spirit} value={`spirit:${spirit}`}>
                 {spirit} ({bySpirit[spirit].length})
