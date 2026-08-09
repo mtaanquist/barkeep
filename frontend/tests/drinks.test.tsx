@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 import DrinkCard from "../src/components/DrinkCard";
 import DrinkGrid from "../src/components/customer/DrinkGrid";
-import { statusCard, statusCardWithText, statusIcon } from "../src/utils/orderStatus";
+import { statusCard, statusPill, statusRail } from "../src/utils/orderStatus";
 import { translations, type TranslationKeys } from "../src/utils/translations";
 import type { OrderStatus } from "../src/types";
 import { aDrink } from "./helpers";
@@ -101,18 +101,18 @@ describe("how an order looks at each step", () => {
     "processed",
   ];
 
-  it("has an icon and colours for every step, with nothing left over", () => {
+  it("has a look for every step, with nothing left over", () => {
     for (const status of every) {
-      expect(statusIcon(status)).toBeTruthy();
-      expect(statusCard(status)).toMatch(/^bg-\S+ border-\S+$/);
-      expect(statusCardWithText(status)).toContain(statusCard(status));
-      expect(statusCardWithText(status)).toMatch(/text-\S+$/);
+      expect(statusPill(status)).toBeTruthy();
+      expect(statusRail(status)).toBeTruthy();
+      expect(statusCard(status)).toBeTruthy();
     }
   });
 
-  it("gives each step its own colour", () => {
-    const colours = new Set(every.map(statusCard));
-
-    expect(colours.size).toBe(every.length);
+  it("tells the steps apart by more than one thing", () => {
+    // The card and the bar down the left edge both have to differ, so an
+    // order is still readable to someone who cannot pick out the colours.
+    expect(new Set(every.map(statusCard)).size).toBe(every.length);
+    expect(new Set(every.map(statusRail)).size).toBe(every.length);
   });
 });

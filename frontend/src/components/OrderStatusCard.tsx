@@ -1,7 +1,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import type { Order } from "../types";
-import { statusCardWithText, statusIcon } from "../utils/orderStatus";
+import { statusCard, statusPill } from "../utils/orderStatus";
 import { translations } from "../utils/translations";
 
 interface OrderStatusCardProps {
@@ -11,43 +11,43 @@ interface OrderStatusCardProps {
   loading?: boolean;
 }
 
+// The one thing the guest's screen must never fail to say. When the drink is
+// ready the whole card turns the signal colour, which is the only place that
+// colour is used.
 const OrderStatusCard: React.FC<OrderStatusCardProps> = ({
   order,
   t,
   onCancelOrder,
   loading = false,
 }) => (
-  <div className={`rounded-lg border-2 p-4 ${statusCardWithText(order.status)}`}>
-    <div className="flex items-center space-x-3">
-      {statusIcon(order.status)}
-      <div className="flex-1">
-        <h3 className="font-semibold">{t("yourOrder")}</h3>
-        <p className="text-sm opacity-90">{order.drink_title}</p>
-        <p className="text-xs opacity-75">
-          {t("orderStatus")}: {t(order.status)}
+  <section
+    aria-label={t("yourOrder")}
+    className={`rounded-md border p-4 ${statusCard(order.status)}`}
+  >
+    <div className="flex items-start gap-4">
+      <div className="flex-1 min-w-0">
+        <p className="font-mono text-caption uppercase opacity-80">
+          {t("yourOrder")}
         </p>
+        <h3 className="text-heading mt-1 break-words">{order.drink_title}</h3>
+        <span className={`mt-3 ${statusPill(order.status)}`}>
+          {t(order.status)}
+        </span>
       </div>
-      <div className="flex items-center space-x-2">
-        {order.status === "ready" && (
-          <div className="text-right">
-            <div className="text-lg font-bold">🎉</div>
-            <div className="text-xs font-medium">Ready!</div>
-          </div>
-        )}
-        {order.status !== "processed" && onCancelOrder && (
-          <button
-            onClick={() => onCancelOrder(order.id)}
-            disabled={loading}
-            className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title={t("cancelOrder")}
-          >
-            <X className="w-3 h-3" />
-            {t("cancel")}
-          </button>
-        )}
-      </div>
+
+      {order.status !== "processed" && onCancelOrder && (
+        <button
+          onClick={() => onCancelOrder(order.id)}
+          disabled={loading}
+          title={t("cancelOrder")}
+          className="flex items-center gap-1.5 h-11 px-3 rounded-md border border-current text-label shrink-0 transition-colors duration-(--duration-instant) hover:bg-current/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <X className="w-4 h-4" />
+          {t("cancel")}
+        </button>
+      )}
     </div>
-  </div>
+  </section>
 );
 
 export default OrderStatusCard;
