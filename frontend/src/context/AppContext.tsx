@@ -1,12 +1,6 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
+import React, { useCallback, useEffect, useState, ReactNode } from "react";
 
+import { AppContext, type AppContextType, type Tab } from "../hooks/useApp";
 import { apiCall } from "../utils/api";
 import { clearStoredState, useStoredState } from "../hooks/useStoredState";
 
@@ -19,83 +13,6 @@ import type {
   Order,
   UserType,
 } from "../types";
-
-/** The bartender's tabs, in the order they appear. */
-export type Tab =
-  | "orders"
-  | "menu"
-  | "analytics"
-  | "categories"
-  | "settings";
-
-/** The two sign-in forms hold the same handful of fields throughout. */
-type BarForm = {
-  name: string;
-  bartenderPassword: string;
-  guestPassword: string;
-  language: Language;
-};
-
-type LoginForm = { password: string; name: string };
-
-interface AppContextType {
-  // App state
-  userType: UserType | null;
-  currentBar: Bar | null;
-  customerName: string;
-  language: Language;
-
-  // Loading and error states
-  loading: boolean;
-  error: string | null;
-
-  // Form states
-  barForm: BarForm;
-  loginForm: LoginForm;
-
-  // Data states
-  drinks: Drink[];
-  orders: Order[];
-  analytics: Analytics | null;
-  categories: Category[];
-
-  // UI states
-  editingDrink: Drink | "new" | null;
-  viewingRecipe: Drink | null;
-  showPassword: boolean;
-  currentTab: Tab;
-
-  // Setters
-  setUserType: (type: UserType | null) => void;
-  setCurrentBar: (bar: Bar | null) => void;
-  setCustomerName: (name: string) => void;
-  setLanguage: (lang: Language) => void;
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  setBarForm: React.Dispatch<React.SetStateAction<BarForm>>;
-  setLoginForm: React.Dispatch<React.SetStateAction<LoginForm>>;
-  setDrinks: React.Dispatch<React.SetStateAction<Drink[]>>;
-  setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
-  setAnalytics: React.Dispatch<React.SetStateAction<Analytics | null>>;
-  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
-  setEditingDrink: (drink: Drink | "new" | null) => void;
-  setViewingRecipe: (drink: Drink | null) => void;
-  setShowPassword: (show: boolean) => void;
-  setCurrentTab: (tab: Tab) => void;
-
-  // API helper
-  apiCall: (endpoint: string, options?: RequestInit) => Promise<any>;
-}
-
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
-export const useApp = () => {
-  const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error("useApp must be used within an AppProvider");
-  }
-  return context;
-};
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
   children,

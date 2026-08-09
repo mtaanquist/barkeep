@@ -73,8 +73,12 @@ Test the `staging` image against a copy of the real data before releasing.
 
 ```sh
 cd backend  && npm test && npm run lint && npm run typecheck
-cd frontend && npx eslint src && npm run build
+cd frontend && npm run lint && npm run build
 ```
+
+Both linters fail on a warning, so anything new has to be dealt with rather
+than left to pile up. `any` is an error in both halves: if a shape is not
+known, add it to `shared/types.d.ts`.
 
 `docker compose -f compose.yaml -f compose.dev.yaml up --build` builds and runs
 the real image from a checkout.

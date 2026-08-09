@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
 
 const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 export const ACTIVITY_KEY = "homeBarSystem_lastActivity";
@@ -12,32 +12,31 @@ export const useSessionManager = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const updateActivity = () => {
+  const updateActivity = useCallback(() => {
     localStorage.setItem(ACTIVITY_KEY, Date.now().toString());
-  };
+  }, []);
 
-  const checkSessionTimeout = () => {
+  const hasTimedOut = useCallback(() => {
     const lastActivity = localStorage.getItem(ACTIVITY_KEY);
     if (!lastActivity) return false;
 
-    const timeSinceActivity = Date.now() - parseInt(lastActivity);
-    return timeSinceActivity > SESSION_TIMEOUT;
-  };
+    return Date.now() - parseInt(lastActivity) > SESSION_TIMEOUT;
+  }, []);
 
-  const clearSession = () => {
+  const clearSession = useCallback(() => {
     navigate("/");
     setUserType(null);
     setCurrentBar(null);
     setCustomerName("");
-    setLoginForm({ password: "", name: "" }); // Clear login form fields
+    setLoginForm({ password: "", name: "" });
     localStorage.removeItem(ACTIVITY_KEY);
-  };
+  }, [navigate, setUserType, setCurrentBar, setCustomerName, setLoginForm]);
 
   useEffect(() => {
     const isOnLandingPage = location.pathname === "/";
 
     // Check for expired session on mount
-    if (!isOnLandingPage && checkSessionTimeout()) {
+    if (!isOnLandingPage && hasTimedOut()) {
       console.log("Session expired, clearing...");
       clearSession();
       return;
@@ -74,7 +73,7 @@ export const useSessionManager = () => {
         document.removeEventListener(event, handleActivity, true);
       });
     };
-  }, [location.pathname]);
+  }, [location.pathname, hasTimedOut, clearSession, updateActivity]);
 
   return { clearSession, updateActivity };
 };

@@ -11,7 +11,7 @@ interface LazyMDEditorProps {
   "data-color-mode"?: "light" | "dark";
   textareaProps?: {
     placeholder?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 

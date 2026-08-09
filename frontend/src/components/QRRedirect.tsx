@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
+import type { Bar, SignedIn } from "../types";
 import LoginForm from "./LoginForm";
 import { ACTIVITY_KEY } from "../hooks/useSessionManager";
 
@@ -34,7 +35,7 @@ const QRRedirect: React.FC = () => {
 
       try {
         setLoading(true);
-        const bar = await apiCall(`/bars/${id}`);
+        const bar = await apiCall<Bar>(`/bars/${id}`);
         
         // Set the bar and language in context
         setCurrentBar(bar);
@@ -76,13 +77,13 @@ const QRRedirect: React.FC = () => {
     setError(null);
 
     try {
-      const response = await apiCall(`/bars/${id}/guest-token-login`, {
-        method: "POST",
-        body: JSON.stringify({
-          token,
-          customerName: guestName.trim(),
-        }),
-      });
+      const response = await apiCall<SignedIn>(
+        `/bars/${id}/guest-token-login`,
+        {
+          method: "POST",
+          body: JSON.stringify({ token, customerName: guestName.trim() }),
+        }
+      );
 
       // Update app context with authentication info
       setCustomerName(guestName.trim());

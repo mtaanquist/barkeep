@@ -38,11 +38,8 @@ export default [
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "no-unused-vars": "off",
-      // Warnings for now: linting had never actually run, and these two flag
-      // existing code that issues #27 and #31 are already set up to fix.
-      // Turn them back into errors once those land.
-      "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/no-empty-object-type": "warn",
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-empty-object-type": "error",
     },
   },
 ];

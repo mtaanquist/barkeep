@@ -1,33 +1,15 @@
 import React, {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useRef,
   useState,
   ReactNode,
 } from "react";
-import { useApp } from "./AppContext";
+import { useApp } from "../hooks/useApp";
+import { LiveUpdatesContext } from "../hooks/useLiveUpdates";
 import type { LiveUpdate } from "../types";
 
-interface LiveUpdatesContextType {
-  isConnected: boolean;
-  connectionError: boolean;
-  reconnect: () => void;
-}
 
-const LiveUpdatesContext = createContext<LiveUpdatesContextType | undefined>(
-  undefined
-);
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const useLiveUpdates = () => {
-  const context = useContext(LiveUpdatesContext);
-  if (context === undefined) {
-    throw new Error("useLiveUpdates must be used within a LiveUpdatesProvider");
-  }
-  return context;
-};
 
 // How long to stay quiet before telling anyone. The browser reconnects on its
 // own, so short drops are not worth mentioning.

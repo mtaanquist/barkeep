@@ -1,13 +1,13 @@
 import React from "react";
 import { Eye, Package } from "lucide-react";
-import type { Drink } from "../types";
+import type { Drink, Order } from "../types";
 import { TranslationKeys } from "../utils/translations";
 
 interface PastOrdersProps {
-  orders: any[];
+  orders: Order[];
   drinks: Drink[];
   customerName: string;
-  customerOrder: any;
+  customerOrder: Order | undefined;
   loading: boolean;
   t: (key: TranslationKeys) => string;
   handlePlaceOrder: (drink: Drink) => void;

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from "react";
 import { BarChart3, TrendingUp, Coffee, Clock, Star } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
 import type { OrderStatus } from "../types";
 import { useTranslation } from "../utils/translations";
 import StatCard from "./analytics/StatCard";

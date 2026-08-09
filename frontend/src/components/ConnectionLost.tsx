@@ -1,6 +1,6 @@
 import React from "react";
 import { WifiOff, RefreshCw } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
 import { translations } from "../utils/translations";
 
 interface ConnectionLostProps {

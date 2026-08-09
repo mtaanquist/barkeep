@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Settings, Save } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
+import type { Bar } from "../types";
 
 const SettingsTab: React.FC = () => {
   const {
@@ -24,7 +25,7 @@ const SettingsTab: React.FC = () => {
     setLoading(true);
     
     try {
-      const updatedBar = await apiCall(`/bars/${currentBar.id}`, {
+      const updatedBar = await apiCall<Bar>(`/bars/${currentBar.id}`, {
         method: "PUT",
         body: JSON.stringify({
           skipApproval,

@@ -88,6 +88,24 @@ export interface Favourite {
   created_at: string;
 }
 
+/** The reply to signing in, or to checking a session is still good. */
+export interface SignedIn {
+  success: true;
+  userType: UserType;
+  bar: Bar;
+  /** Only when a guest signs in. */
+  customerName?: string;
+}
+
+/** A printable code that takes a guest straight to the bar. */
+export interface BarQrCode {
+  barId: number;
+  barName: string;
+  url: string;
+  /** The image itself, ready to drop into an <img>. */
+  qrCode: string;
+}
+
 /** How busy the bar has been, for the reports tab. */
 export interface OrderAnalytics {
   totalOrders: number;

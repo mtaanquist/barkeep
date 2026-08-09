@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
 import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
 import { BASE_SPIRITS } from "../utils/spirits";

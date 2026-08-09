@@ -7,10 +7,10 @@ const API_BASE = "/api";
  * A plain function rather than something built per render, so anything that
  * reloads when it changes never has to.
  */
-export async function apiCall(
+export async function apiCall<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
-): Promise<any> {
+): Promise<T> {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     headers: {
       "Content-Type": "application/json",

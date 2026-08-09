@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { X, Clock, Users, ChefHat } from "lucide-react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
 import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
 import { LazyMarkdownViewer } from "./LazyMDEditor";
@@ -155,10 +155,10 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
           <div className="prose prose-sm text-gray-800 max-w-none">
             <LazyMarkdownViewer
               source={drink.recipe ?? ""}
-              style={{
-                // Force readable text color for markdown output
-                ["--color-fg-default" as any]: "#222",
-              }}
+              style={
+                // Keeps the markdown readable on a light background.
+                { "--color-fg-default": "#222" } as React.CSSProperties
+              }
             />
           </div>
         </div>

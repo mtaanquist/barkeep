@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useApp } from "../context/AppContext";
+import { useApp } from "../hooks/useApp";
 import type { Bar } from "../types";
 import { useTranslation } from "../utils/translations";
 import BarSelector from "./BarSelector";

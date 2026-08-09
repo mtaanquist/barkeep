@@ -1,7 +1,7 @@
 import express, { type Router } from "express";
 import bcrypt from "bcrypt";
 
-import type { UserType } from "../../../shared/types.js";
+import type { SignedIn, UserType } from "../../../shared/types.js";
 import { HttpError, requireId, requireText, route } from "../http.js";
 import { findBar, publicBar, type BarRow, type Db } from "../db/queries.js";
 
@@ -15,7 +15,7 @@ const PASSWORD_FIELD = {
  * The reply to a sign-in. The whole bar goes back, so the pages never have to
  * piece one together from loose fields and lose its settings doing it.
  */
-function signedInAs(bar: BarRow, userType: UserType) {
+function signedInAs(bar: BarRow, userType: UserType): SignedIn {
   return { success: true, userType, bar: publicBar(bar) };
 }
 
