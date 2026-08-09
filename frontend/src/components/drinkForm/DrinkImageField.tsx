@@ -83,7 +83,7 @@ const DrinkImageField: React.FC<DrinkImageFieldProps> = ({
 
       <div className="space-y-4">
         <div className="flex items-center justify-center w-full">
-          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-border border-dashed rounded-md cursor-pointer bg-surface-sunken hover:bg-surface-sunken transition-colors">
+          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-border border-dashed rounded-md cursor-pointer bg-surface-sunken hover:bg-border transition-colors">
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
               <Upload className="w-8 h-8 mb-2 text-text-muted" />
               <p className="mb-2 text-sm text-text-muted">

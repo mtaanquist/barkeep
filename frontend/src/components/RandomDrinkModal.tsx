@@ -66,7 +66,7 @@ const RandomDrinkModal: React.FC<RandomDrinkModalProps> = ({
           </button>
           <button
             onClick={onTryAnother}
-            className="w-full px-4 py-2 bg-surface-sunken text-text rounded-md font-medium hover:bg-surface-sunken transition-colors"
+            className="w-full px-4 py-2 bg-surface-sunken text-text rounded-md font-medium hover:bg-border transition-colors"
           >
             {t("tryAnother")}
           </button>

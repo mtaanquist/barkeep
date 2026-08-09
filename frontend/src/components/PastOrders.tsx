@@ -135,7 +135,7 @@ const PastOrders: React.FC<PastOrdersProps> = ({
                     {drink && setViewingRecipe && (
                       <button
                         onClick={() => setViewingRecipe(drink)}
-                        className="flex items-center gap-1 bg-surface-sunken text-text py-2 px-3 rounded-md text-sm hover:bg-surface-sunken transition-colors"
+                        className="flex items-center gap-1 bg-surface-sunken text-text py-2 px-3 rounded-md text-sm hover:bg-border transition-colors"
                       >
                         <Eye className="w-4 h-4" />
                         View Recipe

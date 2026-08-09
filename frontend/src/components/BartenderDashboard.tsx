@@ -293,7 +293,7 @@ const BartenderDashboard: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setShowQRModal(false)}
-                  className="flex-1 bg-surface-sunken text-text px-4 py-2 rounded-md hover:bg-surface-sunken transition-colors"
+                  className="flex-1 bg-surface-sunken text-text px-4 py-2 rounded-md hover:bg-border transition-colors"
                 >
                   {t("close")}
                 </button>

@@ -140,7 +140,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
                 className={`p-2 rounded-md transition-colors ml-4 ${
                   drink.image_url
                     ? "bg-black/20 text-sign-fg hover:bg-overlay"
-                    : "bg-surface-sunken text-text-muted hover:bg-surface-sunken"
+                    : "bg-surface-sunken text-text-muted hover:bg-border"
                 }`}
               >
                 <X className="w-6 h-6" />
