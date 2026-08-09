@@ -32,7 +32,11 @@ const GuestDock: React.FC<GuestDockProps> = ({
   const ready = order.status === "ready";
   const reached = STEP[order.status];
 
-  const cancel = order.status !== "processed" && onCancelOrder && (
+  // Once it is poured and waiting on the bar there is nothing left to call
+  // off — the drink exists. Cancelling stops at accepted.
+  const canCancel = order.status === "new" || order.status === "accepted";
+
+  const cancel = canCancel && onCancelOrder && (
     <button
       onClick={() => onCancelOrder(order.id)}
       disabled={loading}

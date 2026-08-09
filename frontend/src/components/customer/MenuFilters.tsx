@@ -1,5 +1,5 @@
 import React from "react";
-import { Dices, Star } from "lucide-react";
+import { Dices, SlidersHorizontal, Star, X } from "lucide-react";
 import type { Drink } from "../../types";
 import type { MenuFilter } from "../../hooks/useGuestMenu";
 import { translations } from "../../utils/translations";
@@ -143,63 +143,196 @@ export const MenuSidebar: React.FC<SidebarProps> = ({
   </nav>
 );
 
-/** The same choices as a dropdown, on a phone. */
-export const MenuFilterSelect: React.FC<FilterProps> = ({
+interface ChipsProps extends FilterProps {
+  favouriteCount: number;
+  totalCount: number;
+}
+
+/** One chip: what it filters to, what it says, and how many there are. */
+interface Chip {
+  key: string;
+  label: string;
+  count: number;
+  filter: MenuFilter;
+}
+
+const keyOf = (filter: MenuFilter) =>
+  filter.type === "all" ? "all" : `${filter.type}:${filter.value}`;
+
+const chipsFor = ({
+  categories,
+  spirits,
+  byCategory,
+  bySpirit,
+  totalCount,
+  t,
+}: ChipsProps): Chip[] => [
+  {
+    key: "all",
+    label: t("allDrinks"),
+    count: totalCount,
+    filter: { type: "all" },
+  },
+  ...categories.map((category) => ({
+    key: `category:${category}`,
+    label: category,
+    count: byCategory[category].length,
+    filter: { type: "category" as const, value: category },
+  })),
+  ...spirits.map((spirit) => ({
+    key: `spirit:${spirit}`,
+    label: spirit,
+    count: bySpirit[spirit].length,
+    filter: { type: "spirit" as const, value: spirit },
+  })),
+];
+
+/**
+ * On a phone the side menu becomes a rail of chips that scrolls sideways.
+ * Every chip carries its count, so a guest sees what is on offer without
+ * opening anything; the leading button opens the full list when the rail
+ * is not enough.
+ */
+export const MenuChips: React.FC<ChipsProps> = (props) => {
+  const { filter, onFilter, t } = props;
+  const [sheetOpen, setSheetOpen] = React.useState(false);
+
+  const chosen = keyOf(filter);
+  // Whichever is in force comes first, so it is never off the side.
+  const chips = chipsFor(props).sort(
+    (a, b) => Number(b.key === chosen) - Number(a.key === chosen)
+  );
+
+  return (
+    <div className="lg:hidden">
+      <div className="sticky top-0 z-10 -mx-4 px-4 py-2.5 bg-surface border-b border-border flex gap-2 overflow-x-auto">
+        <button
+          onClick={() => setSheetOpen(true)}
+          className="h-11 pl-3.5 pr-4 shrink-0 flex items-center gap-1.5 rounded-full border border-border-strong bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+        >
+          <SlidersHorizontal className="w-4 h-4 shrink-0" />
+          {t("filterShort")}
+        </button>
+
+        {chips.map((chip) => (
+          <button
+            key={chip.key}
+            onClick={() => onFilter(chip.filter)}
+            aria-pressed={chip.key === chosen}
+            className={`h-11 px-4 shrink-0 rounded-full text-label whitespace-nowrap transition-colors duration-(--duration-instant) cursor-pointer ${
+              chip.key === chosen
+                ? "bg-text text-text-inverse"
+                : "bg-surface-raised border border-border hover:bg-surface-sunken"
+            }`}
+          >
+            {chip.label} {chip.count}
+          </button>
+        ))}
+      </div>
+
+      {sheetOpen && (
+        <FilterSheet
+          {...props}
+          onFilter={(next) => {
+            onFilter(next);
+            setSheetOpen(false);
+          }}
+          onClose={() => setSheetOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+/** The whole list, over the menu, with the menu left where it was. */
+const FilterSheet: React.FC<FilterProps & { onClose: () => void }> = ({
   categories,
   spirits,
   byCategory,
   bySpirit,
   filter,
   onFilter,
+  onClose,
   t,
-}) => (
-  <div className="lg:hidden mb-4 space-y-3">
-    <h2 className="text-heading">{t("availableDrinks")}</h2>
+}) => {
+  React.useEffect(() => {
+    const close = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [onClose]);
 
-    <label className="block">
-      <span className="block text-label mb-2">{t("filterDrinks")}</span>
-      {/* A real native select, so the phone's own list still opens. */}
-      <span className="relative block">
-        <select
-          value={
-            filter.type === "all" ? "all" : `${filter.type}:${filter.value}`
-          }
-          onChange={(e) => {
-            const [type, ...rest] = e.target.value.split(":");
-            // Rejoined, because a category may have a colon in its name.
-            const value = rest.join(":");
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+      <button
+        type="button"
+        aria-label={t("close")}
+        onClick={onClose}
+        className="absolute inset-0 bg-overlay cursor-default"
+      />
 
-            onFilter(
-              type === "all"
-                ? { type: "all" }
-                : { type: type as "category" | "spirit", value }
-            );
-          }}
-          className="appearance-none w-full h-14 pl-3.5 pr-11 rounded-md border border-border bg-surface-raised text-text text-body cursor-pointer focus:border-border-strong focus:outline-none focus:shadow-focus"
-        >
-          <option value="all">{t("allDrinks")}</option>
-          {categories.length > 0 && (
-            <optgroup label={t("categories")}>
-              {categories.map((category) => (
-                <option key={category} value={`category:${category}`}>
-                  {category} ({byCategory[category].length})
-                </option>
-              ))}
-            </optgroup>
-          )}
-          <optgroup label={t("baseSpirits")}>
-            {spirits.map((spirit) => (
-              <option key={spirit} value={`spirit:${spirit}`}>
-                {spirit} ({bySpirit[spirit].length})
-              </option>
-            ))}
-          </optgroup>
-        </select>
-        <span
-          className="pointer-events-none absolute right-4 top-1/2 w-2.5 h-2.5 -translate-y-[70%] rotate-45 border-r-2 border-b-2 border-text"
-          aria-hidden="true"
-        />
-      </span>
-    </label>
-  </div>
-);
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("filterDrinks")}
+        className="relative max-h-[80vh] flex flex-col bg-surface border-t-2 border-border-strong rounded-t-lg"
+      >
+        <div className="shrink-0 px-4 py-3 border-b border-border flex items-center gap-3">
+          <h2 className="flex-1 text-heading">{t("filterDrinks")}</h2>
+          <button
+            onClick={onClose}
+            aria-label={t("close")}
+            className="w-11 h-11 shrink-0 flex items-center justify-center rounded-md text-text-muted transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <ul className="flex-1 overflow-y-auto py-2">
+          <li>
+            <button
+              onClick={() => onFilter({ type: "all" })}
+              className={row(filter.type === "all")}
+            >
+              <span className="flex-1 font-semibold text-base">
+                {t("allDrinks")}
+              </span>
+            </button>
+          </li>
+
+          {categories.length > 0 && <GroupLabel label={t("categories")} />}
+          {categories.map((category) => (
+            <li key={category}>
+              <button
+                onClick={() => onFilter({ type: "category", value: category })}
+                className={row(isChosen(filter, "category", category))}
+              >
+                <span className="flex-1 font-semibold text-base truncate">
+                  {category}
+                </span>
+                <Count n={byCategory[category].length} />
+              </button>
+            </li>
+          ))}
+
+          {spirits.length > 0 && <GroupLabel label={t("baseSpirits")} />}
+          {spirits.map((spirit) => (
+            <li key={spirit}>
+              <button
+                onClick={() => onFilter({ type: "spirit", value: spirit })}
+                className={row(isChosen(filter, "spirit", spirit))}
+              >
+                <span className="flex-1 font-semibold text-base truncate">
+                  {spirit}
+                </span>
+                <Count n={bySpirit[spirit].length} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+

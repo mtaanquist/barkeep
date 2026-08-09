@@ -12,6 +12,7 @@ export interface TranslationMap {
   noDrinksAvailable: string;
   allDrinks: string;
   filterDrinks: string;
+  filterShort: string;
   baseSpirits: string;
   noPastOrders: string;
   addFavourite: string;
@@ -161,6 +162,9 @@ export interface TranslationMap {
   tryAnother: string;
   pastOrders: string; // Added
   menuLabel: string;
+  themeSystem: string;
+  themeLight: string;
+  themeDark: string;
   tonight: string;
   orderAgain: string;
   reorderWhenCollected: string;
@@ -208,6 +212,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     noDrinksAvailable: "No drinks available right now",
     allDrinks: "All drinks",
     filterDrinks: "Filter drinks",
+    filterShort: "Filter",
     baseSpirits: "Base spirits",
     noPastOrders: "No past orders yet",
     addFavourite: "Add to favourites",
@@ -360,6 +365,9 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     tryAnother: "Try another",
     pastOrders: "Past orders", // Added
     menuLabel: "Menu",
+    themeSystem: "Theme: follow my phone",
+    themeLight: "Theme: light",
+    themeDark: "Theme: dark",
     tonight: "tonight",
     orderAgain: "Again",
     reorderWhenCollected:
@@ -405,6 +413,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     noDrinksAvailable: "Ingen drinks lige nu",
     allDrinks: "Alle drinks",
     filterDrinks: "Filtrér drinks",
+    filterShort: "Filtrér",
     baseSpirits: "Basisspiritus",
     noPastOrders: "Ingen tidligere bestillinger endnu",
     addFavourite: "Tilføj til favoritter",
@@ -557,6 +566,9 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     tryAnother: "Prøv en anden",
     pastOrders: "Tidligere bestillinger", // Added
     menuLabel: "Menu",
+    themeSystem: "Udseende: følg min telefon",
+    themeLight: "Udseende: lyst",
+    themeDark: "Udseende: mørkt",
     tonight: "i aften",
     orderAgain: "Igen",
     reorderWhenCollected:

@@ -11,7 +11,7 @@ import DrinkGrid from "./customer/DrinkGrid";
 import GuestShell from "./customer/GuestShell";
 import OrderPlacedModal from "./customer/OrderPlacedModal";
 import PastOrdersPanel from "./customer/PastOrdersPanel";
-import { MenuFilterSelect, MenuSidebar } from "./customer/MenuFilters";
+import { MenuChips, MenuSidebar } from "./customer/MenuFilters";
 
 /** Statuses that mean a guest still has a drink on the go. */
 const IN_PROGRESS = ["new", "accepted", "ready"];
@@ -213,7 +213,11 @@ const CustomerInterface: React.FC = () => {
         />
 
         <div className="flex-1 min-w-0 px-4 lg:px-6 py-6 space-y-8">
-          <MenuFilterSelect {...filters} />
+          <MenuChips
+            {...filters}
+            favouriteCount={menu.favourites.length}
+            totalCount={menu.inStock.length}
+          />
 
           {nothingToShow ? (
             <div className="p-8 text-center text-text-muted">

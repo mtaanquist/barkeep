@@ -154,6 +154,31 @@ describe("ordering a drink", () => {
     expect(sent?.body).toMatchObject({ barId: 1, customerName: "Ada" });
   });
 
+  // Once it is poured and waiting on the bar there is nothing left to call
+  // off, so the button goes rather than sitting there doing harm.
+  it("takes cancelling away once the drink is ready", async () => {
+    orders = [anOrder({ id: 5, status: "ready", drink_title: "Negroni" })];
+
+    await showMenu();
+    const dock = await screen.findByRole("region", { name: "Your Order" });
+
+    expect(dock).toHaveTextContent("Ready");
+    expect(
+      within(dock).queryByRole("button", { name: "Cancel Order" })
+    ).toBeNull();
+  });
+
+  it("still allows cancelling before it is poured", async () => {
+    orders = [anOrder({ id: 5, status: "accepted", drink_title: "Negroni" })];
+
+    await showMenu();
+    await userEvent.click(screen.getByRole("button", { name: /Negroni/ }));
+
+    expect(
+      screen.getByRole("button", { name: "Cancel Order" })
+    ).toBeInTheDocument();
+  });
+
   it("says so plainly when there is nothing on", async () => {
     menu = [];
 

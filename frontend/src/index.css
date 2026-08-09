@@ -9,8 +9,9 @@
 
    How it works:
    1. The raw values live in :root as --bk-* variables.
-   2. One block below swaps those same names for their dark values
-      when the browser asks for dark.
+   2. One block below swaps those same names for their dark values.
+      Which one is in force is decided before the page is painted — see
+      the short script in index.html.
    3. @theme hands them to Tailwind under names that say what a thing
       is for, so `bg-surface text-text border-border` is right in both.
 
@@ -107,75 +108,76 @@
   --bk-shadow-focus: 0 0 0 3px rgb(224 180 0 / 0.55);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* The ramp flips by index, so neutral-0 is still furthest from ink. */
-    --bk-neutral-0:   #0A0B0C;
-    --bk-neutral-25:  #101214;
-    --bk-neutral-50:  #17191B;
-    --bk-neutral-100: #22262A;
-    --bk-neutral-200: #26292C;
-    --bk-neutral-300: #3D4247;
-    --bk-neutral-400: #6B7075;
-    --bk-neutral-500: #8B9095;
-    --bk-neutral-600: #A2A7AB;
-    --bk-neutral-700: #C6CBCF;
-    --bk-neutral-800: #DDDFE0;
-    --bk-neutral-900: #E9EAEA;
-    --bk-neutral-950: #F2F4F5;
-    --bk-neutral-1000:#FFFFFF;
+/* Which of the two is in force is settled before the page is painted, by the
+   short script in index.html — either what the guest picked, or what their
+   phone is set to. So there is one dark block here rather than two. */
+:root[data-theme="dark"] {
+  /* The ramp flips by index, so neutral-0 is still furthest from ink. */
+  --bk-neutral-0:   #0A0B0C;
+  --bk-neutral-25:  #101214;
+  --bk-neutral-50:  #17191B;
+  --bk-neutral-100: #22262A;
+  --bk-neutral-200: #26292C;
+  --bk-neutral-300: #3D4247;
+  --bk-neutral-400: #6B7075;
+  --bk-neutral-500: #8B9095;
+  --bk-neutral-600: #A2A7AB;
+  --bk-neutral-700: #C6CBCF;
+  --bk-neutral-800: #DDDFE0;
+  --bk-neutral-900: #E9EAEA;
+  --bk-neutral-950: #F2F4F5;
+  --bk-neutral-1000:#FFFFFF;
 
-    --bk-surface:        #141618;
-    --bk-surface-raised: #1E2124; /* not a flip — raised goes lighter, sunken darker */
-    --bk-surface-sunken: #0A0B0C;
-    --bk-border:         #26292C;
-    --bk-border-strong:  #3D4247; /* not white: a white hairline glares at arm's length */
-    --bk-text:           #F2F4F5;
-    --bk-text-muted:     #A2A7AB;
-    --bk-text-inverse:   #0A0B0C;
+  --bk-surface:        #141618;
+  --bk-surface-raised: #1E2124; /* not a flip — raised goes lighter, sunken darker */
+  --bk-surface-sunken: #0A0B0C;
+  --bk-border:         #26292C;
+  --bk-border-strong:  #3D4247; /* not white: a white hairline glares at arm's length */
+  --bk-text:           #F2F4F5;
+  --bk-text-muted:     #A2A7AB;
+  --bk-text-inverse:   #0A0B0C;
 
-    --bk-accent:          #F2C90A; /* lifted, not flipped — flipping a yellow gives a blue */
-    --bk-accent-hover:    #FFD92E;
-    --bk-accent-contrast: #101214; /* the one value that never changes */
+  --bk-accent:          #F2C90A; /* lifted, not flipped — flipping a yellow gives a blue */
+  --bk-accent-hover:    #FFD92E;
+  --bk-accent-contrast: #101214; /* the one value that never changes */
 
-    --bk-status-new-bg:           #1E2124;
-    --bk-status-new-border:       #F2F4F5;
-    --bk-status-new-fg:           #F2F4F5;  /* 14.7:1 */
+  --bk-status-new-bg:           #1E2124;
+  --bk-status-new-border:       #F2F4F5;
+  --bk-status-new-fg:           #F2F4F5;  /* 14.7:1 */
 
-    --bk-status-accepted-bg:      #22262A;
-    --bk-status-accepted-border:  #6B7075;
-    --bk-status-accepted-fg:      #C6CBCF;  /* 9.2:1 */
+  --bk-status-accepted-bg:      #22262A;
+  --bk-status-accepted-border:  #6B7075;
+  --bk-status-accepted-fg:      #C6CBCF;  /* 9.2:1 */
 
-    --bk-status-rejected-bg:      #2A1614;
-    --bk-status-rejected-border:  #E0685C;
-    --bk-status-rejected-fg:      #F4AFA4;  /* 9.4:1 */
+  --bk-status-rejected-bg:      #2A1614;
+  --bk-status-rejected-border:  #E0685C;
+  --bk-status-rejected-fg:      #F4AFA4;  /* 9.4:1 */
 
-    --bk-status-ready-bg:         #F2C90A;
-    --bk-status-ready-border:     #F2C90A;
-    --bk-status-ready-fg:         #101214;  /* 11.6:1 */
+  --bk-status-ready-bg:         #F2C90A;
+  --bk-status-ready-border:     #F2C90A;
+  --bk-status-ready-fg:         #101214;  /* 11.6:1 */
 
-    --bk-status-processed-bg:     #17191B;
-    --bk-status-processed-border: #26292C;
-    --bk-status-processed-fg:     #8B9095;  /* 5.5:1 */
+  --bk-status-processed-bg:     #17191B;
+  --bk-status-processed-border: #26292C;
+  --bk-status-processed-fg:     #8B9095;  /* 5.5:1 */
 
-    --bk-danger:          #E0685C;
-    --bk-danger-hover:    #F08376;
-    --bk-danger-contrast: #101214;
+  --bk-danger:          #E0685C;
+  --bk-danger-hover:    #F08376;
+  --bk-danger-contrast: #101214;
 
-    --bk-disabled-bg:     #17191B;
-    --bk-disabled-border: #26292C;
-    --bk-disabled-fg:     #8B9095; /* 5.5:1 */
+  --bk-disabled-bg:     #17191B;
+  --bk-disabled-border: #26292C;
+  --bk-disabled-fg:     #8B9095; /* 5.5:1 */
 
-    --bk-overlay:           rgb(0 0 0 / 0.72);
-    --bk-skeleton:          #22262A;
-    --bk-skeleton-highlight:#2C3135;
+  --bk-overlay:           rgb(0 0 0 / 0.72);
+  --bk-skeleton:          #22262A;
+  --bk-skeleton-highlight:#2C3135;
 
-    /* A blurred black shadow is invisible on near-black, so the floating
-       one gets a hairline ring as well. */
-    --bk-shadow-flat:  0 0 0 1px var(--bk-border);
-    --bk-shadow-float: 0 0 0 1px var(--bk-border), 0 12px 32px rgb(0 0 0 / 0.60);
-    --bk-shadow-focus: 0 0 0 3px rgb(242 201 10 / 0.55);
-  }
+  /* A blurred black shadow is invisible on near-black, so the floating
+     one gets a hairline ring as well. */
+  --bk-shadow-flat:  0 0 0 1px var(--bk-border);
+  --bk-shadow-float: 0 0 0 1px var(--bk-border), 0 12px 32px rgb(0 0 0 / 0.60);
+  --bk-shadow-focus: 0 0 0 3px rgb(242 201 10 / 0.55);
 }
 
 @theme static {
