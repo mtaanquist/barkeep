@@ -89,6 +89,20 @@ describe("orders", () => {
     expect(sent).not.toHaveBeenCalled();
   });
 
+  it("refuses one past the bar's limit, and says so in terms of the limit", async () => {
+    // A bar that allows two at once. The message must not claim there is only
+    // ever one, which is what it used to say however high the limit was set.
+    db.prepare("UPDATE bars SET max_active_orders = 2 WHERE id = ?").run(barId);
+
+    expect((await placeOrder()).status).toBe(201);
+    expect((await placeOrder()).status).toBe(201);
+
+    const third = await placeOrder();
+    expect(third.status).toBe(400);
+    expect(third.body.error).toMatch(/as many|allows/i);
+    expect(third.body.error).not.toMatch(/a pending order/i);
+  });
+
   it("moves an order along and tells everyone", async () => {
     const { body: order } = await placeOrder();
     sent.mockClear();

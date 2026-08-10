@@ -171,7 +171,9 @@ export default function createOrderRoutes(db: Db): Router {
 
       // How many a guest may have on the go is the bar's to decide.
       if (waiting >= (bar.max_active_orders || 1)) {
-        throw HttpError.badRequest("Customer already has a pending order");
+        throw HttpError.badRequest(
+          "You already have as many orders on the go as this bar allows"
+        );
       }
 
       // A bar can be set to skip the accept step.
