@@ -24,6 +24,17 @@ const PNG = Buffer.from(
   "base64"
 );
 
+// A picture that isn't: an SVG carrying script. Nothing here should let it in.
+const SVG = Buffer.from(
+  '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
+);
+
+/** How many uploaded photos are sitting in the folder right now. */
+const drinkPhotoCount = (uploadsDir: string): number =>
+  fs.existsSync(uploadsDir)
+    ? fs.readdirSync(uploadsDir).filter((name) => name.startsWith("drink-")).length
+    : 0;
+
 afterAll(cleanUpTempDirs);
 
 describe("qr code addresses", () => {
@@ -112,6 +123,7 @@ describe("photo uploads", () => {
   it("turns away anything that is not a photo", async () => {
     const res = await request(app)
       .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
       .attach("image", Buffer.from("just text"), {
         filename: "notes.txt",
         contentType: "text/plain",
@@ -121,11 +133,47 @@ describe("photo uploads", () => {
     expect(res.body.error).toMatch(/image/i);
   });
 
+  it("turns an unsigned upload away before writing anything", async () => {
+    const before = drinkPhotoCount(uploadsDir);
+
+    const res = await request(app)
+      .post("/api/drinks/upload-image")
+      .attach("image", PNG, { filename: "sneaky.png", contentType: "image/png" });
+
+    expect(res.status).toBe(401);
+    // The point of the fix: nothing was saved before the request was refused.
+    expect(drinkPhotoCount(uploadsDir)).toBe(before);
+  });
+
+  it("turns away an SVG even though it calls itself an image", async () => {
+    const res = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
+      .attach("image", SVG, { filename: "x.svg", contentType: "image/svg+xml" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/image/i);
+  });
+
+  it("turns away script wearing a .png name, leaving nothing behind", async () => {
+    const before = drinkPhotoCount(uploadsDir);
+
+    const res = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
+      .attach("image", SVG, { filename: "x.png", contentType: "image/png" });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/image/i);
+    expect(drinkPhotoCount(uploadsDir)).toBe(before);
+  });
+
   it("turns away a photo that is too large", async () => {
     const tooBig = Buffer.alloc(6 * 1024 * 1024, 1);
 
     const res = await request(app)
       .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
       .attach("image", tooBig, { filename: "huge.png", contentType: "image/png" });
 
     expect(res.status).toBe(400);

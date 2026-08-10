@@ -1,6 +1,9 @@
-import express, { type Response, type Router } from "express";
+import express, {
+  type RequestHandler,
+  type Response,
+  type Router,
+} from "express";
 import multer from "multer";
-import path from "path";
 import fs from "fs";
 
 import type {
@@ -35,6 +38,12 @@ import {
   requireGuest,
 } from "../auth/middleware.js";
 import { deletePhotoIfUnused } from "../uploads.js";
+import {
+  extensionFor,
+  isAllowedImageType,
+  sniffImageFile,
+  type AllowedImageType,
+} from "../images.js";
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
@@ -77,6 +86,17 @@ export default function createDrinkRoutes({
 }: DrinkRoutesOptions): Router {
   const router = express.Router();
 
+  // Only the bartender may upload, and this is checked before multer writes a
+  // thing — so an unsigned request can't drop files on the photos folder.
+  const bartenderOnly: RequestHandler = (_req, res, next) => {
+    try {
+      requireBartender(res);
+      next();
+    } catch (err) {
+      next(err);
+    }
+  };
+
   const upload = multer({
     storage: multer.diskStorage({
       destination(_req, _file, cb) {
@@ -84,13 +104,18 @@ export default function createDrinkRoutes({
         cb(null, uploadsDir);
       },
       filename(_req, file, cb) {
+        // The extension comes from the type we accepted, not the name the
+        // browser sent, so a "photo.svg" can't be served back as an SVG.
         const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-        cb(null, `drink-${unique}${path.extname(file.originalname)}`);
+        const ext = extensionFor(file.mimetype as AllowedImageType);
+        cb(null, `drink-${unique}${ext}`);
       },
     }),
     limits: { fileSize: MAX_PHOTO_BYTES },
     fileFilter(_req, file, cb) {
-      if (file.mimetype.startsWith("image/")) {
+      // Raster pictures only. SVG and everything else is turned away, because
+      // an SVG served from our own address could run script in a guest's page.
+      if (isAllowedImageType(file.mimetype)) {
         cb(null, true);
       } else {
         cb(new Error("Only image files are allowed!"));
@@ -163,10 +188,18 @@ export default function createDrinkRoutes({
 
   router.post(
     "/upload-image",
+    bartenderOnly,
     upload.single("image"),
     route((req, res) => {
-      requireBartender(res);
       if (!req.file) throw HttpError.badRequest("No image file provided");
+
+      // The filter trusted the browser's label; this checks the bytes really
+      // are one of the pictures we accept. A file that isn't is dropped, not
+      // left on disk for the sweep to find a day later.
+      if (!sniffImageFile(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+        throw HttpError.badRequest("Only image files are allowed.");
+      }
 
       res.json({
         success: true,
