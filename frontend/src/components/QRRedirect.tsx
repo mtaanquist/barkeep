@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
+import { useGuestClaim } from "../hooks/useGuestClaim";
 import type { Bar, SignedIn } from "../types";
 import { useTranslation } from "../utils/translations";
-import { ApiError } from "../utils/api";
 import LoginForm from "./LoginForm";
 import { ACTIVITY_KEY, rememberMe } from "../hooks/useSessionManager";
 import ToggleRow from "./ToggleRow";
@@ -21,6 +21,7 @@ const QRRedirect: React.FC = () => {
     apiCall,
   } = useApp();
   const t = useTranslation(language);
+  const claim = useGuestClaim();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasToken, setHasToken] = useState(false);
@@ -28,13 +29,6 @@ const QRRedirect: React.FC = () => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   // Kept on by default: someone scanning a code is on their own phone.
   const [remember, setRemember] = useState(true);
-  // The optional password for claiming or proving a name.
-  const [accountPassword, setAccountPassword] = useState("");
-  // On when the guest wants to make this name theirs (set a password).
-  const [claiming, setClaiming] = useState(false);
-  // On once the server says the name is already claimed, so we ask for its
-  // password rather than offering to set one.
-  const [nameClaimed, setNameClaimed] = useState(false);
   const hasFetched = useRef(false);
 
   useEffect(() => {
@@ -97,10 +91,6 @@ const QRRedirect: React.FC = () => {
     setIsLoggingIn(true);
     setError(null);
 
-    // Only send a password when there is one to send: proving a claimed name,
-    // or claiming an unclaimed one.
-    const password = accountPassword.trim();
-
     try {
       const response = await apiCall<SignedIn>(
         `/bars/${id}/guest-token-login`,
@@ -109,7 +99,8 @@ const QRRedirect: React.FC = () => {
           body: JSON.stringify({
             token,
             customerName: guestName.trim(),
-            ...(password ? { accountPassword: password } : {}),
+            // Only when there is one: proving a claimed name, or claiming a new.
+            ...(claim.password ? { accountPassword: claim.password } : {}),
           }),
         }
       );
@@ -134,16 +125,8 @@ const QRRedirect: React.FC = () => {
       // Navigate to customer interface
       navigate("/customer");
     } catch (err) {
-      // A claimed name asks for its password; the wrong one says so plainly.
-      if (err instanceof ApiError && err.code === "name_claimed") {
-        setNameClaimed(true);
-        setClaiming(false);
-        setError(null);
-      } else if (err instanceof ApiError && err.code === "password_incorrect") {
-        setError(t("wrongPassword"));
-      } else {
-        setError(err instanceof Error ? err.message : "Failed to login");
-      }
+      // A claimed name reveals the password field; anything else is a message.
+      setError(claim.classify(err, "Failed to login"));
     } finally {
       setIsLoggingIn(false);
     }
@@ -216,12 +199,8 @@ const QRRedirect: React.FC = () => {
                 value={guestName}
                 onChange={(e) => {
                   setGuestName(e.target.value);
-                  // A different name is a different question — drop the "that
-                  // name is registered" prompt tied to the old one.
-                  if (nameClaimed) {
-                    setNameClaimed(false);
-                    setError(null);
-                  }
+                  if (claim.nameClaimed) setError(null);
+                  claim.onNameChange();
                 }}
                 className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
                 onKeyPress={(e) => e.key === "Enter" && handleGuestLogin()}
@@ -229,29 +208,31 @@ const QRRedirect: React.FC = () => {
               />
 
               {/* A claimed name has to be proved with its password. */}
-              {nameClaimed && (
+              {claim.nameClaimed && (
                 <p className="text-sm text-text-muted">{t("nameClaimedHelp")}</p>
               )}
 
               {/* Otherwise, an unobtrusive way to make this name yours. */}
-              {!nameClaimed && (
+              {!claim.nameClaimed && (
                 <ToggleRow
-                  on={claiming}
-                  onChange={setClaiming}
+                  on={claim.claiming}
+                  onChange={claim.setClaiming}
                   title={t("setPassword")}
                   help={t("setPasswordHelp")}
                 />
               )}
 
-              {(nameClaimed || claiming) && (
+              {claim.passwordVisible && (
                 <input
                   type="password"
-                  placeholder={nameClaimed ? t("yourPassword") : t("setAPassword")}
-                  value={accountPassword}
-                  onChange={(e) => setAccountPassword(e.target.value)}
+                  placeholder={
+                    claim.nameClaimed ? t("yourPassword") : t("setAPassword")
+                  }
+                  value={claim.accountPassword}
+                  onChange={(e) => claim.setAccountPassword(e.target.value)}
                   className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
                   onKeyPress={(e) => e.key === "Enter" && handleGuestLogin()}
-                  autoFocus={nameClaimed}
+                  autoFocus={claim.nameClaimed}
                 />
               )}
 

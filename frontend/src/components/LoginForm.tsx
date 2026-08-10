@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, LogIn } from "lucide-react";
 import { useApp } from "../hooks/useApp";
+import { useGuestClaim } from "../hooks/useGuestClaim";
 import type { Bar, SignedIn } from "../types";
 import { useTranslation } from "../utils/translations";
-import { ApiError } from "../utils/api";
 import { rememberMe } from "../hooks/useSessionManager";
 import ToggleRow from "./ToggleRow";
 
@@ -40,6 +40,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
   const navigate = useNavigate();
   const t = useTranslation(language);
+  const claim = useGuestClaim();
 
   // Use the provided bar or the current bar from context
   const targetBar = bar || currentBar;
@@ -54,10 +55,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
   // Kept on by default: most people at a party are on their own phone.
   const [remember, setRemember] = useState(true);
-  // The optional per-name password, kept apart from the bar's shared one above.
-  const [accountPassword, setAccountPassword] = useState("");
-  const [claiming, setClaiming] = useState(false);
-  const [nameClaimed, setNameClaimed] = useState(false);
 
   const handleLogin = async () => {
     if (!loginForm.password) {
@@ -78,8 +75,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
     setLoading(true);
     setError(null);
 
-    const accountPw = accountPassword.trim();
-
     try {
       const endpoint =
         userType === "bartender" ? "/auth/bartender" : "/auth/guest";
@@ -90,7 +85,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         // it; the bartender does neither.
         ...(userType === "guest" && {
           customerName: loginForm.name,
-          ...(accountPw ? { accountPassword: accountPw } : {}),
+          ...(claim.password ? { accountPassword: claim.password } : {}),
         }),
       };
 
@@ -108,17 +103,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
       navigate(userType === "bartender" ? "/bartender" : "/customer");
     } catch (err) {
-      if (err instanceof ApiError && err.code === "name_claimed") {
-        setNameClaimed(true);
-        setClaiming(false);
-        setError(null);
-      } else if (err instanceof ApiError && err.code === "password_incorrect") {
-        // A wrong bar password and a wrong name password are both a 401; only
-        // the name password carries this code, so it's unambiguous here.
-        setError(t("wrongPassword"));
-      } else {
-        setError(err instanceof Error ? err.message : "Login failed");
-      }
+      // A claimed name reveals the password field; a wrong one says so. A wrong
+      // bar password and a wrong name password are both a 401, but only the
+      // name password carries a code, so classify tells them apart.
+      setError(claim.classify(err, "Login failed"));
     } finally {
       setLoading(false);
     }
@@ -127,9 +115,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const resetUserType = () => {
     setUserType(null);
     setLoginForm({ password: "", name: "" });
-    setAccountPassword("");
-    setClaiming(false);
-    setNameClaimed(false);
+    claim.reset();
   };
 
   return (
@@ -211,40 +197,36 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 value={loginForm.name}
                 onChange={(e) => {
                   setLoginForm((prev) => ({ ...prev, name: e.target.value }));
-                  // A different name is a different question — drop the "that
-                  // name is registered" prompt tied to the old one.
-                  if (nameClaimed) {
-                    setNameClaimed(false);
-                    setError(null);
-                  }
+                  if (claim.nameClaimed) setError(null);
+                  claim.onNameChange();
                 }}
                 className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
                 onKeyPress={(e) => e.key === "Enter" && handleLogin()}
               />
 
               {/* A claimed name has to be proved with its password. */}
-              {nameClaimed && (
+              {claim.nameClaimed && (
                 <p className="text-sm text-text-muted">{t("nameClaimedHelp")}</p>
               )}
 
               {/* Otherwise, an unobtrusive way to make this name yours. */}
-              {!nameClaimed && (
+              {!claim.nameClaimed && (
                 <ToggleRow
-                  on={claiming}
-                  onChange={setClaiming}
+                  on={claim.claiming}
+                  onChange={claim.setClaiming}
                   title={t("setPassword")}
                   help={t("setPasswordHelp")}
                 />
               )}
 
-              {(nameClaimed || claiming) && (
+              {claim.passwordVisible && (
                 <input
                   type="password"
                   placeholder={
-                    nameClaimed ? t("yourPassword") : t("setAPassword")
+                    claim.nameClaimed ? t("yourPassword") : t("setAPassword")
                   }
-                  value={accountPassword}
-                  onChange={(e) => setAccountPassword(e.target.value)}
+                  value={claim.accountPassword}
+                  onChange={(e) => claim.setAccountPassword(e.target.value)}
                   className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
                   onKeyPress={(e) => e.key === "Enter" && handleLogin()}
                 />

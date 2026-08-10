@@ -52,6 +52,10 @@ export const TRUST_PROXY: TrustProxy = (() => {
   return raw;
 })();
 
+// The bcrypt work factor for every password we store — bar codes, reset codes,
+// and guests' own passwords. One number so they never drift apart.
+export const HASH_ROUNDS = 12;
+
 // How long a bartender's sign-in lasts. Their screen sits on a counter all
 // night, so a whole day rather than a short idle window.
 export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;

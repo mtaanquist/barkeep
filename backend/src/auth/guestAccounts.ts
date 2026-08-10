@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 
 import type { Regular } from "../../../shared/types.js";
+import { HASH_ROUNDS } from "../config.js";
 import { HttpError } from "../http.js";
 import {
   all,
@@ -10,9 +11,6 @@ import {
   type Db,
   type GuestAccountRow,
 } from "../db/queries.js";
-
-// Matches the bar-password hashing elsewhere, kept local like those.
-const HASH_ROUNDS = 12;
 
 /** The shortest a claimed-name password may be. Light, for a party app. */
 export const GUEST_PASSWORD_MIN = 4;

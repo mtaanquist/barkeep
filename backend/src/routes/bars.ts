@@ -12,6 +12,7 @@ import type {
   BarQrCode,
   Language,
   Order,
+  SignedIn,
 } from "../../../shared/types.js";
 import {
   HttpError,
@@ -22,6 +23,7 @@ import {
   toFlag,
   wasSent,
 } from "../http.js";
+import { HASH_ROUNDS } from "../config.js";
 import { setSessionCookie } from "../auth/session.js";
 import {
   listRegulars,
@@ -51,8 +53,6 @@ const PASSWORD_RULES = {
   bartender: { min: 4, label: "Bartender password" },
   guest: { min: 3, label: "Guest password" },
 } as const;
-
-const HASH_ROUNDS = 12;
 
 /** The bar fields that are safe to list. Never the token or the hashes. */
 const PUBLIC_COLUMNS =
@@ -453,15 +453,15 @@ export default function createBarRoutes({
         ...(resolved.authenticated ? { authenticated: true } : {}),
       });
 
+      // The same shape every other sign-in sends, so the pages read one thing:
+      // the whole bar, the name, and whether a password was proved.
       res.json({
         success: true,
-        barId: bar.id,
-        barName: bar.name,
-        language: bar.language,
-        customerName: resolved.name,
         userType: "guest",
+        bar: publicBar(bar),
+        customerName: resolved.name,
         authenticated: resolved.authenticated,
-      });
+      } satisfies SignedIn);
     })
   );
 
