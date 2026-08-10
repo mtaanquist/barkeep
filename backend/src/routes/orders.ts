@@ -148,7 +148,6 @@ export default function createOrderRoutes(db: Db): Router {
       // can order under someone else's name.
       const { barId, name: customerName } = requireGuest(res);
       const drinkId = requireId(req.body, "drinkId");
-      const drinkTitle = requireText(req.body, "drinkTitle");
 
       const bar = findBar(db, barId);
       const drink = findDrink(db, drinkId, barId);
@@ -185,7 +184,9 @@ export default function createOrderRoutes(db: Db): Router {
         barId,
         customerName,
         drinkId,
-        drinkTitle,
+        // The title is the drink's own, not whatever the client sent, so the
+        // queue and the takings always show the real name.
+        drink.title,
         status
       );
 

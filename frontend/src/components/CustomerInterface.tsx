@@ -98,7 +98,6 @@ const CustomerInterface: React.FC = () => {
           barId: currentBar!.id,
           customerName,
           drinkId: drink.id,
-          drinkTitle: drink.title,
         }),
       });
       setShowOrderPlaced(true);
