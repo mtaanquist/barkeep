@@ -18,6 +18,7 @@ import {
   toFlag,
   wasSent,
 } from "../http.js";
+import { setSessionCookie } from "../auth/session.js";
 import {
   all,
   buildUpdate,
@@ -138,9 +139,14 @@ export default function createBarRoutes({
         language
       );
 
+      const bar = findBar(db, Number(lastInsertRowid));
+      // Making a bar signs you in as its bartender, so there's no unguarded
+      // gap between creating it and being able to run it.
+      setSessionCookie(res, { barId: bar.id, role: "bartender" });
+
       // The whole bar goes back, settings and all, so the pages can hold on to
       // it as-is.
-      res.status(201).json(publicBar(findBar(db, Number(lastInsertRowid))));
+      res.status(201).json(publicBar(bar));
     })
   );
 
@@ -359,6 +365,9 @@ export default function createBarRoutes({
       if (token !== guestToken(bar)) {
         throw new HttpError(401, "Invalid or expired token");
       }
+
+      // The QR link gets you a session; it isn't one itself.
+      setSessionCookie(res, { barId: bar.id, role: "guest", name: customerName });
 
       res.json({
         success: true,

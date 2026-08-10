@@ -13,6 +13,7 @@ import {
   type TrustProxy,
 } from "./config.js";
 import { errorReply, route } from "./http.js";
+import { attachSession } from "./auth/middleware.js";
 import { createRealtime } from "./realtime.js";
 import type { Db } from "./db/queries.js";
 
@@ -59,6 +60,9 @@ export function createApp({
 
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+  // Reads the sign-in cookie, if any, before the routes and the live feed run.
+  app.use(attachSession);
 
   if (requestLogging) {
     app.use((req, _res, next) => {
