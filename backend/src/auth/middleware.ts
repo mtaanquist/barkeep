@@ -26,6 +26,7 @@ export function attachSession(
       barId: payload.barId,
       role: payload.role,
       ...(payload.name !== undefined ? { name: payload.name } : {}),
+      ...(payload.authenticated ? { authenticated: true } : {}),
     } satisfies Session;
   }
 
@@ -61,6 +62,19 @@ export function requireGuest(res: Response): { barId: number; name: string } {
   const session = requireSession(res);
   if (session.role !== "guest" || !session.name) {
     throw HttpError.forbidden("Only a guest can do this");
+  }
+  return { barId: session.barId, name: session.name };
+}
+
+/**
+ * A regular: a guest who proved a password for their name. For the few things
+ * only a claimed name should do — changing its own password. A one-time guest,
+ * whose name nobody has claimed, is turned away.
+ */
+export function requireRegular(res: Response): { barId: number; name: string } {
+  const session = requireSession(res);
+  if (session.role !== "guest" || !session.name || session.authenticated !== true) {
+    throw HttpError.forbidden("Only a signed-in regular can do this");
   }
   return { barId: session.barId, name: session.name };
 }

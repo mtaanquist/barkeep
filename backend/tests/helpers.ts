@@ -93,6 +93,7 @@ export function sessionCookie(session: {
   barId: number;
   role: UserType;
   name?: string;
+  authenticated?: boolean;
 }): string {
   return `session=${signSession(session)}`;
 }

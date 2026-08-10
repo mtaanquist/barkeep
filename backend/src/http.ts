@@ -4,7 +4,12 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 export class HttpError extends Error {
   constructor(
     readonly status: number,
-    message: string
+    message: string,
+    /**
+     * A short machine-readable tag the pages can branch on, when the same
+     * status means different things (a claimed name vs. a wrong password).
+     */
+    readonly code?: string
   ) {
     super(message);
     this.name = "HttpError";
@@ -114,7 +119,9 @@ export function errorReply(
   _next: NextFunction
 ): void {
   if (err instanceof HttpError) {
-    res.status(err.status).json({ error: err.message });
+    res
+      .status(err.status)
+      .json(err.code ? { error: err.message, code: err.code } : { error: err.message });
     return;
   }
 

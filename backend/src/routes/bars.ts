@@ -23,6 +23,7 @@ import {
   wasSent,
 } from "../http.js";
 import { setSessionCookie } from "../auth/session.js";
+import { resolveGuest } from "../auth/guestAccounts.js";
 import {
   requireBartender,
   requireBartenderForBar,
@@ -377,7 +378,7 @@ export default function createBarRoutes({
 
   router.post(
     "/:id/guest-token-login",
-    route((req, res) => {
+    route(async (req, res) => {
       const barId = idParam(req, "id");
       const token = requireText(req.body, "token");
       const customerName = requireText(req.body, "customerName", {
@@ -391,16 +392,30 @@ export default function createBarRoutes({
         throw new HttpError(401, "Invalid or expired token");
       }
 
-      // The QR link gets you a session; it isn't one itself.
-      setSessionCookie(res, { barId: bar.id, role: "guest", name: customerName });
+      // The QR link gets you a session; it isn't one itself. A claimed name
+      // still has to be proved with its password before the session is set.
+      const resolved = await resolveGuest(
+        db,
+        bar.id,
+        customerName,
+        optionalText(req.body, "accountPassword")
+      );
+
+      setSessionCookie(res, {
+        barId: bar.id,
+        role: "guest",
+        name: resolved.name,
+        ...(resolved.authenticated ? { authenticated: true } : {}),
+      });
 
       res.json({
         success: true,
         barId: bar.id,
         barName: bar.name,
         language: bar.language,
-        customerName,
+        customerName: resolved.name,
         userType: "guest",
+        authenticated: resolved.authenticated,
       });
     })
   );
