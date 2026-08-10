@@ -23,7 +23,10 @@ import {
   wasSent,
 } from "../http.js";
 import { setSessionCookie } from "../auth/session.js";
-import { requireBartender } from "../auth/middleware.js";
+import {
+  requireBartender,
+  requireBartenderForBar,
+} from "../auth/middleware.js";
 import {
   all,
   buildUpdate,
@@ -254,6 +257,7 @@ export default function createBarRoutes({
     "/:id/dashboard",
     route((req, res) => {
       const barId = idParam(req, "id");
+      requireBartenderForBar(res, barId);
       const bar = publicBar(findBar(db, barId));
 
       res.json({
@@ -346,6 +350,7 @@ export default function createBarRoutes({
     "/:id/qrcode",
     route(async (req, res) => {
       const barId = idParam(req, "id");
+      requireBartenderForBar(res, barId);
       const bar = findBar(db, barId);
 
       // Prefer a configured address, otherwise the one the request arrived on

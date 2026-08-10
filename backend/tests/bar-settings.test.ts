@@ -223,7 +223,9 @@ describe("what a host can set on a bar", () => {
     const tokenOf = (url: string) => new URL(url).searchParams.get("token");
 
     it("keeps working on a code that was printed before it could be rotated", async () => {
-      const qr = await request(app).get(`/api/bars/${barId}/qrcode`);
+      const qr = await request(app)
+        .get(`/api/bars/${barId}/qrcode`)
+        .set("Cookie", asBartender());
 
       const login = await request(app)
         .post(`/api/bars/${barId}/guest-token-login`)
@@ -233,14 +235,18 @@ describe("what a host can set on a bar", () => {
     });
 
     it("turns the old link off once a new one is made", async () => {
-      const before = await request(app).get(`/api/bars/${barId}/qrcode`);
+      const before = await request(app)
+        .get(`/api/bars/${barId}/qrcode`)
+        .set("Cookie", asBartender());
       const oldToken = tokenOf(before.body.url);
 
       await request(app)
         .post(`/api/bars/${barId}/rotate-guest-link`)
         .set("Cookie", asBartender());
 
-      const after = await request(app).get(`/api/bars/${barId}/qrcode`);
+      const after = await request(app)
+        .get(`/api/bars/${barId}/qrcode`)
+        .set("Cookie", asBartender());
       expect(tokenOf(after.body.url)).not.toBe(oldToken);
 
       const withOld = await request(app)

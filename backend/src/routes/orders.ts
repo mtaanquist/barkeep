@@ -24,7 +24,9 @@ import {
   type Db,
 } from "../db/queries.js";
 import {
+  requireBarMember,
   requireBartender,
+  requireBartenderForBar,
   requireGuest,
   requireSession,
 } from "../auth/middleware.js";
@@ -57,6 +59,9 @@ export default function createOrderRoutes(db: Db): Router {
     "/bar/:barId",
     route((req, res) => {
       const barId = idParam(req, "barId");
+      // Both the bartender's queue and the guest's own view read this, so it's
+      // open to anyone signed in to this bar — but nobody else.
+      requireBarMember(res, barId);
       const { status, customerName } = req.query;
       const limit = Math.min(Number(req.query["limit"] ?? 100) || 100, 500);
 
@@ -88,12 +93,14 @@ export default function createOrderRoutes(db: Db): Router {
   router.get(
     "/bar/:barId/pending",
     route((req, res) => {
+      const barId = idParam(req, "barId");
+      requireBartenderForBar(res, barId);
       res.json(
         all<OrderForBartender>(
           db,
           `${WITH_RECIPE} WHERE o.bar_id = ? AND o.status IN (${OPEN})
            ORDER BY o.created_at ASC`,
-          idParam(req, "barId")
+          barId
         )
       );
     })
@@ -104,6 +111,12 @@ export default function createOrderRoutes(db: Db): Router {
     route((req, res) => {
       const barId = idParam(req, "barId");
       const customerName = decodeURIComponent(req.params.customerName ?? "");
+
+      // A guest may only look up their own waiting order; the bartender, anyone's.
+      const session = requireBarMember(res, barId);
+      if (session.role === "guest" && session.name !== customerName) {
+        throw HttpError.forbidden("You can only see your own orders");
+      }
 
       res.json(
         one<Order>(
@@ -210,6 +223,7 @@ export default function createOrderRoutes(db: Db): Router {
     "/bar/:barId/analytics",
     route((req, res) => {
       const barId = idParam(req, "barId");
+      requireBartenderForBar(res, barId);
       const days = periodInDays(req.query["days"]);
       // A window expressed for SQLite, built from a checked number.
       const since = `-${days} days`;

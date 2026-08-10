@@ -1,4 +1,4 @@
-import express, { type Router } from "express";
+import express, { type Response, type Router } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -28,7 +28,12 @@ import {
   run,
   type Db,
 } from "../db/queries.js";
-import { requireBartender, requireGuest } from "../auth/middleware.js";
+import {
+  requireBarMember,
+  requireBartender,
+  requireBartenderForBar,
+  requireGuest,
+} from "../auth/middleware.js";
 import { deletePhotoIfUnused } from "../uploads.js";
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -47,6 +52,18 @@ function asGuestSees<T extends Drink>(drinks: T[]): T[] {
   return drinks.map((drink) =>
     drink.show_recipe_to_guests ? drink : { ...drink, recipe: null }
   );
+}
+
+/**
+ * A signed-in member of this bar. A guest may only ask by their own name, so
+ * one guest can't read another's list by putting a different name in the
+ * address; the bartender may look up anyone.
+ */
+function ownList(res: Response, barId: number, name: string): void {
+  const session = requireBarMember(res, barId);
+  if (session.role === "guest" && session.name !== name) {
+    throw HttpError.forbidden("You can only see your own list");
+  }
 }
 
 interface DrinkRoutesOptions {
@@ -106,11 +123,13 @@ export default function createDrinkRoutes({
   router.get(
     "/bar/:barId",
     route((req, res) => {
+      const barId = idParam(req, "barId");
+      requireBartenderForBar(res, barId);
       res.json(
         all<DrinkWithCategory>(
           db,
           `${WITH_CATEGORY} WHERE d.bar_id = ? ORDER BY d.created_at DESC`,
-          idParam(req, "barId")
+          barId
         )
       );
     })
@@ -119,12 +138,14 @@ export default function createDrinkRoutes({
   router.get(
     "/bar/:barId/guest",
     route((req, res) => {
+      const barId = idParam(req, "barId");
+      requireBarMember(res, barId);
       res.json(
         asGuestSees(
           all<DrinkWithCategory>(
             db,
             `${WITH_CATEGORY} WHERE d.bar_id = ? ORDER BY d.created_at DESC`,
-            idParam(req, "barId")
+            barId
           )
         )
       );
@@ -134,7 +155,9 @@ export default function createDrinkRoutes({
   router.get(
     "/bar/:barId/drink/:drinkId",
     route((req, res) => {
-      res.json(findDrink(db, idParam(req, "drinkId"), idParam(req, "barId")));
+      const barId = idParam(req, "barId");
+      requireBartenderForBar(res, barId);
+      res.json(findDrink(db, idParam(req, "drinkId"), barId));
     })
   );
 
@@ -271,6 +294,7 @@ export default function createDrinkRoutes({
     "/bar/:barId/analytics",
     route((req, res) => {
       const barId = idParam(req, "barId");
+      requireBartenderForBar(res, barId);
 
       const report = {
         popularDrinks: all<{ drink_title: string; order_count: number }>(
@@ -301,6 +325,7 @@ export default function createDrinkRoutes({
     route((req, res) => {
       const barId = idParam(req, "barId");
       const customerName = req.params.customerName ?? "";
+      ownList(res, barId, customerName);
 
       res.json(
         asGuestSees(
@@ -374,6 +399,7 @@ export default function createDrinkRoutes({
     route((req, res) => {
       const barId = idParam(req, "barId");
       const customerName = req.params.customerName ?? "";
+      ownList(res, barId, customerName);
 
       res.json(
         asGuestSees(
