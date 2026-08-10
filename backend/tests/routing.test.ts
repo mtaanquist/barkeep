@@ -35,6 +35,21 @@ describe("api routing", () => {
     expect(res.type).toBe("application/json");
   });
 
+  it("turns away a request body past the size cap, cleanly", async () => {
+    // Comfortably over the 1mb cap. The reply should say so, not fall through
+    // to a 500.
+    const huge = { note: "x".repeat(1_100_000) };
+
+    const res = await request(app)
+      .post("/api/auth/bartender")
+      .set("Content-Type", "application/json")
+      .send(JSON.stringify(huge));
+
+    expect(res.status).toBe(413);
+    expect(res.type).toBe("application/json");
+    expect(res.body.error).toMatch(/too large/i);
+  });
+
   it("reports health", async () => {
     const res = await request(app).get("/api/health");
 
