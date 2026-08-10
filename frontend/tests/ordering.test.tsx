@@ -84,12 +84,14 @@ describe("ordering a drink", () => {
     );
 
     const posted = api.calls.find((c) => c.method === "POST");
+    // Only the drink id goes up; the server fills in the title from the drink,
+    // so a guest can't put words on the queue.
     expect(posted?.body).toMatchObject({
       barId: 1,
       customerName: "Ada",
       drinkId: 1,
-      drinkTitle: "Negroni",
     });
+    expect(posted?.body).not.toHaveProperty("drinkTitle");
     expect(await screen.findByText(/order placed/i)).toBeInTheDocument();
   });
 

@@ -74,7 +74,7 @@ export function encodeToken(payload: unknown): string {
  * the body isn't JSON. The caller checks the shape — this only proves we signed
  * it and it parses.
  */
-export function decodeToken(token: string): unknown | null {
+export function decodeToken(token: string): unknown {
   const dot = token.indexOf(".");
   if (dot <= 0) return null;
 

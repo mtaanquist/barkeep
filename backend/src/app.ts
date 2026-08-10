@@ -1,5 +1,7 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import helmet from "helmet";
+import { createHash } from "node:crypto";
 import path from "path";
 import fs from "fs";
 
@@ -15,6 +17,7 @@ import {
 } from "./config.js";
 import { errorReply, route } from "./http.js";
 import { attachSession } from "./auth/middleware.js";
+import { adminLoginLimiter, guestLoginLimiter } from "./rateLimit.js";
 import { createRealtime } from "./realtime.js";
 import type { Db } from "./db/queries.js";
 
@@ -33,8 +36,60 @@ export interface AppOptions {
   publicUrl?: string;
   trustProxy?: TrustProxy;
   requestLogging?: boolean;
+  /** Throttle repeated wrong passwords on the sign-in routes. Off in tests. */
+  rateLimit?: boolean;
   /** The operator panel's password. Unset switches the panel off. */
   operatorPassword?: string | undefined;
+}
+
+/**
+ * The hashes of any inline <script> in the built page, so the policy below can
+ * name them without opening the door to inline script in general. The one we
+ * have settles light or dark before the first paint; its bytes are fixed at
+ * build time, so reading them here keeps the policy in step with the page even
+ * if that script changes.
+ */
+function inlineScriptHashes(frontendDir: string): string[] {
+  const indexFile = path.join(frontendDir, "index.html");
+  if (!fs.existsSync(indexFile)) return [];
+
+  const html = fs.readFileSync(indexFile, "utf8");
+  const hashes: string[] = [];
+  for (const match of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
+    const body = match[1] ?? "";
+    const digest = createHash("sha256").update(body, "utf8").digest("base64");
+    hashes.push(`'sha256-${digest}'`);
+  }
+  return hashes;
+}
+
+/**
+ * What a browser may load and where it may talk to. Everything comes from this
+ * one origin already; the loose ends are the QR code (a data: image), the
+ * inline theme script (named by its hash), and inline styles the pages and the
+ * recipe editor set. `upgrade-insecure-requests` is left off on purpose, so a
+ * bar served over plain http on a home network still works.
+ */
+function securityPolicy(frontendDir: string) {
+  return helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        "default-src": ["'self'"],
+        "script-src": ["'self'", ...inlineScriptHashes(frontendDir)],
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "img-src": ["'self'", "data:", "blob:"],
+        "font-src": ["'self'", "data:"],
+        "connect-src": ["'self'"],
+        "object-src": ["'none'"],
+        "base-uri": ["'self'"],
+        "frame-ancestors": ["'self'"],
+        "upgrade-insecure-requests": null,
+      },
+    },
+    // The QR image and drink photos are read cross-page by design.
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  });
 }
 
 /**
@@ -49,11 +104,15 @@ export function createApp({
   publicUrl = PUBLIC_URL,
   trustProxy = TRUST_PROXY,
   requestLogging = NODE_ENV !== "test",
+  rateLimit = NODE_ENV !== "test",
   operatorPassword = OPERATOR_PASSWORD,
 }: AppOptions): Express {
   if (!db) throw new Error("createApp needs a database");
 
   const app = express();
+
+  // Security headers first, so every reply carries them.
+  app.use(securityPolicy(frontendDir));
 
   // Lets QR codes use the address guests actually came in on when a reverse
   // proxy sits in front.
@@ -63,8 +122,10 @@ export function createApp({
     app.use(cors({ origin: corsOrigin, credentials: true }));
   }
 
-  app.use(express.json({ limit: "10mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+  // Photos come through multer, not here, so a request body is only ever small
+  // fields. 1mb is plenty and caps how much an unsigned caller can make us hold.
+  app.use(express.json({ limit: "1mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
   // Reads the sign-in cookie, if any, before the routes and the live feed run.
   app.use(attachSession);
@@ -81,7 +142,13 @@ export function createApp({
   fs.mkdirSync(uploadsDir, { recursive: true });
   app.use(
     "/uploads",
-    express.static(uploadsDir, { maxAge: "7d", fallthrough: false })
+    express.static(uploadsDir, {
+      maxAge: "7d",
+      fallthrough: false,
+      // Serve the file as exactly the type its extension says, so a browser
+      // won't sniff a stored file into something it can run.
+      setHeaders: (res) => res.setHeader("X-Content-Type-Options", "nosniff"),
+    })
   );
 
   app.get(
@@ -112,6 +179,16 @@ export function createApp({
   const realtime = createRealtime();
   app.locals["realtime"] = realtime;
   app.get("/api/events", (req, res) => realtime.subscribe(req, res));
+
+  // Throttle wrong passwords on the sign-in routes, before the routes run.
+  if (rateLimit) {
+    const admin = adminLoginLimiter();
+    const guest = guestLoginLimiter();
+    app.use("/api/auth/bartender", admin);
+    app.use("/api/operator/login", admin);
+    app.use("/api/auth/guest", guest);
+    app.use("/api/bars/:id/guest-token-login", guest);
+  }
 
   app.use("/api/bars", createBarRoutes({ db, publicUrl }));
   app.use("/api/drinks", createDrinkRoutes({ db, uploadsDir }));

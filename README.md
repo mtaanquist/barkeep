@@ -99,6 +99,25 @@ Two folders need to survive an upgrade:
 Back both up together. The database refers to photos by filename, so they only
 make sense as a pair.
 
+### Running as an ordinary user
+
+By default the container runs as root, which is the simplest thing and matches
+how most setups already have their `data/` and `uploads/` folders. If you would
+rather it ran as an ordinary user, set `PUID` and `PGID` to the user you want.
+The two folders' ownership is put right on start, so an existing setup keeps
+working after the switch.
+
+```yaml
+services:
+  barkeep:
+    environment:
+      PUID: 1000
+      PGID: 1000
+```
+
+`1000:1000` is the first ordinary user on most machines; `id -u` and `id -g`
+tell you yours. This is optional — leave both unset and nothing changes.
+
 ### Setting up your bar
 
 Open the address in a browser and create a bar. You pick two passwords: one for
