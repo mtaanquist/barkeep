@@ -20,6 +20,12 @@ services:
       # Set this if the web address guests use differs from the one the bar
       # is reached on. QR codes use it.
       # PUBLIC_URL: https://bar.example.com
+      # The password for the operator panel, which lists every bar and can
+      # retire a dead one. Leave it unset and the panel stays switched off.
+      # OPERATOR_PASSWORD: change-me
+      # How many days a retired bar stays recoverable before it is removed for
+      # good. Defaults to 60.
+      # SOFT_DELETE_RETENTION_DAYS: 60
     healthcheck:
       test:
         [

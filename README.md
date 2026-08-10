@@ -129,6 +129,8 @@ machine.
 | `PUID`/`PGID` | unset, runs as root                | Run as an ordinary user instead. Ownership of the two folders is fixed on start.                                    |
 | `TRUST_PROXY` | this machine and the local network | Which proxies may say what address a guest used. Widening this would let an outsider point your QR codes elsewhere. |
 | `TZ`          | `UTC`                              | Which clock "today" is measured against, which decides what counts as today's orders.                               |
+| `OPERATOR_PASSWORD` | unset, panel off             | The password for the operator panel, which lists every bar and can retire a dead one. Leave it unset and the panel stays switched off. |
+| `SOFT_DELETE_RETENTION_DAYS` | `60`                | How many days a retired bar stays recoverable before it is removed for good.                                        |
 
 ### Putting a proxy in front
 

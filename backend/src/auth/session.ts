@@ -1,16 +1,8 @@
-import fs from "fs";
-import path from "path";
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { Request, Response } from "express";
 
 import type { UserType } from "../../../shared/types.js";
-import {
-  COOKIE_SECURE,
-  NODE_ENV,
-  SESSION_SECRET,
-  SESSION_SECRET_FILE,
-  SESSION_TTL_MS,
-} from "../config.js";
+import { COOKIE_SECURE, SESSION_TTL_MS } from "../config.js";
+import { decodeToken, encodeToken, readCookie } from "./tokens.js";
 
 /** Who someone is, once their cookie has been checked. */
 export interface Session {
@@ -30,46 +22,6 @@ export interface SessionPayload extends Session {
 /** The one cookie we set. */
 const COOKIE_NAME = "session";
 
-let cachedSecret: string | undefined;
-
-/**
- * The signing key. Prefer the environment; in tests keep one in memory so no
- * file is written; otherwise keep a generated one on disk so a restart doesn't
- * sign everybody out.
- */
-function secret(): string {
-  if (cachedSecret !== undefined) return cachedSecret;
-
-  if (SESSION_SECRET) {
-    cachedSecret = SESSION_SECRET;
-  } else if (NODE_ENV === "test") {
-    cachedSecret = randomBytes(32).toString("hex");
-  } else {
-    cachedSecret = readOrCreateSecretFile();
-  }
-
-  return cachedSecret;
-}
-
-function readOrCreateSecretFile(): string {
-  try {
-    const existing = fs.readFileSync(SESSION_SECRET_FILE, "utf8").trim();
-    if (existing) return existing;
-  } catch {
-    // Not there the first time; made below.
-  }
-
-  const fresh = randomBytes(32).toString("hex");
-  fs.mkdirSync(path.dirname(SESSION_SECRET_FILE), { recursive: true });
-  // Owner-only: nobody else on the box should read the signing key.
-  fs.writeFileSync(SESSION_SECRET_FILE, fresh, { mode: 0o600 });
-  return fresh;
-}
-
-function sign(body: string): string {
-  return createHmac("sha256", secret()).update(body).digest("base64url");
-}
-
 /** Turns a session into a signed cookie value. */
 export function signSession(session: Session, now: number = Date.now()): string {
   const payload: SessionPayload = {
@@ -82,8 +34,7 @@ export function signSession(session: Session, now: number = Date.now()): string 
     exp: now + SESSION_TTL_MS,
   };
 
-  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  return `${body}.${sign(body)}`;
+  return encodeToken(payload);
 }
 
 function isSessionPayload(value: unknown, now: number): value is SessionPayload {
@@ -106,25 +57,7 @@ export function verifySession(
   token: string,
   now: number = Date.now()
 ): SessionPayload | null {
-  const dot = token.indexOf(".");
-  if (dot <= 0) return null;
-
-  const body = token.slice(0, dot);
-  const given = Buffer.from(token.slice(dot + 1));
-  const wanted = Buffer.from(sign(body));
-
-  // Same length first, then a constant-time compare so timing gives nothing away.
-  if (given.length !== wanted.length || !timingSafeEqual(given, wanted)) {
-    return null;
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(Buffer.from(body, "base64url").toString("utf8"));
-  } catch {
-    return null;
-  }
-
+  const parsed = decodeToken(token);
   return isSessionPayload(parsed, now) ? parsed : null;
 }
 
@@ -150,16 +83,5 @@ export function clearSessionCookie(res: Response): void {
 
 /** Reads our cookie out of the request, if it's there. */
 export function readSessionCookie(req: Request): string | undefined {
-  const header = req.headers.cookie;
-  if (!header) return undefined;
-
-  for (const part of header.split(";")) {
-    const eq = part.indexOf("=");
-    if (eq === -1) continue;
-    if (part.slice(0, eq).trim() === COOKIE_NAME) {
-      return decodeURIComponent(part.slice(eq + 1).trim());
-    }
-  }
-
-  return undefined;
+  return readCookie(req, COOKIE_NAME);
 }

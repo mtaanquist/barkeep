@@ -72,3 +72,15 @@ export const SESSION_SECRET_FILE = path.join(
 // Only send the cookie over HTTPS when the public address is HTTPS. Plain-http
 // development has to work without it, or the cookie never arrives.
 export const COOKIE_SECURE: boolean = PUBLIC_URL.startsWith("https://");
+
+// The password for the operator panel, which lists every bar and can retire a
+// dead one. Kept out of the database on purpose, so recovering a bar never
+// depends on the database being readable. Left unset, the panel is switched
+// off and its sign-in always refuses.
+export const OPERATOR_PASSWORD: string | undefined =
+  process.env.OPERATOR_PASSWORD || undefined;
+
+// How long a bar the operator retired sits recoverable before it is removed for
+// good. A whole row survives the wait, so a mistaken delete can be undone.
+export const SOFT_DELETE_RETENTION_DAYS: number =
+  Number(process.env.SOFT_DELETE_RETENTION_DAYS) || 60;
