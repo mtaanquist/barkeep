@@ -26,6 +26,7 @@ export interface AppContextType {
   currentBar: Bar | null;
   customerName: string;
   language: Language;
+  languageChosen: boolean;
 
   // Loading and error states
   loading: boolean;
@@ -50,6 +51,7 @@ export interface AppContextType {
   setCurrentBar: (bar: Bar | null) => void;
   setCustomerName: (name: string) => void;
   setLanguage: (lang: Language) => void;
+  setLanguageChosen: (chosen: boolean) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setBarForm: React.Dispatch<React.SetStateAction<BarForm>>;
