@@ -1,5 +1,7 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import helmet from "helmet";
+import { createHash } from "node:crypto";
 import path from "path";
 import fs from "fs";
 
@@ -38,6 +40,56 @@ export interface AppOptions {
 }
 
 /**
+ * The hashes of any inline <script> in the built page, so the policy below can
+ * name them without opening the door to inline script in general. The one we
+ * have settles light or dark before the first paint; its bytes are fixed at
+ * build time, so reading them here keeps the policy in step with the page even
+ * if that script changes.
+ */
+function inlineScriptHashes(frontendDir: string): string[] {
+  const indexFile = path.join(frontendDir, "index.html");
+  if (!fs.existsSync(indexFile)) return [];
+
+  const html = fs.readFileSync(indexFile, "utf8");
+  const hashes: string[] = [];
+  for (const match of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
+    const body = match[1] ?? "";
+    const digest = createHash("sha256").update(body, "utf8").digest("base64");
+    hashes.push(`'sha256-${digest}'`);
+  }
+  return hashes;
+}
+
+/**
+ * What a browser may load and where it may talk to. Everything comes from this
+ * one origin already; the loose ends are the QR code (a data: image), the
+ * inline theme script (named by its hash), and inline styles the pages and the
+ * recipe editor set. `upgrade-insecure-requests` is left off on purpose, so a
+ * bar served over plain http on a home network still works.
+ */
+function securityPolicy(frontendDir: string) {
+  return helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        "default-src": ["'self'"],
+        "script-src": ["'self'", ...inlineScriptHashes(frontendDir)],
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "img-src": ["'self'", "data:", "blob:"],
+        "font-src": ["'self'", "data:"],
+        "connect-src": ["'self'"],
+        "object-src": ["'none'"],
+        "base-uri": ["'self'"],
+        "frame-ancestors": ["'self'"],
+        "upgrade-insecure-requests": null,
+      },
+    },
+    // The QR image and drink photos are read cross-page by design.
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  });
+}
+
+/**
  * Builds the app. Nothing here listens on a port or opens a database, so a
  * test can hand in its own and check the app on its own terms.
  */
@@ -54,6 +106,9 @@ export function createApp({
   if (!db) throw new Error("createApp needs a database");
 
   const app = express();
+
+  // Security headers first, so every reply carries them.
+  app.use(securityPolicy(frontendDir));
 
   // Lets QR codes use the address guests actually came in on when a reverse
   // proxy sits in front.
