@@ -81,7 +81,13 @@ export function createApp({
   fs.mkdirSync(uploadsDir, { recursive: true });
   app.use(
     "/uploads",
-    express.static(uploadsDir, { maxAge: "7d", fallthrough: false })
+    express.static(uploadsDir, {
+      maxAge: "7d",
+      fallthrough: false,
+      // Serve the file as exactly the type its extension says, so a browser
+      // won't sniff a stored file into something it can run.
+      setHeaders: (res) => res.setHeader("X-Content-Type-Options", "nosniff"),
+    })
   );
 
   app.get(
