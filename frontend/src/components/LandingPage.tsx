@@ -7,8 +7,15 @@ import BarCreator from "./BarCreator";
 import LoginForm from "./LoginForm";
 
 const LandingPage: React.FC = () => {
-  const { currentBar, language, setLanguage, setCurrentBar, setLoginForm } =
-    useApp();
+  const {
+    currentBar,
+    language,
+    languageChosen,
+    setLanguage,
+    setLanguageChosen,
+    setCurrentBar,
+    setLoginForm,
+  } = useApp();
   const t = useTranslation(language);
 
   const [mode, setMode] = useState<"select" | "create" | "login">("select");
@@ -17,7 +24,8 @@ const LandingPage: React.FC = () => {
   const handleSelectBar = (bar: Bar) => {
     setSelectedBar(bar);
     setCurrentBar(bar);
-    setLanguage(bar.language);
+    // A guest who picked a language keeps it; otherwise fall back to the bar's.
+    if (!languageChosen) setLanguage(bar.language);
     setMode("login");
   };
 
@@ -86,7 +94,10 @@ const LandingPage: React.FC = () => {
 
   const languageOption = (value: Language, label: string) => (
     <button
-      onClick={() => setLanguage(value)}
+      onClick={() => {
+        setLanguage(value);
+        setLanguageChosen(true);
+      }}
       aria-pressed={language === value}
       className={`h-11 px-4 text-label transition-colors duration-(--duration-instant) cursor-pointer ${
         language === value

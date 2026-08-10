@@ -27,6 +27,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   );
   const [customerName, setCustomerName] = useStoredState("customerName", "");
   const [language, setLanguage] = useStoredState<Language>("language", "en");
+  // Whether the guest picked a language by hand. Once they have, picking a bar
+  // must not quietly switch it back to the bar's default.
+  const [languageChosen, setLanguageChosen] = useStoredState<boolean>(
+    "languageChosen",
+    false
+  );
 
   // Loading and error states
   const [loading, setLoading] = useState(false);
@@ -57,6 +63,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     setCurrentBar(null);
     setCustomerName("");
     setLanguage("en");
+    setLanguageChosen(false);
     setBarForm({
       name: "",
       bartenderPassword: "",
@@ -66,7 +73,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     setLoginForm({ password: "", name: "" });
 
     clearStoredState();
-  }, [setUserType, setCurrentBar, setCustomerName, setLanguage]);
+  }, [
+    setUserType,
+    setCurrentBar,
+    setCustomerName,
+    setLanguage,
+    setLanguageChosen,
+  ]);
 
   // Session validation effect
   useEffect(() => {
@@ -118,6 +131,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     currentBar,
     customerName,
     language,
+    languageChosen,
 
     // Loading and error states
     loading,
@@ -142,6 +156,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     setCurrentBar,
     setCustomerName,
     setLanguage,
+    setLanguageChosen,
     setLoading,
     setError,
     setBarForm,
