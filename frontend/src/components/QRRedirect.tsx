@@ -207,33 +207,23 @@ const QRRedirect: React.FC = () => {
                 autoFocus
               />
 
-              {/* A claimed name has to be proved with its password. */}
+              {/* A claimed name has to be proved with its password — the only
+                  time the door asks for one. Registering happens inside. */}
               {claim.nameClaimed && (
-                <p className="text-sm text-text-muted">{t("nameClaimedHelp")}</p>
-              )}
-
-              {/* Otherwise, an unobtrusive way to make this name yours. */}
-              {!claim.nameClaimed && (
-                <ToggleRow
-                  on={claim.claiming}
-                  onChange={claim.setClaiming}
-                  title={t("setPassword")}
-                  help={t("setPasswordHelp")}
-                />
-              )}
-
-              {claim.passwordVisible && (
-                <input
-                  type="password"
-                  placeholder={
-                    claim.nameClaimed ? t("yourPassword") : t("setAPassword")
-                  }
-                  value={claim.accountPassword}
-                  onChange={(e) => claim.setAccountPassword(e.target.value)}
-                  className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
-                  onKeyPress={(e) => e.key === "Enter" && handleGuestLogin()}
-                  autoFocus={claim.nameClaimed}
-                />
+                <>
+                  <p className="text-sm text-text-muted">
+                    {t("nameClaimedHelp")}
+                  </p>
+                  <input
+                    type="password"
+                    placeholder={t("yourPassword")}
+                    value={claim.accountPassword}
+                    onChange={(e) => claim.setAccountPassword(e.target.value)}
+                    className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
+                    onKeyPress={(e) => e.key === "Enter" && handleGuestLogin()}
+                    autoFocus
+                  />
+                </>
               )}
 
               <ToggleRow

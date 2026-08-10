@@ -13,8 +13,16 @@ import {
   clearSessionCookie,
   setSessionCookie,
 } from "../auth/session.js";
-import { currentSession, requireRegular } from "../auth/middleware.js";
-import { changeGuestPassword, resolveGuest } from "../auth/guestAccounts.js";
+import {
+  currentSession,
+  requireGuest,
+  requireRegular,
+} from "../auth/middleware.js";
+import {
+  changeGuestPassword,
+  claimGuestName,
+  resolveGuest,
+} from "../auth/guestAccounts.js";
 import {
   findBar,
   publicBar,
@@ -133,6 +141,25 @@ export default function createAuthRoutes(db: Db): Router {
           ? { ...reply, customerName: session.name }
           : reply
       );
+    })
+  );
+
+  // "Make this name yours": a guest already signed in under a name sets a
+  // password on it, from inside the bar. It claims the name and their session
+  // becomes a regular's, so the longer-lived things open up on the next reload.
+  router.post(
+    "/guest/claim",
+    route(async (req, res) => {
+      const { barId, name } = requireGuest(res);
+      const password = requireText(req.body, "password", { label: "Password" });
+
+      await claimGuestName(db, barId, name, password);
+
+      // Re-issue the cookie as a proven regular, so the claim sticks.
+      setSessionCookie(res, { barId, role: "guest", name, authenticated: true });
+
+      const bar = findBar(db, barId);
+      res.json({ ...signedInAs(bar, "guest", true), customerName: name });
     })
   );
 

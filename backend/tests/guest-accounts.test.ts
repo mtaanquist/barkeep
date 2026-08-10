@@ -380,6 +380,65 @@ describe("the bartender resetting a regular's password", () => {
   });
 });
 
+describe("claiming a name from inside the bar", () => {
+  it("lets a signed-in guest set a password and become a regular", async () => {
+    const { app, db } = makeTestApp();
+    const { barId, token } = seedBarWithToken(db);
+
+    const res = await request(app)
+      .post("/api/auth/guest/claim")
+      .set("Cookie", sessionCookie({ barId, role: "guest", name: "Ada" }))
+      .send({ password: "secret" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.authenticated).toBe(true);
+    expect(res.body.customerName).toBe("Ada");
+
+    // The name is claimed now: proving it at the door works, and a bare login
+    // is turned away.
+    const proved = await tokenLogin(app, barId, token, {
+      customerName: "Ada",
+      accountPassword: "secret",
+    });
+    expect(proved.status).toBe(200);
+    expect(proved.body.authenticated).toBe(true);
+
+    const bare = await tokenLogin(app, barId, token, { customerName: "Ada" });
+    expect(bare.status).toBe(401);
+  });
+
+  it("refuses a name that is already claimed", async () => {
+    const { app, db } = makeTestApp();
+    const { barId } = seedBar(db);
+    db.prepare(
+      "INSERT INTO guest_accounts (bar_id, name, password_hash) VALUES (?, 'Ada', 'x')"
+    ).run(barId);
+
+    const res = await request(app)
+      .post("/api/auth/guest/claim")
+      .set("Cookie", sessionCookie({ barId, role: "guest", name: "Ada" }))
+      .send({ password: "secret" });
+
+    expect(res.status).toBe(409);
+  });
+
+  it("is only for a signed-in guest", async () => {
+    const { app, db } = makeTestApp();
+    const { barId } = seedBar(db);
+
+    const noCookie = await request(app)
+      .post("/api/auth/guest/claim")
+      .send({ password: "secret" });
+    expect(noCookie.status).toBe(401);
+
+    const asBartender = await request(app)
+      .post("/api/auth/guest/claim")
+      .set("Cookie", sessionCookie({ barId, role: "bartender" }))
+      .send({ password: "secret" });
+    expect(asBartender.status).toBe(403);
+  });
+});
+
 describe("changing a regular's password", () => {
   it("turns away a one-time guest who never claimed a name", async () => {
     const { app, db } = makeTestApp();

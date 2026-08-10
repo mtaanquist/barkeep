@@ -195,7 +195,8 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
               {t("notMe")}
             </button>
 
-            {/* Only a regular — a guest who claimed their name — sees this. */}
+            {/* A regular — a guest who claimed their name — can change their
+                password here. Claiming itself is offered up in the greeting. */}
             <ChangePasswordSection />
           </div>
         </div>
