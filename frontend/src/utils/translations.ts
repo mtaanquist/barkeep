@@ -115,6 +115,18 @@ export interface TranslationMap {
   rememberMe: string;
   rememberMeHelp: string;
 
+  // Claiming a name (regulars)
+  setPassword: string;
+  setPasswordHelp: string;
+  setAPassword: string;
+  yourPassword: string;
+  nameClaimedHelp: string;
+  wrongPassword: string;
+  changePassword: string;
+  currentPassword: string;
+  newPassword: string;
+  passwordChanged: string;
+
   // Bartender interface
   pendingOrders: string;
   noPendingOrders: string;
@@ -367,7 +379,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     goHome: "Go to the front page",
     loadingBar: "Fetching the bar…",
     landingIntro:
-      "Pick a bar, type your first name, and order from your phone. No account, no app.",
+      "Pick a bar, type your first name, and order from your phone. No account needed — or claim your name so it stays yours.",
     bartenderLogin: "Bartender Login",
     guestLogin: "Guest Login",
     createBar: "Create New Bar",
@@ -381,6 +393,20 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     enterName: "Enter Your Name",
     rememberMe: "Remember me on this phone",
     rememberMeHelp: "So you do not have to type your name again next time.",
+
+    // Claiming a name (regulars)
+    setPassword: "Make this name mine",
+    setPasswordHelp:
+      "Set a password so only you can use this name at this bar.",
+    setAPassword: "Choose a password",
+    yourPassword: "Your password",
+    nameClaimedHelp:
+      "This name is taken here. Enter its password — or add a last name or initial if it is not you.",
+    wrongPassword: "That password is not right.",
+    changePassword: "Change password",
+    currentPassword: "Current password",
+    newPassword: "New password",
+    passwordChanged: "Password changed.",
 
     // Bartender interface
     pendingOrders: "Pending Orders",
@@ -632,7 +658,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     goHome: "Gå til forsiden",
     loadingBar: "Henter baren…",
     landingIntro:
-      "Vælg en bar, skriv dit fornavn, og bestil fra telefonen. Ingen konto, ingen app.",
+      "Vælg en bar, skriv dit fornavn, og bestil fra telefonen. Ingen konto nødvendig — eller gør navnet til dit, så det bliver ved med at være dit.",
     bartenderLogin: "Bartender login",
     guestLogin: "Gæst login",
     createBar: "Opret ny bar",
@@ -646,6 +672,20 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     enterName: "Indtast dit navn",
     rememberMe: "Husk mig på denne telefon",
     rememberMeHelp: "Så du ikke skal skrive dit navn igen næste gang.",
+
+    // Claiming a name (regulars)
+    setPassword: "Gør dette navn til mit",
+    setPasswordHelp:
+      "Vælg en adgangskode, så kun du kan bruge dette navn i denne bar.",
+    setAPassword: "Vælg en adgangskode",
+    yourPassword: "Din adgangskode",
+    nameClaimedHelp:
+      "Dette navn er taget her. Indtast dets adgangskode — eller tilføj et efternavn eller et forbogstav, hvis det ikke er dig.",
+    wrongPassword: "Den adgangskode passer ikke.",
+    changePassword: "Skift adgangskode",
+    currentPassword: "Nuværende adgangskode",
+    newPassword: "Ny adgangskode",
+    passwordChanged: "Adgangskoden er skiftet.",
 
     // Bartender interface
     pendingOrders: "Afventende bestillinger",

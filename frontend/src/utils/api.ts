@@ -1,6 +1,22 @@
 const API_BASE = "/api";
 
 /**
+ * A failed request. Carries the status and, when the server sent one, a short
+ * code the pages can branch on — telling a claimed name apart from a wrong
+ * password without having to read the English message.
+ */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly code?: string
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+/**
  * Talks to the API. Anything other than a success is turned into an error
  * carrying the message the server sent, which is what the pages show.
  *
@@ -27,7 +43,11 @@ export async function apiCall<T = unknown>(
       .json()
       .catch(() => ({ error: `HTTP ${response.status}` }));
 
-    throw new Error(problem.error || `HTTP ${response.status}`);
+    throw new ApiError(
+      problem.error || `HTTP ${response.status}`,
+      response.status,
+      problem.code
+    );
   }
 
   return response.json();

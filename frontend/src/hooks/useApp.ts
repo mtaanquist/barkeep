@@ -25,6 +25,8 @@ export interface AppContextType {
   userType: UserType | null;
   currentBar: Bar | null;
   customerName: string;
+  /** A guest who proved a password for their name — a "regular". */
+  authenticated: boolean;
   language: Language;
   languageChosen: boolean;
 
@@ -50,6 +52,7 @@ export interface AppContextType {
   setUserType: (type: UserType | null) => void;
   setCurrentBar: (bar: Bar | null) => void;
   setCustomerName: (name: string) => void;
+  setAuthenticated: (value: boolean) => void;
   setLanguage: (lang: Language) => void;
   setLanguageChosen: (chosen: boolean) => void;
   setLoading: (loading: boolean) => void;
