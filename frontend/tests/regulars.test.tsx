@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 import RegularsTab from "../src/components/bartender/RegularsTab";
 import { withApp, fakeApi, aBar, signIn } from "./helpers";
@@ -17,6 +17,9 @@ function fakeRegulars(initial: Row[]) {
   return fakeApi((path, options) => {
     if (path.includes("/auth/me")) {
       return { success: true, userType: "bartender", bar: aBar() };
+    }
+    if (path.endsWith("/password") && options.method === "PUT") {
+      return { success: true };
     }
     if (path.includes("/regulars/") && options.method === "PUT") {
       const { name } = JSON.parse(String(options.body));
@@ -55,5 +58,23 @@ describe("the bartender's regulars tab", () => {
     fireEvent.keyDown(input, { key: "Enter" });
 
     expect(await screen.findByText("Ada Lovelace")).toBeInTheDocument();
+  });
+
+  it("resets a regular's password on the bartender's say-so", async () => {
+    const api = fakeRegulars([{ id: 1, name: "Ada", created_at: "2026-08-01" }]);
+    signIn({ as: "bartender" });
+
+    render(<RegularsTab />, { wrapper: withApp });
+
+    fireEvent.click(await screen.findByRole("button", { name: "Set password" }));
+
+    // The bartender (or the guest they hand the tablet to) types a new one.
+    const input = screen.getByPlaceholderText("New password");
+    fireEvent.change(input, { target: { value: "simple" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    // It went to the password endpoint, and the row confirms it.
+    await waitFor(() => expect(api.countOf("/password")).toBe(1));
+    expect(await screen.findByText("Password set.")).toBeInTheDocument();
   });
 });

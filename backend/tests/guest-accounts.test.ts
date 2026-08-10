@@ -321,6 +321,65 @@ describe("renaming a regular", () => {
   });
 });
 
+describe("the bartender resetting a regular's password", () => {
+  it("sets a new password without asking for the old one", async () => {
+    const { app, db } = makeTestApp();
+    const { barId, token } = seedBarWithToken(db);
+    await tokenLogin(app, barId, token, {
+      customerName: "Ada",
+      accountPassword: "secret",
+    });
+    const accountId = Number(
+      (
+        db
+          .prepare("SELECT id FROM guest_accounts WHERE bar_id = ?")
+          .get(barId) as { id: number }
+      ).id
+    );
+
+    const res = await request(app)
+      .put(`/api/bars/${barId}/regulars/${accountId}/password`)
+      .set("Cookie", sessionCookie({ barId, role: "bartender" }))
+      .send({ newPassword: "freshone" });
+    expect(res.status).toBe(200);
+
+    // The old password no longer works; the one the bartender set does.
+    const oldPw = await tokenLogin(app, barId, token, {
+      customerName: "Ada",
+      accountPassword: "secret",
+    });
+    expect(oldPw.status).toBe(401);
+    const newPw = await tokenLogin(app, barId, token, {
+      customerName: "Ada",
+      accountPassword: "freshone",
+    });
+    expect(newPw.status).toBe(200);
+    expect(newPw.body.authenticated).toBe(true);
+  });
+
+  it("is the bartender's alone", async () => {
+    const { app, db } = makeTestApp();
+    const { barId, token } = seedBarWithToken(db);
+    await tokenLogin(app, barId, token, {
+      customerName: "Ada",
+      accountPassword: "secret",
+    });
+    const accountId = Number(
+      (
+        db
+          .prepare("SELECT id FROM guest_accounts WHERE bar_id = ?")
+          .get(barId) as { id: number }
+      ).id
+    );
+
+    const asGuest = await request(app)
+      .put(`/api/bars/${barId}/regulars/${accountId}/password`)
+      .set("Cookie", sessionCookie({ barId, role: "guest", name: "Ada" }))
+      .send({ newPassword: "freshone" });
+    expect(asGuest.status).toBe(403);
+  });
+});
+
 describe("changing a regular's password", () => {
   it("turns away a one-time guest who never claimed a name", async () => {
     const { app, db } = makeTestApp();

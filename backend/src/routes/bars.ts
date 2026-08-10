@@ -27,6 +27,7 @@ import {
   listRegulars,
   renameRegular,
   resolveGuest,
+  setRegularPassword,
 } from "../auth/guestAccounts.js";
 import {
   requireBartender,
@@ -401,6 +402,22 @@ export default function createBarRoutes({
       const accountId = idParam(req, "accountId");
       const name = requireText(req.body, "name", { min: 2, label: "Name" });
       res.json(renameRegular(db, barId, accountId, name));
+    })
+  );
+
+  // Reset a regular's password. No old password asked for — the bartender is
+  // trusted, and this is the way back in for a regular who forgot theirs.
+  router.put(
+    "/:id/regulars/:accountId/password",
+    route(async (req, res) => {
+      const barId = ownBar(req, res);
+      findBar(db, barId);
+      const accountId = idParam(req, "accountId");
+      const newPassword = requireText(req.body, "newPassword", {
+        label: "Password",
+      });
+      await setRegularPassword(db, barId, accountId, newPassword);
+      res.json({ success: true });
     })
   );
 

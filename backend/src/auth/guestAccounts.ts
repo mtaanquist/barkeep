@@ -196,3 +196,34 @@ export function renameRegular(
 
   return { id: account.id, name: trimmed, created_at: account.created_at };
 }
+
+/**
+ * Sets a regular's password on the bartender's say-so — no old password asked
+ * for. The bartender hands the tablet over for the guest to type their own, or
+ * sets a simple one the guest changes later. A friendly way back in for a
+ * regular who forgot theirs.
+ */
+export async function setRegularPassword(
+  db: Db,
+  barId: number,
+  accountId: number,
+  newPassword: string
+): Promise<void> {
+  const account = one<GuestAccountRow>(
+    db,
+    "SELECT * FROM guest_accounts WHERE id = ? AND bar_id = ?",
+    accountId,
+    barId
+  );
+  if (!account) throw HttpError.notFound("No such regular");
+
+  const trimmed = newPassword.trim();
+  if (trimmed.length < GUEST_PASSWORD_MIN) {
+    throw HttpError.badRequest(
+      `Password must be at least ${GUEST_PASSWORD_MIN} characters long`
+    );
+  }
+
+  const passwordHash = await bcrypt.hash(trimmed, HASH_ROUNDS);
+  run(db, "UPDATE guest_accounts SET password_hash = ? WHERE id = ?", passwordHash, account.id);
+}

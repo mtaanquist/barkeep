@@ -135,6 +135,9 @@ export interface TranslationMap {
   rename: string;
   nameTaken: string;
   guestRenamed: string;
+  setGuestPassword: string;
+  setGuestPasswordHelp: string;
+  guestPasswordSet: string;
 
   // Bartender interface
   pendingOrders: string;
@@ -426,6 +429,10 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     rename: "Rename",
     nameTaken: "That name is already taken.",
     guestRenamed: "Renamed.",
+    setGuestPassword: "Set password",
+    setGuestPasswordHelp:
+      "Hand them the tablet to type a new one, or set a simple one they can change later.",
+    guestPasswordSet: "Password set.",
 
     // Bartender interface
     pendingOrders: "Pending Orders",
@@ -715,6 +722,10 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     rename: "Omdøb",
     nameTaken: "Det navn er allerede taget.",
     guestRenamed: "Omdøbt.",
+    setGuestPassword: "Vælg adgangskode",
+    setGuestPasswordHelp:
+      "Ræk dem tabletten, så de selv kan skrive en ny, eller vælg en simpel en, de kan ændre senere.",
+    guestPasswordSet: "Adgangskoden er sat.",
 
     // Bartender interface
     pendingOrders: "Afventende bestillinger",
