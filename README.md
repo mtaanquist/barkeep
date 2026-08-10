@@ -122,6 +122,20 @@ Retiring a bar can be undone: it disappears for guests and bartenders straight
 away but can be restored, and is removed for good after
 `SOFT_DELETE_RETENTION_DAYS` (60 days by default).
 
+### If a code is lost
+
+Recovering a password does not need a screen — it needs the machine. From the
+server, set a new code and read it once:
+
+```sh
+docker compose exec barkeep npm run reset-code -- --bar 1 --guest
+docker compose exec barkeep npm run reset-code -- --bar 1 --bartender
+```
+
+The bar's id is on the operator panel. The new code is shown once and only its
+hash is kept, so write it down when it appears. This works even when the app
+will not start, because it never starts it.
+
 ### Image tags
 
 | Tag              | Built from                                     |
