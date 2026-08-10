@@ -23,6 +23,8 @@ export interface TranslationMap {
   yourName: string;
   startOrdering: string;
   greeting: string;
+  greetingBack: string;
+  lastVisited: string;
   letTheBarChoose: string;
   confirmReject: string;
   bartender: string;
@@ -126,6 +128,7 @@ export interface TranslationMap {
   currentPassword: string;
   newPassword: string;
   passwordChanged: string;
+  nameIsYours: string;
 
   // Regulars (bartender)
   regulars: string;
@@ -306,6 +309,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     yourName: "Your name",
     startOrdering: "Start ordering",
     greeting: "Welcome",
+    greetingBack: "Welcome back",
+    lastVisited: "You last visited on",
     letTheBarChoose: "Let the bar choose",
     confirmReject: "Reject this order? The guest is told straight away.",
     bartender: "Bartender",
@@ -419,6 +424,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     currentPassword: "Current password",
     newPassword: "New password",
     passwordChanged: "Password changed.",
+    nameIsYours: "This name is yours now — you will need this password next time.",
 
     // Regulars (bartender)
     regulars: "Regulars",
@@ -599,6 +605,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     yourName: "Dit navn",
     startOrdering: "Kom i gang",
     greeting: "Velkommen",
+    greetingBack: "Velkommen tilbage",
+    lastVisited: "Du var her sidst den",
     letTheBarChoose: "Lad baren vælge",
     confirmReject: "Afvis denne bestilling? Gæsten får besked med det samme.",
     bartender: "Bartender",
@@ -712,6 +720,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     currentPassword: "Nuværende adgangskode",
     newPassword: "Ny adgangskode",
     passwordChanged: "Adgangskoden er skiftet.",
+    nameIsYours: "Navnet er dit nu — du skal bruge denne adgangskode næste gang.",
 
     // Regulars (bartender)
     regulars: "Faste gæster",

@@ -104,6 +104,43 @@ export async function resolveGuest(
 }
 
 /**
+ * Claims a name for a guest who is already signed in under it — the "make this
+ * name yours" step taken inside the bar, not at the door. The name must still
+ * be free; a signed-in anonymous guest always holds a free one.
+ */
+export async function claimGuestName(
+  db: Db,
+  barId: number,
+  name: string,
+  password: string
+): Promise<void> {
+  if (findGuestAccount(db, barId, name)) {
+    throw new HttpError(409, "That name is already claimed", NAME_CLAIMED);
+  }
+
+  const pw = password.trim();
+  if (pw.length < GUEST_PASSWORD_MIN) {
+    throw HttpError.badRequest(
+      `Password must be at least ${GUEST_PASSWORD_MIN} characters long`
+    );
+  }
+
+  const passwordHash = await bcrypt.hash(pw, HASH_ROUNDS);
+  try {
+    run(
+      db,
+      "INSERT INTO guest_accounts (bar_id, name, password_hash) VALUES (?, ?, ?)",
+      barId,
+      name,
+      passwordHash
+    );
+  } catch (err) {
+    if (!isUniqueViolation(err)) throw err;
+    throw new HttpError(409, "That name was just claimed", NAME_CLAIMED);
+  }
+}
+
+/**
  * Changes a claimed name's password. The caller has already proved they are the
  * regular whose name this is.
  */

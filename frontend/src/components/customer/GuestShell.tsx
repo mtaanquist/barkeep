@@ -8,6 +8,7 @@ import { useTranslation } from "../../utils/translations";
 import { ConnectionLost } from "../ConnectionLost";
 import ThemeToggle from "../ThemeToggle";
 import GuestDock from "./GuestDock";
+import GuestGreeting from "./GuestGreeting";
 
 /** Statuses that mean a guest still has a drink on the go. */
 const IN_PROGRESS = ["new", "accepted", "ready"];
@@ -82,9 +83,7 @@ const GuestShell: React.FC<GuestShellProps> = ({
 
             <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-4">
               <h1 className="text-heading truncate">{currentBar?.name}</h1>
-              <p className="sm:flex-1 min-w-0 text-body text-text-muted truncate">
-                {t("greeting")}, {customerName}
-              </p>
+              <GuestGreeting />
             </div>
 
             <ThemeToggle t={t} />
