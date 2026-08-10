@@ -9,7 +9,9 @@ import LoginForm from "./LoginForm";
 
 const LandingPage: React.FC = () => {
   const {
+    userType,
     currentBar,
+    customerName,
     language,
     languageChosen,
     setLanguage,
@@ -22,6 +24,14 @@ const LandingPage: React.FC = () => {
 
   const [mode, setMode] = useState<"select" | "create" | "login">("select");
   const [selectedBar, setSelectedBar] = useState<Bar | null>(null);
+
+  // The bar this visitor is already signed into, remembered as the page opens
+  // — before picking a bar starts overwriting currentBar. Tapping this same bar
+  // means "back to where I was", not "sign in again". A different bar still
+  // goes through the login, so swapping bars works as before.
+  const signedIn = useRef(
+    userType && currentBar ? { role: userType, barId: currentBar.id } : null
+  );
 
   // The way in to the operator panel: tap the sign seven times, quickly. There
   // is deliberately no link to it anywhere — this is the whole door. The real
@@ -39,6 +49,21 @@ const LandingPage: React.FC = () => {
   };
 
   const handleSelectBar = (bar: Bar) => {
+    // Already signed in on this bar: walk back in rather than asking again.
+    // A guest still needs a remembered name to have somewhere to return to.
+    if (signedIn.current?.barId === bar.id) {
+      if (signedIn.current.role === "guest" && customerName) {
+        setCurrentBar(bar);
+        navigate("/customer");
+        return;
+      }
+      if (signedIn.current.role === "bartender") {
+        setCurrentBar(bar);
+        navigate("/bartender");
+        return;
+      }
+    }
+
     setSelectedBar(bar);
     setCurrentBar(bar);
     // A guest who picked a language keeps it; otherwise fall back to the bar's.
