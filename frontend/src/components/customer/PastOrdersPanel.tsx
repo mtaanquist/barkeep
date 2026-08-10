@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { ChevronLeft } from "lucide-react";
 import type { Drink, Order } from "../../types";
 import type { TranslationKeys } from "../../utils/translations";
+import ChangePasswordSection from "./ChangePasswordSection";
 
 interface PastOrdersPanelProps {
   orders: Order[];
@@ -193,6 +194,9 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
             >
               {t("notMe")}
             </button>
+
+            {/* Only a regular — a guest who claimed their name — sees this. */}
+            <ChangePasswordSection />
           </div>
         </div>
       </aside>

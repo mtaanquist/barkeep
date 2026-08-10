@@ -1,13 +1,12 @@
 import { randomInt } from "node:crypto";
 import bcrypt from "bcrypt";
 
+import { HASH_ROUNDS } from "../config.js";
 import { one, run, type Db } from "../db/queries.js";
 
 // Setting a lost password back to something known. Kept as a plain function so
 // the recovery command can use it today and an operator route could use the
 // very same thing later — neither has to know how the other shows the result.
-
-const HASH_ROUNDS = 12;
 
 // No look-alike characters (no i, l, o, 0, 1), so a code read off a screen and
 // typed on a phone doesn't trip on which letter it was.

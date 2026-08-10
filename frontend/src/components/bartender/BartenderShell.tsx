@@ -7,6 +7,7 @@ import {
   LogOut,
   QrCode,
   Settings,
+  Users,
 } from "lucide-react";
 import { useApp } from "../../hooks/useApp";
 import type { Analytics, BarQrCode, Drink, Order } from "../../types";
@@ -23,6 +24,7 @@ const PENDING = ["new", "accepted", "ready"];
 const SETUP = [
   { to: "menu", label: "drinkMenu", Icon: List },
   { to: "categories", label: "categories", Icon: Grid2x2 },
+  { to: "regulars", label: "regulars", Icon: Users },
   { to: "analytics", label: "analytics", Icon: BarChart3 },
   { to: "settings", label: "settings", Icon: Settings },
 ] as const;

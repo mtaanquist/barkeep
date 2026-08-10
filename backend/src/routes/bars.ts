@@ -12,6 +12,7 @@ import type {
   BarQrCode,
   Language,
   Order,
+  SignedIn,
 } from "../../../shared/types.js";
 import {
   HttpError,
@@ -22,7 +23,14 @@ import {
   toFlag,
   wasSent,
 } from "../http.js";
+import { HASH_ROUNDS } from "../config.js";
 import { setSessionCookie } from "../auth/session.js";
+import {
+  listRegulars,
+  renameRegular,
+  resolveGuest,
+  setRegularPassword,
+} from "../auth/guestAccounts.js";
 import {
   requireBartender,
   requireBartenderForBar,
@@ -45,8 +53,6 @@ const PASSWORD_RULES = {
   bartender: { min: 4, label: "Bartender password" },
   guest: { min: 3, label: "Guest password" },
 } as const;
-
-const HASH_ROUNDS = 12;
 
 /** The bar fields that are safe to list. Never the token or the hashes. */
 const PUBLIC_COLUMNS =
@@ -375,9 +381,49 @@ export default function createBarRoutes({
     })
   );
 
+  // The regulars who have claimed a name at this bar. Bartender-only; the
+  // list never carries a password.
+  router.get(
+    "/:id/regulars",
+    route((req, res) => {
+      const barId = ownBar(req, res);
+      findBar(db, barId);
+      res.json(listRegulars(db, barId));
+    })
+  );
+
+  // Rename a regular, moving their favourites and past orders with them. For
+  // the bartender to fix a name or tell two same-named regulars apart.
+  router.put(
+    "/:id/regulars/:accountId",
+    route((req, res) => {
+      const barId = ownBar(req, res);
+      findBar(db, barId);
+      const accountId = idParam(req, "accountId");
+      const name = requireText(req.body, "name", { min: 2, label: "Name" });
+      res.json(renameRegular(db, barId, accountId, name));
+    })
+  );
+
+  // Reset a regular's password. No old password asked for — the bartender is
+  // trusted, and this is the way back in for a regular who forgot theirs.
+  router.put(
+    "/:id/regulars/:accountId/password",
+    route(async (req, res) => {
+      const barId = ownBar(req, res);
+      findBar(db, barId);
+      const accountId = idParam(req, "accountId");
+      const newPassword = requireText(req.body, "newPassword", {
+        label: "Password",
+      });
+      await setRegularPassword(db, barId, accountId, newPassword);
+      res.json({ success: true });
+    })
+  );
+
   router.post(
     "/:id/guest-token-login",
-    route((req, res) => {
+    route(async (req, res) => {
       const barId = idParam(req, "id");
       const token = requireText(req.body, "token");
       const customerName = requireText(req.body, "customerName", {
@@ -391,17 +437,31 @@ export default function createBarRoutes({
         throw new HttpError(401, "Invalid or expired token");
       }
 
-      // The QR link gets you a session; it isn't one itself.
-      setSessionCookie(res, { barId: bar.id, role: "guest", name: customerName });
+      // The QR link gets you a session; it isn't one itself. A claimed name
+      // still has to be proved with its password before the session is set.
+      const resolved = await resolveGuest(
+        db,
+        bar.id,
+        customerName,
+        optionalText(req.body, "accountPassword")
+      );
 
+      setSessionCookie(res, {
+        barId: bar.id,
+        role: "guest",
+        name: resolved.name,
+        ...(resolved.authenticated ? { authenticated: true } : {}),
+      });
+
+      // The same shape every other sign-in sends, so the pages read one thing:
+      // the whole bar, the name, and whether a password was proved.
       res.json({
         success: true,
-        barId: bar.id,
-        barName: bar.name,
-        language: bar.language,
-        customerName,
         userType: "guest",
-      });
+        bar: publicBar(bar),
+        customerName: resolved.name,
+        authenticated: resolved.authenticated,
+      } satisfies SignedIn);
     })
   );
 

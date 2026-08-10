@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 
 import type { UserType } from "../../../shared/types.js";
-import { COOKIE_SECURE, SESSION_TTL_MS } from "../config.js";
+import { COOKIE_SECURE, GUEST_SESSION_TTL_MS, SESSION_TTL_MS } from "../config.js";
 import { decodeToken, encodeToken, readCookie } from "./tokens.js";
 
 /** Who someone is, once their cookie has been checked. */
@@ -10,6 +10,13 @@ export interface Session {
   role: UserType;
   /** A guest's name, so an order can't be placed or cancelled as someone else. */
   name?: string;
+  /** A guest who proved a password for their name — a "regular". */
+  authenticated?: boolean;
+}
+
+/** A guest's cookie outlives the bartender's single shift. */
+function ttlFor(role: UserType): number {
+  return role === "guest" ? GUEST_SESSION_TTL_MS : SESSION_TTL_MS;
 }
 
 /** The signed contents of a cookie: a session, plus when it was made and dies. */
@@ -28,10 +35,11 @@ export function signSession(session: Session, now: number = Date.now()): string 
     v: 1,
     barId: session.barId,
     role: session.role,
-    // Only carry a name when there is one — the type won't take undefined.
+    // Only carry these when they're set — the type won't take undefined.
     ...(session.name !== undefined ? { name: session.name } : {}),
+    ...(session.authenticated ? { authenticated: true } : {}),
     iat: now,
-    exp: now + SESSION_TTL_MS,
+    exp: now + ttlFor(session.role),
   };
 
   return encodeToken(payload);
@@ -48,7 +56,8 @@ function isSessionPayload(value: unknown, now: number): value is SessionPayload 
     typeof p["iat"] === "number" &&
     typeof p["exp"] === "number" &&
     p["exp"] > now &&
-    (p["name"] === undefined || typeof p["name"] === "string")
+    (p["name"] === undefined || typeof p["name"] === "string") &&
+    (p["authenticated"] === undefined || typeof p["authenticated"] === "boolean")
   );
 }
 
@@ -72,7 +81,7 @@ const COOKIE_OPTIONS = {
 export function setSessionCookie(res: Response, session: Session): void {
   res.cookie(COOKIE_NAME, signSession(session), {
     ...COOKIE_OPTIONS,
-    maxAge: SESSION_TTL_MS,
+    maxAge: ttlFor(session.role),
   });
 }
 

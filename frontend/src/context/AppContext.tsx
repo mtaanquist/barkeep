@@ -33,6 +33,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     null
   );
   const [customerName, setCustomerName] = useStoredState("customerName", "");
+  // Whether the guest proved a password for their name — a "regular". Kept
+  // alongside the name so a reload knows to offer the things only a regular
+  // gets (changing their own password).
+  const [authenticated, setAuthenticated] = useStoredState<boolean>(
+    "authenticated",
+    false
+  );
   const [language, setLanguage] = useStoredState<Language>("language", "en");
   // Whether the guest picked a language by hand. Once they have, picking a bar
   // must not quietly switch it back to the bar's default.
@@ -69,6 +76,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     setUserType(null);
     setCurrentBar(null);
     setCustomerName("");
+    setAuthenticated(false);
     setLanguage("en");
     setLanguageChosen(false);
     setBarForm({
@@ -84,6 +92,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     setUserType,
     setCurrentBar,
     setCustomerName,
+    setAuthenticated,
     setLanguage,
     setLanguageChosen,
   ]);
@@ -114,7 +123,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
         const me = (await res.json()) as SignedIn;
         setUserType(me.userType);
         setCurrentBar(me.bar);
-        if (me.userType === "guest") setCustomerName(me.customerName ?? "");
+        if (me.userType === "guest") {
+          setCustomerName(me.customerName ?? "");
+          setAuthenticated(me.authenticated === true);
+        }
       } catch {
         // Offline or unreachable: leave the remembered state be.
       }
@@ -123,13 +135,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     return () => {
       cancelled = true;
     };
-  }, [userType, clearAllData, setUserType, setCurrentBar, setCustomerName]);
+  }, [
+    userType,
+    clearAllData,
+    setUserType,
+    setCurrentBar,
+    setCustomerName,
+    setAuthenticated,
+  ]);
 
   const value: AppContextType = {
     // App state
     userType,
     currentBar,
     customerName,
+    authenticated,
     language,
     languageChosen,
 
@@ -155,6 +175,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     setUserType,
     setCurrentBar,
     setCustomerName,
+    setAuthenticated,
     setLanguage,
     setLanguageChosen,
     setLoading,

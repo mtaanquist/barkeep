@@ -52,9 +52,19 @@ export const TRUST_PROXY: TrustProxy = (() => {
   return raw;
 })();
 
-// How long a sign-in lasts. The bartender screen sits on a counter all night,
-// so a whole day rather than a short idle window.
+// The bcrypt work factor for every password we store — bar codes, reset codes,
+// and guests' own passwords. One number so they never drift apart.
+export const HASH_ROUNDS = 12;
+
+// How long a bartender's sign-in lasts. Their screen sits on a counter all
+// night, so a whole day rather than a short idle window.
 export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+// A guest's sign-in lasts longer: a regular who claimed their name shouldn't
+// have to type it again across a weekend of parties. Set GUEST_SESSION_TTL_DAYS
+// to change it; the default is a month.
+export const GUEST_SESSION_TTL_MS: number =
+  (Number(process.env.GUEST_SESSION_TTL_DAYS) || 30) * 24 * 60 * 60 * 1000;
 
 // The key that signs sign-in cookies. Set SESSION_SECRET so it stays the same
 // across restarts (and across several servers). Left unset, the server keeps a

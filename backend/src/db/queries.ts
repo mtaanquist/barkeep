@@ -15,6 +15,18 @@ export interface BarRow extends Bar {
   guest_token: string | null;
 }
 
+/**
+ * A claimed guest name for a bar. A regular sets a password to make their name
+ * theirs; one-time guests never get a row here.
+ */
+export interface GuestAccountRow {
+  id: number;
+  bar_id: number;
+  name: string;
+  password_hash: string;
+  created_at: string;
+}
+
 /** The parts of a bar that are safe to send out. */
 export function publicBar(bar: BarRow): Bar {
   const {
@@ -70,6 +82,23 @@ export function findBar(db: Db, barId: number): BarRow {
   );
   if (!bar) throw HttpError.notFound("Bar not found");
   return bar;
+}
+
+/**
+ * A claimed name for a bar, matched without regard to case so it lines up with
+ * the table's uniqueness. Nothing when the name is still free.
+ */
+export function findGuestAccount(
+  db: Db,
+  barId: number,
+  name: string
+): GuestAccountRow | undefined {
+  return one<GuestAccountRow>(
+    db,
+    "SELECT * FROM guest_accounts WHERE bar_id = ? AND name = ? COLLATE NOCASE",
+    barId,
+    name
+  );
 }
 
 export function findDrink(db: Db, drinkId: number, barId: number): Drink {

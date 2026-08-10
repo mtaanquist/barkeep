@@ -2,12 +2,19 @@ import express, { type Router } from "express";
 import bcrypt from "bcrypt";
 
 import type { SignedIn, UserType } from "../../../shared/types.js";
-import { HttpError, requireId, requireText, route } from "../http.js";
+import {
+  HttpError,
+  optionalText,
+  requireId,
+  requireText,
+  route,
+} from "../http.js";
 import {
   clearSessionCookie,
   setSessionCookie,
 } from "../auth/session.js";
-import { currentSession } from "../auth/middleware.js";
+import { currentSession, requireRegular } from "../auth/middleware.js";
+import { changeGuestPassword, resolveGuest } from "../auth/guestAccounts.js";
 import {
   findBar,
   publicBar,
@@ -26,8 +33,18 @@ const PASSWORD_FIELD = {
  * The reply to a sign-in. The whole bar goes back, so the pages never have to
  * piece one together from loose fields and lose its settings doing it.
  */
-function signedInAs(bar: BarRow, userType: UserType): SignedIn {
-  return { success: true, userType, bar: publicBar(bar) };
+function signedInAs(
+  bar: BarRow,
+  userType: UserType,
+  authenticated = false
+): SignedIn {
+  return {
+    success: true,
+    userType,
+    bar: publicBar(bar),
+    // Only a guest can be a proven regular; the flag is noise on a bartender.
+    ...(userType === "guest" ? { authenticated } : {}),
+  };
 }
 
 export default function createAuthRoutes(db: Db): Router {
@@ -76,9 +93,27 @@ export default function createAuthRoutes(db: Db): Router {
         label: "Customer name",
       });
       const bar = await signIn(req.body, "guest");
-      setSessionCookie(res, { barId: bar.id, role: "guest", name: customerName });
 
-      res.json({ ...signedInAs(bar, "guest"), customerName });
+      // The bar's shared password got them this far; a claimed name still has to
+      // be proved with its own. An unclaimed name walks straight in.
+      const resolved = await resolveGuest(
+        db,
+        bar.id,
+        customerName,
+        optionalText(req.body, "accountPassword")
+      );
+
+      setSessionCookie(res, {
+        barId: bar.id,
+        role: "guest",
+        name: resolved.name,
+        ...(resolved.authenticated ? { authenticated: true } : {}),
+      });
+
+      res.json({
+        ...signedInAs(bar, "guest", resolved.authenticated),
+        customerName: resolved.name,
+      });
     })
   );
 
@@ -91,13 +126,30 @@ export default function createAuthRoutes(db: Db): Router {
       if (!session) throw HttpError.unauthorized("Not signed in");
 
       const bar = findBar(db, session.barId);
-      const reply = signedInAs(bar, session.role);
+      const reply = signedInAs(bar, session.role, session.authenticated === true);
 
       res.json(
         session.role === "guest" && session.name
           ? { ...reply, customerName: session.name }
           : reply
       );
+    })
+  );
+
+  // A regular changes their own name's password. requireRegular guarantees the
+  // cookie already proved this is their name, so we only need the old password.
+  router.put(
+    "/guest/password",
+    route(async (req, res) => {
+      const { barId, name } = requireRegular(res);
+      const currentPassword = requireText(req.body, "currentPassword");
+      const newPassword = requireText(req.body, "newPassword", {
+        label: "New password",
+      });
+
+      await changeGuestPassword(db, barId, name, currentPassword, newPassword);
+
+      res.json({ success: true });
     })
   );
 

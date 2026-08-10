@@ -107,6 +107,21 @@ export interface SignedIn {
   bar: Bar;
   /** Only when a guest signs in. */
   customerName?: string;
+  /**
+   * A guest who proved a password for their name — a "regular". Absent or false
+   * for a one-time guest, who typed a name nobody has claimed.
+   */
+  authenticated?: boolean;
+}
+
+/**
+ * A regular the bartender can see: a guest who claimed their name at this bar.
+ * No password ever leaves the server, so only the name and when it was claimed.
+ */
+export interface Regular {
+  id: number;
+  name: string;
+  created_at: string;
 }
 
 /**
