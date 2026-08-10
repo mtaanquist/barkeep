@@ -12,7 +12,11 @@ import {
   makeTempDir,
   cleanUpTempDirs,
   seedBar,
+  sessionCookie,
 } from "./helpers.js";
+
+/** A bartender cookie; the bar id only matters for drink routes, not uploads. */
+const asBartender = (barId = 1) => sessionCookie({ barId, role: "bartender" });
 
 // Smallest valid PNG, so the type check has something real to look at.
 const PNG = Buffer.from(
@@ -88,6 +92,7 @@ describe("photo uploads", () => {
   it("accepts a photo and serves it back", async () => {
     const upload = await request(app)
       .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
       .attach("image", PNG, { filename: "negroni.png", contentType: "image/png" });
 
     expect(upload.status).toBe(200);
@@ -122,7 +127,9 @@ describe("photo uploads", () => {
   });
 
   it("complains when nothing was sent", async () => {
-    const res = await request(app).post("/api/drinks/upload-image");
+    const res = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender());
 
     expect(res.status).toBe(400);
   });
@@ -132,14 +139,13 @@ describe("photo uploads", () => {
 
     const upload = await request(app)
       .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender(barId))
       .attach("image", PNG, { filename: "doomed.png", contentType: "image/png" });
 
-    const created = await request(app).post("/api/drinks").send({
-      barId,
-      title: "Doomed",
-      recipe: "gin",
-      imageUrl: upload.body.imageUrl,
-    });
+    const created = await request(app)
+      .post("/api/drinks")
+      .set("Cookie", asBartender(barId))
+      .send({ title: "Doomed", recipe: "gin", imageUrl: upload.body.imageUrl });
     expect(created.status).toBe(201);
 
     const filePath = path.join(uploadsDir, upload.body.filename);
@@ -147,7 +153,7 @@ describe("photo uploads", () => {
 
     const deleted = await request(app)
       .delete(`/api/drinks/${created.body.id}`)
-      .send({ barId });
+      .set("Cookie", asBartender(barId));
 
     expect(deleted.status).toBe(200);
     expect(fs.existsSync(filePath)).toBe(false);
@@ -158,14 +164,14 @@ describe("photo uploads", () => {
     const outside = path.join(uploadsDir, "..", "keep-me.txt");
     fs.writeFileSync(outside, "should survive");
 
-    const created = await request(app).post("/api/drinks").send({
-      barId,
-      title: "Sneaky",
-      recipe: "gin",
-      imageUrl: "/uploads/../keep-me.txt",
-    });
+    const created = await request(app)
+      .post("/api/drinks")
+      .set("Cookie", asBartender(barId))
+      .send({ title: "Sneaky", recipe: "gin", imageUrl: "/uploads/../keep-me.txt" });
 
-    await request(app).delete(`/api/drinks/${created.body.id}`).send({ barId });
+    await request(app)
+      .delete(`/api/drinks/${created.body.id}`)
+      .set("Cookie", asBartender(barId));
 
     expect(fs.existsSync(outside)).toBe(true);
     fs.rmSync(outside, { force: true });

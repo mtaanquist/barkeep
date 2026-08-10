@@ -6,7 +6,12 @@ import fs from "fs";
 import path from "path";
 
 import { deletePhotoIfUnused, sweepUnusedPhotos } from "../src/uploads.js";
-import { makeTestApp, cleanUpTempDirs, seedBar } from "./helpers.js";
+import {
+  makeTestApp,
+  cleanUpTempDirs,
+  seedBar,
+  sessionCookie,
+} from "./helpers.js";
 
 const PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
@@ -28,15 +33,21 @@ describe("tidying up photos", () => {
 
   const photoOnDisk = (name: string) => fs.existsSync(path.join(uploadsDir, name));
 
+  const asBartender = () => sessionCookie({ barId, role: "bartender" });
+
   const uploadPhoto = async () => {
     const res = await request(app)
       .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
       .attach("image", PNG, { filename: "drink.png", contentType: "image/png" });
     return res.body;
   };
 
   const createDrink = (imageUrl: string, title = "Negroni") =>
-    request(app).post("/api/drinks").send({ barId, title, recipe: "gin", imageUrl });
+    request(app)
+      .post("/api/drinks")
+      .set("Cookie", asBartender())
+      .send({ title, recipe: "gin", imageUrl });
 
   it("removes the old photo when a drink gets a new one", async () => {
     const first = await uploadPhoto();
@@ -45,7 +56,8 @@ describe("tidying up photos", () => {
 
     await request(app)
       .put(`/api/drinks/${drink.body.id}`)
-      .send({ barId, imageUrl: second.imageUrl });
+      .set("Cookie", asBartender())
+      .send({ imageUrl: second.imageUrl });
 
     expect(photoOnDisk(first.filename)).toBe(false);
     expect(photoOnDisk(second.filename)).toBe(true);
@@ -57,7 +69,8 @@ describe("tidying up photos", () => {
 
     await request(app)
       .put(`/api/drinks/${drink.body.id}`)
-      .send({ barId, title: "Renamed", imageUrl: photo.imageUrl });
+      .set("Cookie", asBartender())
+      .send({ title: "Renamed", imageUrl: photo.imageUrl });
 
     expect(photoOnDisk(photo.filename)).toBe(true);
   });
@@ -67,7 +80,9 @@ describe("tidying up photos", () => {
     const one = await createDrink(photo.imageUrl, "First");
     await createDrink(photo.imageUrl, "Second");
 
-    await request(app).delete(`/api/drinks/${one.body.id}`).send({ barId });
+    await request(app)
+      .delete(`/api/drinks/${one.body.id}`)
+      .set("Cookie", asBartender());
 
     expect(photoOnDisk(photo.filename)).toBe(true);
   });
@@ -77,8 +92,12 @@ describe("tidying up photos", () => {
     const one = await createDrink(photo.imageUrl, "First");
     const two = await createDrink(photo.imageUrl, "Second");
 
-    await request(app).delete(`/api/drinks/${one.body.id}`).send({ barId });
-    await request(app).delete(`/api/drinks/${two.body.id}`).send({ barId });
+    await request(app)
+      .delete(`/api/drinks/${one.body.id}`)
+      .set("Cookie", asBartender());
+    await request(app)
+      .delete(`/api/drinks/${two.body.id}`)
+      .set("Cookie", asBartender());
 
     expect(photoOnDisk(photo.filename)).toBe(false);
   });

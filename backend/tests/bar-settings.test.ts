@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import request from "supertest";
 
-import { makeTestApp, cleanUpTempDirs, seedBar } from "./helpers.js";
+import {
+  makeTestApp,
+  cleanUpTempDirs,
+  seedBar,
+  sessionCookie,
+} from "./helpers.js";
 import type { Express } from "express";
 import type { Db } from "../src/db/queries.js";
 
@@ -19,13 +24,19 @@ describe("what a host can set on a bar", () => {
     app.locals.realtime = { broadcast: () => {} };
   });
 
+  const asBartender = (id = barId) =>
+    sessionCookie({ barId: id, role: "bartender" });
+  const asGuest = (name: string, id = barId) =>
+    sessionCookie({ barId: id, role: "guest", name });
+
   const setBar = (body: Record<string, unknown>) =>
-    request(app).put(`/api/bars/${barId}`).send(body);
+    request(app).put(`/api/bars/${barId}`).set("Cookie", asBartender()).send(body);
 
   const order = (customerName = "Mads") =>
     request(app)
       .post("/api/orders")
-      .send({ barId, customerName, drinkId, drinkTitle: "Negroni" });
+      .set("Cookie", asGuest(customerName))
+      .send({ drinkId, drinkTitle: "Negroni" });
 
   describe("last orders", () => {
     it("stops taking new ones, and says so plainly", async () => {
@@ -46,7 +57,8 @@ describe("what a host can set on a bar", () => {
 
       const served = await request(app)
         .patch(`/api/orders/${placed.body.id}/status`)
-        .send({ barId, status: "accepted" });
+        .set("Cookie", asBartender())
+        .send({ status: "accepted" });
 
       expect(served.status).toBe(200);
     });
@@ -128,15 +140,16 @@ describe("what a host can set on a bar", () => {
       ).id;
 
     const setOwnBar = (body: Record<string, unknown>) =>
-      request(app).put(`/api/bars/${ownBarId}`).send(body);
+      request(app)
+        .put(`/api/bars/${ownBarId}`)
+        .set("Cookie", asBartender(ownBarId))
+        .send(body);
 
     const orderAtOwnBar = () =>
-      request(app).post("/api/orders").send({
-        barId: ownBarId,
-        customerName: "Mads",
-        drinkId: ownDrinkId(),
-        drinkTitle: "Negroni",
-      });
+      request(app)
+        .post("/api/orders")
+        .set("Cookie", asGuest("Mads", ownBarId))
+        .send({ drinkId: ownDrinkId(), drinkTitle: "Negroni" });
 
     const signInAsBartender = () =>
       request(app)
@@ -223,7 +236,9 @@ describe("what a host can set on a bar", () => {
       const before = await request(app).get(`/api/bars/${barId}/qrcode`);
       const oldToken = tokenOf(before.body.url);
 
-      await request(app).post(`/api/bars/${barId}/rotate-guest-link`);
+      await request(app)
+        .post(`/api/bars/${barId}/rotate-guest-link`)
+        .set("Cookie", asBartender());
 
       const after = await request(app).get(`/api/bars/${barId}/qrcode`);
       expect(tokenOf(after.body.url)).not.toBe(oldToken);
@@ -241,7 +256,9 @@ describe("what a host can set on a bar", () => {
 
     // It is the one thing here that would let a stranger in.
     it("never sends the token out with a bar", async () => {
-      await request(app).post(`/api/bars/${barId}/rotate-guest-link`);
+      await request(app)
+        .post(`/api/bars/${barId}/rotate-guest-link`)
+        .set("Cookie", asBartender());
 
       const one = await request(app).get(`/api/bars/${barId}`);
       const list = await request(app).get("/api/bars");

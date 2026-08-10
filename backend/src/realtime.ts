@@ -6,6 +6,7 @@
 
 import type { Request, Response } from "express";
 import type { LiveUpdate } from "../../shared/types.js";
+import { currentSession } from "./auth/middleware.js";
 
 const KEEPALIVE_MS = 25000;
 
@@ -41,12 +42,16 @@ export function createRealtime(): Realtime {
   const clients = new Set<Listener>();
 
   function subscribe(req: Request, res: Response): void {
-    const barId = Number(req.query["barId"]);
+    // The bar comes from the cookie, so a browser only ever watches the bar it
+    // signed in to — no listening in on another by changing the address.
+    const session = currentSession(res);
 
-    if (!Number.isInteger(barId) || barId <= 0) {
-      res.status(400).json({ error: "A bar id is required" });
+    if (!session) {
+      res.status(401).json({ error: "Please sign in" });
       return;
     }
+
+    const barId = session.barId;
 
     res.writeHead(200, {
       "Content-Type": "text/event-stream",

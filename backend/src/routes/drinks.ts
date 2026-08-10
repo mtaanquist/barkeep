@@ -28,6 +28,7 @@ import {
   run,
   type Db,
 } from "../db/queries.js";
+import { requireBartender, requireGuest } from "../auth/middleware.js";
 import { deletePhotoIfUnused } from "../uploads.js";
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -141,6 +142,7 @@ export default function createDrinkRoutes({
     "/upload-image",
     upload.single("image"),
     route((req, res) => {
+      requireBartender(res);
       if (!req.file) throw HttpError.badRequest("No image file provided");
 
       res.json({
@@ -154,7 +156,7 @@ export default function createDrinkRoutes({
   router.post(
     "/",
     route((req, res) => {
-      const barId = requireId(req.body, "barId");
+      const { barId } = requireBartender(res);
       const title = requireText(req.body, "title");
       const recipe = requireText(req.body, "recipe");
 
@@ -192,7 +194,7 @@ export default function createDrinkRoutes({
     "/:drinkId",
     route((req, res) => {
       const drinkId = idParam(req, "drinkId");
-      const barId = requireId(req.body, "barId");
+      const { barId } = requireBartender(res);
 
       const existing = findDrink(db, drinkId, barId);
 
@@ -231,7 +233,7 @@ export default function createDrinkRoutes({
     "/:drinkId/stock",
     route((req, res) => {
       const drinkId = idParam(req, "drinkId");
-      const barId = requireId(req.body, "barId");
+      const { barId } = requireBartender(res);
 
       const drink = findDrink(db, drinkId, barId);
 
@@ -251,7 +253,7 @@ export default function createDrinkRoutes({
     "/:drinkId",
     route((req, res) => {
       const drinkId = idParam(req, "drinkId");
-      const barId = requireId(req.body, "barId");
+      const { barId } = requireBartender(res);
 
       const drink = findDrink(db, drinkId, barId);
 
@@ -322,9 +324,8 @@ export default function createDrinkRoutes({
   router.post(
     "/bar/:barId/favourites",
     route((req, res) => {
-      const barId = idParam(req, "barId");
+      const { barId, name } = requireGuest(res);
       const drinkId = requireId(req.body, "drinkId");
-      const customerName = requireText(req.body, "customerName");
 
       findDrink(db, drinkId, barId);
 
@@ -333,7 +334,7 @@ export default function createDrinkRoutes({
         `INSERT OR IGNORE INTO user_favourites (bar_id, customer_name, drink_id)
          VALUES (?, ?, ?)`,
         barId,
-        customerName,
+        name,
         drinkId
       );
 
@@ -350,16 +351,15 @@ export default function createDrinkRoutes({
   router.delete(
     "/bar/:barId/favourites",
     route((req, res) => {
-      const barId = idParam(req, "barId");
+      const { barId, name } = requireGuest(res);
       const drinkId = requireId(req.body, "drinkId");
-      const customerName = requireText(req.body, "customerName");
 
       const { changes } = run(
         db,
         `DELETE FROM user_favourites
          WHERE bar_id = ? AND customer_name = ? AND drink_id = ?`,
         barId,
-        customerName,
+        name,
         drinkId
       );
 
