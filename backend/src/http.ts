@@ -142,6 +142,12 @@ export function errorReply(
     return;
   }
 
+  // A request body over the size cap, from the JSON/form parser.
+  if (asRecord?.status === 413) {
+    res.status(413).json({ error: "Request body too large." });
+    return;
+  }
+
   console.error("Unhandled error:", err);
   res.status(500).json({
     error: "Internal server error",

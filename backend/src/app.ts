@@ -63,8 +63,10 @@ export function createApp({
     app.use(cors({ origin: corsOrigin, credentials: true }));
   }
 
-  app.use(express.json({ limit: "10mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+  // Photos come through multer, not here, so a request body is only ever small
+  // fields. 1mb is plenty and caps how much an unsigned caller can make us hold.
+  app.use(express.json({ limit: "1mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
   // Reads the sign-in cookie, if any, before the routes and the live feed run.
   app.use(attachSession);
