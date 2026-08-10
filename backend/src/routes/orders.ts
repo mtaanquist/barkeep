@@ -148,7 +148,6 @@ export default function createOrderRoutes(db: Db): Router {
       // can order under someone else's name.
       const { barId, name: customerName } = requireGuest(res);
       const drinkId = requireId(req.body, "drinkId");
-      const drinkTitle = requireText(req.body, "drinkTitle");
 
       const bar = findBar(db, barId);
       const drink = findDrink(db, drinkId, barId);
@@ -172,7 +171,9 @@ export default function createOrderRoutes(db: Db): Router {
 
       // How many a guest may have on the go is the bar's to decide.
       if (waiting >= (bar.max_active_orders || 1)) {
-        throw HttpError.badRequest("Customer already has a pending order");
+        throw HttpError.badRequest(
+          "You already have as many orders on the go as this bar allows"
+        );
       }
 
       // A bar can be set to skip the accept step.
@@ -185,7 +186,9 @@ export default function createOrderRoutes(db: Db): Router {
         barId,
         customerName,
         drinkId,
-        drinkTitle,
+        // The title is the drink's own, not whatever the client sent, so the
+        // queue and the takings always show the real name.
+        drink.title,
         status
       );
 

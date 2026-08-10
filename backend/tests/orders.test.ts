@@ -38,18 +38,19 @@ describe("orders", () => {
 
   // The name on the order now comes from the guest's cookie, not the body, so
   // it's set through the cookie here rather than passed in.
+  // The title on an order is the drink's own, taken on the server, so the body
+  // only carries the drink id (the name comes from the cookie).
   const placeOrder = (
     overrides: {
       customerName?: string;
-      drinkId?: number;
-      drinkTitle?: string | undefined;
+      drinkId?: number | undefined;
     } = {}
   ) => {
     const { customerName = "Mads", ...body } = overrides;
     return request(app)
       .post("/api/orders")
       .set("Cookie", asGuest(customerName))
-      .send({ drinkId, drinkTitle: "Negroni", ...body });
+      .send({ drinkId, ...body });
   };
 
   it("places an order and tells everyone", async () => {
@@ -65,10 +66,20 @@ describe("orders", () => {
   });
 
   it("refuses an order with pieces missing", async () => {
-    const res = await placeOrder({ drinkTitle: undefined });
+    const res = await placeOrder({ drinkId: undefined });
 
     expect(res.status).toBe(400);
     expect(sent).not.toHaveBeenCalled();
+  });
+
+  it("stores the drink's own title, not whatever the client sent", async () => {
+    const res = await request(app)
+      .post("/api/orders")
+      .set("Cookie", asGuest("Mads"))
+      .send({ drinkId, drinkTitle: "Free Top-Shelf Whisky" });
+
+    expect(res.status).toBe(201);
+    expect(res.body.drink_title).toBe("Negroni");
   });
 
   it("refuses an order for a drink that is not there", async () => {
@@ -76,6 +87,20 @@ describe("orders", () => {
 
     expect(res.status).toBeGreaterThanOrEqual(400);
     expect(sent).not.toHaveBeenCalled();
+  });
+
+  it("refuses one past the bar's limit, and says so in terms of the limit", async () => {
+    // A bar that allows two at once. The message must not claim there is only
+    // ever one, which is what it used to say however high the limit was set.
+    db.prepare("UPDATE bars SET max_active_orders = 2 WHERE id = ?").run(barId);
+
+    expect((await placeOrder()).status).toBe(201);
+    expect((await placeOrder()).status).toBe(201);
+
+    const third = await placeOrder();
+    expect(third.status).toBe(400);
+    expect(third.body.error).toMatch(/as many|allows/i);
+    expect(third.body.error).not.toMatch(/a pending order/i);
   });
 
   it("moves an order along and tells everyone", async () => {
