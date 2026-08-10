@@ -97,7 +97,10 @@ export interface Favourite {
   created_at: string;
 }
 
-/** The reply to signing in, or to checking a session is still good. */
+/**
+ * The reply to signing in, and to `GET /api/auth/me`, which reads the cookie
+ * back to say who is signed in (or answers 401 with `ApiError`).
+ */
 export interface SignedIn {
   success: true;
   userType: UserType;

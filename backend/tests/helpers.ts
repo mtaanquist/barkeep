@@ -6,7 +6,9 @@ import type { Express } from "express";
 
 import { openDatabase } from "../src/db/index.js";
 import { createApp } from "../src/app.js";
+import { signSession } from "../src/auth/session.js";
 import type { Db } from "../src/db/queries.js";
+import type { UserType } from "../../shared/types.js";
 
 const tempDirs: string[] = [];
 
@@ -74,4 +76,16 @@ export function seedBar(db: Db, { name = "Test Bar" } = {}): SeededBar {
     .run(barId);
 
   return { barId, drinkId: Number(drink.lastInsertRowid) };
+}
+
+/**
+ * A Cookie header carrying a signed session, so a test can act as a bartender
+ * or a guest without going through a password.
+ */
+export function sessionCookie(session: {
+  barId: number;
+  role: UserType;
+  name?: string;
+}): string {
+  return `session=${signSession(session)}`;
 }

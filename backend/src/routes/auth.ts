@@ -4,6 +4,11 @@ import bcrypt from "bcrypt";
 import type { SignedIn, UserType } from "../../../shared/types.js";
 import { HttpError, requireId, requireText, route } from "../http.js";
 import {
+  clearSessionCookie,
+  setSessionCookie,
+} from "../auth/session.js";
+import { currentSession } from "../auth/middleware.js";
+import {
   findBar,
   publicBar,
   run,
@@ -45,6 +50,7 @@ export default function createAuthRoutes(db: Db): Router {
     "/bartender",
     route(async (req, res) => {
       const bar = await signIn(req.body, "bartender");
+      setSessionCookie(res, { barId: bar.id, role: "bartender" });
 
       // The bartender arriving is the bar opening. Last night's closing —
       // whether it was the switch or the time — is cleared, so nobody has
@@ -70,19 +76,37 @@ export default function createAuthRoutes(db: Db): Router {
         label: "Customer name",
       });
       const bar = await signIn(req.body, "guest");
+      setSessionCookie(res, { barId: bar.id, role: "guest", name: customerName });
 
       res.json({ ...signedInAs(bar, "guest"), customerName });
     })
   );
 
-  router.post(
-    "/verify",
-    route((req, res) => {
-      const barId = requireId(req.body, "barId");
-      const userType = requireText(req.body, "userType");
-      const bar = findBar(db, barId);
+  // Who the cookie says you are. Replaces the old /verify, which took your word
+  // for it and checked nothing.
+  router.get(
+    "/me",
+    route((_req, res) => {
+      const session = currentSession(res);
+      if (!session) throw HttpError.unauthorized("Not signed in");
 
-      res.json(signedInAs(bar, userType as UserType));
+      const bar = findBar(db, session.barId);
+      const reply = signedInAs(bar, session.role);
+
+      res.json(
+        session.role === "guest" && session.name
+          ? { ...reply, customerName: session.name }
+          : reply
+      );
+    })
+  );
+
+  // Sign out: drop the cookie.
+  router.post(
+    "/logout",
+    route((_req, res) => {
+      clearSessionCookie(res);
+      res.json({ success: true });
     })
   );
 
