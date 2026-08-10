@@ -20,16 +20,25 @@ describe("locking down what can be read", () => {
   let app: Express;
   let db: Db;
   let barId: number;
+  let drinkId: number;
 
   beforeEach(() => {
     ({ app, db } = makeTestApp());
-    ({ barId } = seedBar(db));
+    ({ barId, drinkId } = seedBar(db));
+    // The order queue reads this, and it's fine to have no one listening.
+    app.locals.realtime = { broadcast: () => {} };
   });
 
   const asBartender = (id = barId) =>
     sessionCookie({ barId: id, role: "bartender" });
   const asGuest = (name = "Mads", id = barId) =>
     sessionCookie({ barId: id, role: "guest", name });
+
+  const placeOrder = (name: string) =>
+    request(app)
+      .post("/api/orders")
+      .set("Cookie", asGuest(name))
+      .send({ drinkId, drinkTitle: "Negroni" });
 
   // The bartender's own views: the full menu with recipes, the queue, the
   // takings, the printable code. None of these should answer a stranger.
@@ -139,6 +148,40 @@ describe("locking down what can be read", () => {
         .get(`/api/orders/bar/${barId}/customer/Astrid`)
         .set("Cookie", asBartender());
       expect(res.status).toBe(200);
+    });
+  });
+
+  describe("the order queue is filtered to who is reading it", () => {
+    beforeEach(async () => {
+      await placeOrder("Mads");
+      await placeOrder("Astrid");
+    });
+
+    it("gives a guest only their own orders", async () => {
+      const res = await request(app)
+        .get(`/api/orders/bar/${barId}`)
+        .set("Cookie", asGuest("Mads"));
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(1);
+      expect(res.body[0].customer_name).toBe("Mads");
+    });
+
+    it("won't widen to another guest by asking for their name", async () => {
+      const res = await request(app)
+        .get(`/api/orders/bar/${barId}?customerName=Astrid`)
+        .set("Cookie", asGuest("Mads"));
+
+      expect(res.body).toHaveLength(1);
+      expect(res.body[0].customer_name).toBe("Mads");
+    });
+
+    it("still gives the bartender the whole room", async () => {
+      const res = await request(app)
+        .get(`/api/orders/bar/${barId}`)
+        .set("Cookie", asBartender());
+
+      expect(res.body).toHaveLength(2);
     });
   });
 });
