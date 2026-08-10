@@ -232,6 +232,29 @@ export interface TranslationMap {
   connectionLostBody: string;
   connectionLostRetry: string;
   connectionLostDismiss: string;
+
+  // Operator panel
+  operatorTitle: string;
+  operatorIntro: string;
+  operatorPasswordPlaceholder: string;
+  operatorSignIn: string;
+  operatorWrongPassword: string;
+  operatorSignOut: string;
+  operatorBars: string;
+  operatorCreated: string;
+  operatorLastUsed: string;
+  operatorNeverUsed: string;
+  operatorDrinks: string;
+  operatorOrders: string;
+  operatorRemove: string;
+  operatorRestore: string;
+  operatorRetiredTag: string;
+  operatorRemovedOnPrefix: string;
+  operatorConfirmTitle: string;
+  operatorConfirmBody: string;
+  operatorConfirmButton: string;
+  operatorNoBars: string;
+  operatorLoadError: string;
 }
 
 export const translations: { en: TranslationMap; da: TranslationMap } = {
@@ -477,6 +500,28 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
       "You may not see new orders until this comes back. It usually sorts itself out in a moment.",
     connectionLostRetry: "Try again now",
     connectionLostDismiss: "Carry on anyway",
+    operatorTitle: "Operator",
+    operatorIntro: "Every bar on this server.",
+    operatorPasswordPlaceholder: "Operator password",
+    operatorSignIn: "Sign in",
+    operatorWrongPassword: "That password did not work.",
+    operatorSignOut: "Sign out",
+    operatorBars: "Bars",
+    operatorCreated: "Created",
+    operatorLastUsed: "Last used",
+    operatorNeverUsed: "Never used",
+    operatorDrinks: "drinks",
+    operatorOrders: "orders",
+    operatorRemove: "Remove",
+    operatorRestore: "Restore",
+    operatorRetiredTag: "Removed",
+    operatorRemovedOnPrefix: "Removed on",
+    operatorConfirmTitle: "Remove this bar?",
+    operatorConfirmBody:
+      "It disappears for guests and bartenders straight away, but can be restored until it is removed for good. Type the bar's name to confirm.",
+    operatorConfirmButton: "Remove bar",
+    operatorNoBars: "No bars on this server yet.",
+    operatorLoadError: "Could not load the bars.",
   },
   da: {
     // Landing page (Danish)
@@ -720,6 +765,28 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
       "Du ser måske ikke nye bestillinger, før forbindelsen er tilbage. Det plejer at løse sig af sig selv.",
     connectionLostRetry: "Prøv igen nu",
     connectionLostDismiss: "Fortsæt alligevel",
+    operatorTitle: "Operatør",
+    operatorIntro: "Alle barer på denne server.",
+    operatorPasswordPlaceholder: "Operatøradgangskode",
+    operatorSignIn: "Log ind",
+    operatorWrongPassword: "Den adgangskode virkede ikke.",
+    operatorSignOut: "Log ud",
+    operatorBars: "Barer",
+    operatorCreated: "Oprettet",
+    operatorLastUsed: "Sidst brugt",
+    operatorNeverUsed: "Aldrig brugt",
+    operatorDrinks: "drinks",
+    operatorOrders: "bestillinger",
+    operatorRemove: "Fjern",
+    operatorRestore: "Gendan",
+    operatorRetiredTag: "Fjernet",
+    operatorRemovedOnPrefix: "Fjernet den",
+    operatorConfirmTitle: "Fjern denne bar?",
+    operatorConfirmBody:
+      "Den forsvinder for gæster og bartendere med det samme, men kan gendannes indtil den slettes endeligt. Skriv barens navn for at bekræfte.",
+    operatorConfirmButton: "Fjern bar",
+    operatorNoBars: "Ingen barer på denne server endnu.",
+    operatorLoadError: "Kunne ikke hente barerne.",
   },
 };
 
