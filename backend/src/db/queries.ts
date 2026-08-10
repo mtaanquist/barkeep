@@ -60,7 +60,14 @@ export function count(db: Db, sql: string, ...params: Params): number {
 // wording. Sharing them keeps the replies consistent.
 
 export function findBar(db: Db, barId: number): BarRow {
-  const bar = one<BarRow>(db, "SELECT * FROM bars WHERE id = ?", barId);
+  // A retired bar is gone as far as everything but the operator is concerned:
+  // it can't be signed into, ordered from, or looked up. The operator's own
+  // routes query the row directly instead of through here.
+  const bar = one<BarRow>(
+    db,
+    "SELECT * FROM bars WHERE id = ? AND deleted_at IS NULL",
+    barId
+  );
   if (!bar) throw HttpError.notFound("Bar not found");
   return bar;
 }

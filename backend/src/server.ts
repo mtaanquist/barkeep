@@ -11,6 +11,7 @@ import { openDatabase, closeDatabase } from "./db/index.js";
 import { createApp } from "./app.js";
 import type { Realtime } from "./realtime.js";
 import { sweepUnusedPhotos } from "./uploads.js";
+import { purgeSoftDeleted } from "./db/purge.js";
 
 const db = openDatabase(DB_PATH);
 const app = createApp({ db });
@@ -34,6 +35,23 @@ const sweepPhotos = (): void => {
 
 sweepPhotos();
 setInterval(sweepPhotos, SWEEP_EVERY_MS).unref();
+
+// A bar the operator retired sits recoverable for a while, then goes for good.
+// Checked on start and once a day, so one left past the window is cleared even
+// on a container that stays up for weeks.
+const purgeBars = (): void => {
+  try {
+    const removed = purgeSoftDeleted(db);
+    if (removed) {
+      console.log(`Removed ${removed} retired bar(s) past the retention window`);
+    }
+  } catch (error) {
+    console.error("Could not remove retired bars:", error);
+  }
+};
+
+purgeBars();
+setInterval(purgeBars, SWEEP_EVERY_MS).unref();
 
 server.listen(PORT, () => {
   console.log(`🍸 Bar running on port ${PORT}`);

@@ -135,9 +135,10 @@ export default function createBarRoutes({
         ? requireLanguage((req.body as Record<string, unknown>)["language"])
         : "en";
 
+      // A retired bar frees its name; only a live one can clash.
       const taken = one<Pick<Bar, "id">>(
         db,
-        "SELECT id FROM bars WHERE name = ?",
+        "SELECT id FROM bars WHERE name = ? AND deleted_at IS NULL",
         name
       );
 
@@ -179,7 +180,8 @@ export default function createBarRoutes({
       res.json(
         all<Bar>(
           db,
-          `SELECT ${PUBLIC_COLUMNS} FROM bars ORDER BY created_at DESC LIMIT ?`,
+          `SELECT ${PUBLIC_COLUMNS} FROM bars
+           WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ?`,
           limit
         )
       );

@@ -6,6 +6,7 @@ import {
   verifySession,
   type Session,
 } from "./session.js";
+import { readOperatorCookie, verifyOperator } from "./operator.js";
 
 /**
  * Resolves the cookie to a session and leaves it on `res.locals` for routes to
@@ -86,4 +87,15 @@ export function requireBarMember(res: Response, barId: number): Session {
     throw HttpError.forbidden("You can only see your own bar");
   }
   return session;
+}
+
+/**
+ * The operator, from their own cookie. Separate from the bar session, so this
+ * reads that cookie directly rather than anything `attachSession` left behind.
+ */
+export function requireOperator(req: Request): void {
+  const token = readOperatorCookie(req);
+  if (!token || !verifyOperator(token)) {
+    throw HttpError.unauthorized("Please sign in");
+  }
 }
