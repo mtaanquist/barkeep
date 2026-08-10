@@ -17,6 +17,7 @@ import {
 } from "./config.js";
 import { errorReply, route } from "./http.js";
 import { attachSession } from "./auth/middleware.js";
+import { adminLoginLimiter, guestLoginLimiter } from "./rateLimit.js";
 import { createRealtime } from "./realtime.js";
 import type { Db } from "./db/queries.js";
 
@@ -35,6 +36,8 @@ export interface AppOptions {
   publicUrl?: string;
   trustProxy?: TrustProxy;
   requestLogging?: boolean;
+  /** Throttle repeated wrong passwords on the sign-in routes. Off in tests. */
+  rateLimit?: boolean;
   /** The operator panel's password. Unset switches the panel off. */
   operatorPassword?: string | undefined;
 }
@@ -101,6 +104,7 @@ export function createApp({
   publicUrl = PUBLIC_URL,
   trustProxy = TRUST_PROXY,
   requestLogging = NODE_ENV !== "test",
+  rateLimit = NODE_ENV !== "test",
   operatorPassword = OPERATOR_PASSWORD,
 }: AppOptions): Express {
   if (!db) throw new Error("createApp needs a database");
@@ -175,6 +179,16 @@ export function createApp({
   const realtime = createRealtime();
   app.locals["realtime"] = realtime;
   app.get("/api/events", (req, res) => realtime.subscribe(req, res));
+
+  // Throttle wrong passwords on the sign-in routes, before the routes run.
+  if (rateLimit) {
+    const admin = adminLoginLimiter();
+    const guest = guestLoginLimiter();
+    app.use("/api/auth/bartender", admin);
+    app.use("/api/operator/login", admin);
+    app.use("/api/auth/guest", guest);
+    app.use("/api/bars/:id/guest-token-login", guest);
+  }
 
   app.use("/api/bars", createBarRoutes({ db, publicUrl }));
   app.use("/api/drinks", createDrinkRoutes({ db, uploadsDir }));
