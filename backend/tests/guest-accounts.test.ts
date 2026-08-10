@@ -186,6 +186,141 @@ describe("the guest cookie outlives the bartender's", () => {
   });
 });
 
+describe("the bartender's list of regulars", () => {
+  it("lists claimed names, and never a password", async () => {
+    const { app, db } = makeTestApp();
+    const { barId, token } = seedBarWithToken(db);
+    await tokenLogin(app, barId, token, {
+      customerName: "Ada",
+      accountPassword: "secret",
+    });
+
+    const res = await request(app)
+      .get(`/api/bars/${barId}/regulars`)
+      .set("Cookie", sessionCookie({ barId, role: "bartender" }));
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0]).toMatchObject({ name: "Ada" });
+    expect(JSON.stringify(res.body)).not.toMatch(/password/);
+  });
+
+  it("is the bartender's alone", async () => {
+    const { app, db } = makeTestApp();
+    const { barId } = seedBar(db);
+
+    const asGuest = await request(app)
+      .get(`/api/bars/${barId}/regulars`)
+      .set("Cookie", sessionCookie({ barId, role: "guest", name: "Ada" }));
+    expect(asGuest.status).toBe(403);
+
+    const noCookie = await request(app).get(`/api/bars/${barId}/regulars`);
+    expect(noCookie.status).toBe(401);
+  });
+});
+
+describe("renaming a regular", () => {
+  it("carries their favourites and past orders to the new name", async () => {
+    const { app, db } = makeTestApp();
+    const { barId, drinkId } = seedBarWithToken(db);
+
+    // A favourite and a settled order under the bare name, then the claim.
+    db.prepare(
+      "INSERT INTO user_favourites (bar_id, customer_name, drink_id) VALUES (?, 'Ada', ?)"
+    ).run(barId, drinkId);
+    db.prepare(
+      "INSERT INTO orders (bar_id, customer_name, drink_id, drink_title, status) VALUES (?, 'Ada', ?, 'Negroni', 'processed')"
+    ).run(barId, drinkId);
+    const account = db
+      .prepare("INSERT INTO guest_accounts (bar_id, name, password_hash) VALUES (?, 'Ada', 'x')")
+      .run(barId);
+    const accountId = Number(account.lastInsertRowid);
+
+    const res = await request(app)
+      .put(`/api/bars/${barId}/regulars/${accountId}`)
+      .set("Cookie", sessionCookie({ barId, role: "bartender" }))
+      .send({ name: "Ada Lovelace" });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ name: "Ada Lovelace" });
+
+    const favNames = db
+      .prepare("SELECT DISTINCT customer_name AS n FROM user_favourites WHERE bar_id = ?")
+      .all(barId)
+      .map((r) => (r as { n: string }).n);
+    expect(favNames).toEqual(["Ada Lovelace"]);
+
+    const orderNames = db
+      .prepare("SELECT DISTINCT customer_name AS n FROM orders WHERE bar_id = ?")
+      .all(barId)
+      .map((r) => (r as { n: string }).n);
+    expect(orderNames).toEqual(["Ada Lovelace"]);
+  });
+
+  it("frees the old name and keeps the password on the new one", async () => {
+    const { app, db } = makeTestApp();
+    const { barId, token } = seedBarWithToken(db);
+    await tokenLogin(app, barId, token, {
+      customerName: "Ada",
+      accountPassword: "secret",
+    });
+    const accountId = Number(
+      (
+        db
+          .prepare("SELECT id FROM guest_accounts WHERE bar_id = ?")
+          .get(barId) as { id: number }
+      ).id
+    );
+
+    await request(app)
+      .put(`/api/bars/${barId}/regulars/${accountId}`)
+      .set("Cookie", sessionCookie({ barId, role: "bartender" }))
+      .send({ name: "Bea" });
+
+    // The old name is free for a one-time guest again.
+    const oldName = await tokenLogin(app, barId, token, { customerName: "Ada" });
+    expect(oldName.status).toBe(200);
+    expect(oldName.body.authenticated).toBe(false);
+
+    // The new name still needs the same password.
+    const newNoPw = await tokenLogin(app, barId, token, { customerName: "Bea" });
+    expect(newNoPw.status).toBe(401);
+    const newWithPw = await tokenLogin(app, barId, token, {
+      customerName: "Bea",
+      accountPassword: "secret",
+    });
+    expect(newWithPw.status).toBe(200);
+    expect(newWithPw.body.authenticated).toBe(true);
+  });
+
+  it("won't collide with a name another regular already holds", async () => {
+    const { app, db } = makeTestApp();
+    const { barId, token } = seedBarWithToken(db);
+    await tokenLogin(app, barId, token, {
+      customerName: "Ada",
+      accountPassword: "secret",
+    });
+    await tokenLogin(app, barId, token, {
+      customerName: "Bea",
+      accountPassword: "other",
+    });
+    const adaId = Number(
+      (
+        db
+          .prepare("SELECT id FROM guest_accounts WHERE name = 'Ada' AND bar_id = ?")
+          .get(barId) as { id: number }
+      ).id
+    );
+
+    const res = await request(app)
+      .put(`/api/bars/${barId}/regulars/${adaId}`)
+      .set("Cookie", sessionCookie({ barId, role: "bartender" }))
+      .send({ name: "Bea" });
+
+    expect(res.status).toBe(409);
+  });
+});
+
 describe("changing a regular's password", () => {
   it("turns away a one-time guest who never claimed a name", async () => {
     const { app, db } = makeTestApp();

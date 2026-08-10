@@ -12,6 +12,7 @@ export type {
   LiveUpdate,
   OperatorBar,
   OrderStatus,
+  Regular,
   SignedIn,
   UserType,
 } from "@shared/types";

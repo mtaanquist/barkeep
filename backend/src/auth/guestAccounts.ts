@@ -1,7 +1,15 @@
 import bcrypt from "bcrypt";
 
+import type { Regular } from "../../../shared/types.js";
 import { HttpError } from "../http.js";
-import { findGuestAccount, run, type Db } from "../db/queries.js";
+import {
+  all,
+  findGuestAccount,
+  one,
+  run,
+  type Db,
+  type GuestAccountRow,
+} from "../db/queries.js";
 
 // Matches the bar-password hashing elsewhere, kept local like those.
 const HASH_ROUNDS = 12;
@@ -110,4 +118,81 @@ export async function changeGuestPassword(
 
   const passwordHash = await bcrypt.hash(newPassword, HASH_ROUNDS);
   run(db, "UPDATE guest_accounts SET password_hash = ? WHERE id = ?", passwordHash, account.id);
+}
+
+/** The regulars a bar has, for the bartender's list. No hashes leave here. */
+export function listRegulars(db: Db, barId: number): Regular[] {
+  return all<Regular>(
+    db,
+    `SELECT id, name, created_at FROM guest_accounts
+     WHERE bar_id = ? ORDER BY name COLLATE NOCASE`,
+    barId
+  );
+}
+
+/**
+ * Renames a regular, carrying their name-keyed favourites and past orders over
+ * with them so nothing is left behind. For the bartender to fix a name or tell
+ * two same-named regulars apart — the guest is told their new name next visit.
+ */
+export function renameRegular(
+  db: Db,
+  barId: number,
+  accountId: number,
+  newName: string
+): Regular {
+  const account = one<GuestAccountRow>(
+    db,
+    "SELECT * FROM guest_accounts WHERE id = ? AND bar_id = ?",
+    accountId,
+    barId
+  );
+  if (!account) throw HttpError.notFound("No such regular");
+
+  const trimmed = newName.trim();
+  if (trimmed.length < 2) {
+    throw HttpError.badRequest("Name must be at least 2 characters long");
+  }
+
+  // A rename can't land on a name another regular has already claimed. The same
+  // account under a different casing is fine, so fixing the case is allowed.
+  const clash = findGuestAccount(db, barId, trimmed);
+  if (clash && clash.id !== account.id) {
+    throw new HttpError(409, "That name is already taken", NAME_CLAIMED);
+  }
+
+  const oldName = account.name;
+
+  db.transaction(() => {
+    run(db, "UPDATE guest_accounts SET name = ? WHERE id = ?", trimmed, account.id);
+
+    // Favourites carry a per-drink uniqueness, so move what can move and drop
+    // any leftover that would duplicate one already under the new name.
+    run(
+      db,
+      `UPDATE OR IGNORE user_favourites SET customer_name = ?
+       WHERE bar_id = ? AND customer_name = ? COLLATE NOCASE`,
+      trimmed,
+      barId,
+      oldName
+    );
+    run(
+      db,
+      `DELETE FROM user_favourites
+       WHERE bar_id = ? AND customer_name = ? COLLATE NOCASE`,
+      barId,
+      oldName
+    );
+
+    run(
+      db,
+      `UPDATE orders SET customer_name = ?
+       WHERE bar_id = ? AND customer_name = ? COLLATE NOCASE`,
+      trimmed,
+      barId,
+      oldName
+    );
+  })();
+
+  return { id: account.id, name: trimmed, created_at: account.created_at };
 }

@@ -127,6 +127,15 @@ export interface TranslationMap {
   newPassword: string;
   passwordChanged: string;
 
+  // Regulars (bartender)
+  regulars: string;
+  regularsIntro: string;
+  noRegulars: string;
+  regularSince: string;
+  rename: string;
+  nameTaken: string;
+  guestRenamed: string;
+
   // Bartender interface
   pendingOrders: string;
   noPendingOrders: string;
@@ -408,6 +417,16 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     newPassword: "New password",
     passwordChanged: "Password changed.",
 
+    // Regulars (bartender)
+    regulars: "Regulars",
+    regularsIntro:
+      "Guests who have claimed their name here. Rename one to fix a name or tell two apart — let them know their new name next time.",
+    noRegulars: "No regulars yet.",
+    regularSince: "Regular since",
+    rename: "Rename",
+    nameTaken: "That name is already taken.",
+    guestRenamed: "Renamed.",
+
     // Bartender interface
     pendingOrders: "Pending Orders",
     noPendingOrders: "No pending orders",
@@ -686,6 +705,16 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     currentPassword: "Nuværende adgangskode",
     newPassword: "Ny adgangskode",
     passwordChanged: "Adgangskoden er skiftet.",
+
+    // Regulars (bartender)
+    regulars: "Faste gæster",
+    regularsIntro:
+      "Gæster der har gjort deres navn til deres her. Omdøb en for at rette et navn eller skelne to fra hinanden — fortæl dem deres nye navn næste gang.",
+    noRegulars: "Ingen faste gæster endnu.",
+    regularSince: "Fast gæst siden",
+    rename: "Omdøb",
+    nameTaken: "Det navn er allerede taget.",
+    guestRenamed: "Omdøbt.",
 
     // Bartender interface
     pendingOrders: "Afventende bestillinger",

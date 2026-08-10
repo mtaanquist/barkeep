@@ -23,7 +23,11 @@ import {
   wasSent,
 } from "../http.js";
 import { setSessionCookie } from "../auth/session.js";
-import { resolveGuest } from "../auth/guestAccounts.js";
+import {
+  listRegulars,
+  renameRegular,
+  resolveGuest,
+} from "../auth/guestAccounts.js";
 import {
   requireBartender,
   requireBartenderForBar,
@@ -373,6 +377,30 @@ export default function createBarRoutes({
       } satisfies BarQrCode;
 
       res.json(code);
+    })
+  );
+
+  // The regulars who have claimed a name at this bar. Bartender-only; the
+  // list never carries a password.
+  router.get(
+    "/:id/regulars",
+    route((req, res) => {
+      const barId = ownBar(req, res);
+      findBar(db, barId);
+      res.json(listRegulars(db, barId));
+    })
+  );
+
+  // Rename a regular, moving their favourites and past orders with them. For
+  // the bartender to fix a name or tell two same-named regulars apart.
+  router.put(
+    "/:id/regulars/:accountId",
+    route((req, res) => {
+      const barId = ownBar(req, res);
+      findBar(db, barId);
+      const accountId = idParam(req, "accountId");
+      const name = requireText(req.body, "name", { min: 2, label: "Name" });
+      res.json(renameRegular(db, barId, accountId, name));
     })
   );
 

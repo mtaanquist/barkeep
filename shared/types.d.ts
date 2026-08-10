@@ -115,6 +115,16 @@ export interface SignedIn {
 }
 
 /**
+ * A regular the bartender can see: a guest who claimed their name at this bar.
+ * No password ever leaves the server, so only the name and when it was claimed.
+ */
+export interface Regular {
+  id: number;
+  name: string;
+  created_at: string;
+}
+
+/**
  * One bar as the operator panel sees it: enough to tell live bars apart, spot a
  * dead one, and know when each was last used. The operator sees retired bars
  * too, which is why `deletedAt` is here and not on the guest-facing `Bar`.
