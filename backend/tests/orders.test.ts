@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
 import request from "supertest";
 
-import { makeTestApp, cleanUpTempDirs, seedBar } from "./helpers.js";
+import {
+  makeTestApp,
+  cleanUpTempDirs,
+  seedBar,
+  sessionCookie,
+} from "./helpers.js";
 import type { Express } from "express";
 import type { Db } from "../src/db/queries.js";
 
@@ -27,16 +32,25 @@ describe("orders", () => {
     sent = watchUpdates(app);
   });
 
-  const placeOrder = (overrides = {}) =>
-    request(app)
+  const asBartender = () => sessionCookie({ barId, role: "bartender" });
+  const asGuest = (name: string) =>
+    sessionCookie({ barId, role: "guest", name });
+
+  // The name on the order now comes from the guest's cookie, not the body, so
+  // it's set through the cookie here rather than passed in.
+  const placeOrder = (
+    overrides: {
+      customerName?: string;
+      drinkId?: number;
+      drinkTitle?: string | undefined;
+    } = {}
+  ) => {
+    const { customerName = "Mads", ...body } = overrides;
+    return request(app)
       .post("/api/orders")
-      .send({
-        barId,
-        customerName: "Mads",
-        drinkId,
-        drinkTitle: "Negroni",
-        ...overrides,
-      });
+      .set("Cookie", asGuest(customerName))
+      .send({ drinkId, drinkTitle: "Negroni", ...body });
+  };
 
   it("places an order and tells everyone", async () => {
     const res = await placeOrder();
@@ -51,7 +65,7 @@ describe("orders", () => {
   });
 
   it("refuses an order with pieces missing", async () => {
-    const res = await placeOrder({ customerName: undefined });
+    const res = await placeOrder({ drinkTitle: undefined });
 
     expect(res.status).toBe(400);
     expect(sent).not.toHaveBeenCalled();
@@ -70,7 +84,8 @@ describe("orders", () => {
 
     const res = await request(app)
       .patch(`/api/orders/${order.id}/status`)
-      .send({ barId, status: "accepted" });
+      .set("Cookie", asBartender())
+      .send({ status: "accepted" });
 
     expect(res.status).toBe(200);
     expect(res.body.status).toBe("accepted");
@@ -85,7 +100,8 @@ describe("orders", () => {
 
     const res = await request(app)
       .patch(`/api/orders/${order.id}/status`)
-      .send({ barId, status: "brewing-coffee" });
+      .set("Cookie", asBartender())
+      .send({ status: "brewing-coffee" });
 
     expect(res.status).toBe(400);
   });
@@ -96,7 +112,7 @@ describe("orders", () => {
 
     const res = await request(app)
       .delete(`/api/orders/${order.id}`)
-      .send({ barId, customerName: "Mads" });
+      .set("Cookie", asGuest("Mads"));
 
     expect(res.status).toBe(200);
     expect(sent).toHaveBeenCalledWith(
@@ -134,7 +150,8 @@ describe("orders", () => {
     for (const status of statuses) {
       const res = await request(app)
         .patch(`/api/orders/${orderId}/status`)
-        .send({ barId, status });
+        .set("Cookie", asBartender())
+        .send({ status });
       expect(res.status).toBe(200);
     }
   };
@@ -155,7 +172,8 @@ describe("orders", () => {
 
     const res = await request(app)
       .patch(`/api/orders/${order.id}/status`)
-      .send({ barId, status: "processed" });
+      .set("Cookie", asBartender())
+      .send({ status: "processed" });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/cannot change status/i);
@@ -167,7 +185,8 @@ describe("orders", () => {
 
     const res = await request(app)
       .patch(`/api/orders/${order.id}/status`)
-      .send({ barId, status: "accepted" });
+      .set("Cookie", asBartender())
+      .send({ status: "accepted" });
 
     expect(res.status).toBe(400);
   });

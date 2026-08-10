@@ -9,7 +9,6 @@ import type {
 import {
   HttpError,
   idParam,
-  optionalText,
   requireId,
   requireText,
   route,
@@ -24,6 +23,11 @@ import {
   run,
   type Db,
 } from "../db/queries.js";
+import {
+  requireBartender,
+  requireGuest,
+  requireSession,
+} from "../auth/middleware.js";
 import { liveUpdates } from "../realtime.js";
 import { assertCanMove, isOrderStatus, OPEN_STATUSES } from "../orders/status.js";
 import { ordersAreClosed } from "../orders/closing.js";
@@ -117,9 +121,10 @@ export default function createOrderRoutes(db: Db): Router {
   router.post(
     "/",
     route((req, res) => {
-      const barId = requireId(req.body, "barId");
+      // The name on the order is the one the guest signed in with, so nobody
+      // can order under someone else's name.
+      const { barId, name: customerName } = requireGuest(res);
       const drinkId = requireId(req.body, "drinkId");
-      const customerName = requireText(req.body, "customerName");
       const drinkTitle = requireText(req.body, "drinkTitle");
 
       const bar = findBar(db, barId);
@@ -173,7 +178,7 @@ export default function createOrderRoutes(db: Db): Router {
     "/:orderId/status",
     route((req, res) => {
       const orderId = idParam(req, "orderId");
-      const barId = requireId(req.body, "barId");
+      const { barId } = requireBartender(res);
       const status = requireText(req.body, "status");
 
       if (!isOrderStatus(status)) throw HttpError.badRequest("Invalid status");
@@ -276,14 +281,15 @@ export default function createOrderRoutes(db: Db): Router {
     "/:orderId",
     route((req, res) => {
       const orderId = idParam(req, "orderId");
-      const barId = requireId(req.body, "barId");
-      const customerName = optionalText(req.body, "customerName");
+      const session = requireSession(res);
+      const { barId } = session;
 
       const order = findOrder(db, orderId, barId);
 
-      // A guest may cancel their own order, and only before it is handed over.
-      if (customerName) {
-        if (order.customer_name !== customerName) {
+      // The bartender may cancel anything in their bar. A guest may cancel only
+      // their own order, and only before it is handed over.
+      if (session.role === "guest") {
+        if (order.customer_name !== session.name) {
           throw new HttpError(403, "You can only cancel your own orders");
         }
         if (order.status === "processed") {
