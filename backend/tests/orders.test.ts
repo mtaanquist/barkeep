@@ -120,7 +120,9 @@ describe("orders", () => {
       expect.objectContaining({ type: "order_deleted" })
     );
 
-    const remaining = await request(app).get(`/api/orders/bar/${barId}`);
+    const remaining = await request(app)
+      .get(`/api/orders/bar/${barId}`)
+      .set("Cookie", asBartender());
     expect(remaining.body).toHaveLength(0);
   });
 
@@ -128,18 +130,18 @@ describe("orders", () => {
     await placeOrder();
     await placeOrder({ customerName: "Someone Else" });
 
-    const res = await request(app).get(
-      `/api/orders/bar/${barId}/customer/${encodeURIComponent("Mads")}`
-    );
+    const res = await request(app)
+      .get(`/api/orders/bar/${barId}/customer/${encodeURIComponent("Mads")}`)
+      .set("Cookie", asGuest("Mads"));
 
     expect(res.status).toBe(200);
     expect(res.body.customer_name).toBe("Mads");
   });
 
   it("gives nothing back when a guest has no order waiting", async () => {
-    const res = await request(app).get(
-      `/api/orders/bar/${barId}/customer/${encodeURIComponent("Nobody")}`
-    );
+    const res = await request(app)
+      .get(`/api/orders/bar/${barId}/customer/${encodeURIComponent("Nobody")}`)
+      .set("Cookie", asGuest("Nobody"));
 
     expect(res.status).toBe(200);
     expect(res.body).toBeNull();
@@ -195,9 +197,9 @@ describe("orders", () => {
     const { body: order } = await placeOrder();
     await advanceTo(order.id, "accepted", "ready", "processed");
 
-    const res = await request(app).get(
-      `/api/orders/bar/${barId}/customer/${encodeURIComponent("Mads")}`
-    );
+    const res = await request(app)
+      .get(`/api/orders/bar/${barId}/customer/${encodeURIComponent("Mads")}`)
+      .set("Cookie", asGuest("Mads"));
 
     expect(res.body).toBeNull();
   });
@@ -206,7 +208,11 @@ describe("orders", () => {
     const other = seedBar(db, { name: "Other Bar" });
     await placeOrder();
 
-    const res = await request(app).get(`/api/orders/bar/${other.barId}`);
+    // Read the other bar as its own bartender: the order landed in this bar,
+    // not that one.
+    const res = await request(app)
+      .get(`/api/orders/bar/${other.barId}`)
+      .set("Cookie", sessionCookie({ barId: other.barId, role: "bartender" }));
 
     expect(res.body).toHaveLength(0);
   });

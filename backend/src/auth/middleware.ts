@@ -63,3 +63,27 @@ export function requireGuest(res: Response): { barId: number; name: string } {
   }
   return { barId: session.barId, name: session.name };
 }
+
+/**
+ * A bartender signed in to the bar named in the address. The address carries a
+ * bar id, so this checks the cookie is for that same bar — a valid sign-in to
+ * one bar can't read another's orders or takings.
+ */
+export function requireBartenderForBar(res: Response, barId: number): void {
+  const session = requireBartender(res);
+  if (session.barId !== barId) {
+    throw HttpError.forbidden("You can only see your own bar");
+  }
+}
+
+/**
+ * Anyone signed in to the bar named in the address — guest or bartender. For
+ * the shared reads (the menu, the order queue) that both kinds need.
+ */
+export function requireBarMember(res: Response, barId: number): Session {
+  const session = requireSession(res);
+  if (session.barId !== barId) {
+    throw HttpError.forbidden("You can only see your own bar");
+  }
+  return session;
+}

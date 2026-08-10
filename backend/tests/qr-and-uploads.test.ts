@@ -37,7 +37,9 @@ describe("qr code addresses", () => {
   });
 
   it("uses the address the request came in on", async () => {
-    const res = await request(app).get(`/api/bars/${barId}/qrcode`);
+    const res = await request(app)
+      .get(`/api/bars/${barId}/qrcode`)
+      .set("Cookie", asBartender(barId));
 
     expect(res.status).toBe(200);
     expect(res.body.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/bar\/\d+\?token=/);
@@ -46,6 +48,7 @@ describe("qr code addresses", () => {
   it("follows a reverse proxy that reports the real address", async () => {
     const res = await request(app)
       .get(`/api/bars/${barId}/qrcode`)
+      .set("Cookie", asBartender(barId))
       .set("X-Forwarded-Proto", "https")
       .set("X-Forwarded-For", "10.0.0.5")
       .set("Host", "bar.example.com");
@@ -69,6 +72,7 @@ describe("qr code addresses", () => {
 
     const res = await request(configured)
       .get(`/api/bars/${seeded.barId}/qrcode`)
+      .set("Cookie", asBartender(seeded.barId))
       .set("X-Forwarded-Proto", "http")
       .set("Host", "somewhere-else.example.com");
 
@@ -76,7 +80,9 @@ describe("qr code addresses", () => {
   });
 
   it("returns a scannable image", async () => {
-    const res = await request(app).get(`/api/bars/${barId}/qrcode`);
+    const res = await request(app)
+      .get(`/api/bars/${barId}/qrcode`)
+      .set("Cookie", asBartender(barId));
 
     expect(res.body.qrCode).toMatch(/^data:image\/png;base64,/);
   });
