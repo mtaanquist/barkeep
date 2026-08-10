@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
 import type { Bar, Language } from "../types";
 import { useTranslation } from "../utils/translations";
@@ -17,9 +18,25 @@ const LandingPage: React.FC = () => {
     setLoginForm,
   } = useApp();
   const t = useTranslation(language);
+  const navigate = useNavigate();
 
   const [mode, setMode] = useState<"select" | "create" | "login">("select");
   const [selectedBar, setSelectedBar] = useState<Bar | null>(null);
+
+  // The way in to the operator panel: tap the sign seven times, quickly. There
+  // is deliberately no link to it anywhere — this is the whole door. The real
+  // lock is the operator password on the other side, not the hidden gesture.
+  const taps = useRef({ count: 0, at: 0 });
+  const tapWordmark = () => {
+    const now = Date.now();
+    const run = taps.current;
+    run.count = now - run.at > 2000 ? 1 : run.count + 1;
+    run.at = now;
+    if (run.count >= 7) {
+      run.count = 0;
+      navigate("/operator");
+    }
+  };
 
   const handleSelectBar = (bar: Bar) => {
     setSelectedBar(bar);
@@ -114,7 +131,10 @@ const LandingPage: React.FC = () => {
       {/* The sign above the door. Ink in both schemes — it is the one
           deliberate block of colour in the product. */}
       <div className="lg:w-[44%] shrink-0 bg-sign text-sign-fg px-6 py-8 lg:px-10 lg:py-11 flex flex-col min-h-50 lg:min-h-screen">
-        <span className="font-mono text-caption uppercase opacity-65">
+        <span
+          onClick={tapWordmark}
+          className="font-mono text-caption uppercase opacity-65 select-none"
+        >
           Barkeep
         </span>
         <span className="flex-1" />

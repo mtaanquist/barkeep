@@ -1,4 +1,8 @@
-import express, { type Router } from "express";
+import express, {
+  type Request,
+  type Response,
+  type Router,
+} from "express";
 import bcrypt from "bcrypt";
 import QRCode from "qrcode";
 import { randomBytes } from "node:crypto";
@@ -18,6 +22,11 @@ import {
   toFlag,
   wasSent,
 } from "../http.js";
+import { setSessionCookie } from "../auth/session.js";
+import {
+  requireBartender,
+  requireBartenderForBar,
+} from "../auth/middleware.js";
 import {
   all,
   buildUpdate,
@@ -85,6 +94,19 @@ function guestToken(bar: BarRow): string {
   return bar.guest_token || originalToken(bar.id);
 }
 
+/**
+ * The bar the signed-in bartender may change: their own. The bar comes from
+ * the cookie, and the address has to name the same one, so a valid sign-in for
+ * one bar can't reach another.
+ */
+function ownBar(req: Request, res: Response): number {
+  const { barId } = requireBartender(res);
+  if (idParam(req, "id") !== barId) {
+    throw HttpError.forbidden("You can only change your own bar");
+  }
+  return barId;
+}
+
 interface BarRoutesOptions {
   db: Db;
   publicUrl?: string;
@@ -113,9 +135,10 @@ export default function createBarRoutes({
         ? requireLanguage((req.body as Record<string, unknown>)["language"])
         : "en";
 
+      // A retired bar frees its name; only a live one can clash.
       const taken = one<Pick<Bar, "id">>(
         db,
-        "SELECT id FROM bars WHERE name = ?",
+        "SELECT id FROM bars WHERE name = ? AND deleted_at IS NULL",
         name
       );
 
@@ -138,9 +161,14 @@ export default function createBarRoutes({
         language
       );
 
+      const bar = findBar(db, Number(lastInsertRowid));
+      // Making a bar signs you in as its bartender, so there's no unguarded
+      // gap between creating it and being able to run it.
+      setSessionCookie(res, { barId: bar.id, role: "bartender" });
+
       // The whole bar goes back, settings and all, so the pages can hold on to
       // it as-is.
-      res.status(201).json(publicBar(findBar(db, Number(lastInsertRowid))));
+      res.status(201).json(publicBar(bar));
     })
   );
 
@@ -152,7 +180,8 @@ export default function createBarRoutes({
       res.json(
         all<Bar>(
           db,
-          `SELECT ${PUBLIC_COLUMNS} FROM bars ORDER BY created_at DESC LIMIT ?`,
+          `SELECT ${PUBLIC_COLUMNS} FROM bars
+           WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT ?`,
           limit
         )
       );
@@ -169,7 +198,7 @@ export default function createBarRoutes({
   router.put(
     "/:id",
     route(async (req, res) => {
-      const barId = idParam(req, "id");
+      const barId = ownBar(req, res);
       findBar(db, barId);
 
       const body = req.body as Record<string, unknown>;
@@ -230,6 +259,7 @@ export default function createBarRoutes({
     "/:id/dashboard",
     route((req, res) => {
       const barId = idParam(req, "id");
+      requireBartenderForBar(res, barId);
       const bar = publicBar(findBar(db, barId));
 
       res.json({
@@ -279,7 +309,7 @@ export default function createBarRoutes({
   router.delete(
     "/:id",
     route((req, res) => {
-      const barId = idParam(req, "id");
+      const barId = ownBar(req, res);
       const bar = findBar(db, barId);
 
       // Everything below the bar goes with it, so make it deliberate.
@@ -304,7 +334,7 @@ export default function createBarRoutes({
   router.post(
     "/:id/rotate-guest-link",
     route((req, res) => {
-      const barId = idParam(req, "id");
+      const barId = ownBar(req, res);
       findBar(db, barId);
 
       run(
@@ -322,6 +352,7 @@ export default function createBarRoutes({
     "/:id/qrcode",
     route(async (req, res) => {
       const barId = idParam(req, "id");
+      requireBartenderForBar(res, barId);
       const bar = findBar(db, barId);
 
       // Prefer a configured address, otherwise the one the request arrived on
@@ -359,6 +390,9 @@ export default function createBarRoutes({
       if (token !== guestToken(bar)) {
         throw new HttpError(401, "Invalid or expired token");
       }
+
+      // The QR link gets you a session; it isn't one itself.
+      setSessionCookie(res, { barId: bar.id, role: "guest", name: customerName });
 
       res.json({
         success: true,

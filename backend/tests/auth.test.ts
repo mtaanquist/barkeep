@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import type { Express } from "express";
 import request from "supertest";
 
-import { makeTestApp, cleanUpTempDirs } from "./helpers.js";
+import { makeTestApp, cleanUpTempDirs, sessionCookie } from "./helpers.js";
 
 afterAll(cleanUpTempDirs);
 
@@ -27,6 +27,7 @@ describe("signing in", () => {
 
     await request(app)
       .put(`/api/bars/${barId}`)
+      .set("Cookie", sessionCookie({ barId, role: "bartender" }))
       .send({ skipApproval: true })
       .expect(200);
   });

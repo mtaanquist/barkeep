@@ -10,6 +10,7 @@ export type {
   Flag,
   Language,
   LiveUpdate,
+  OperatorBar,
   OrderStatus,
   SignedIn,
   UserType,

@@ -9,7 +9,6 @@ import type {
 import {
   HttpError,
   idParam,
-  optionalText,
   requireId,
   requireText,
   route,
@@ -24,6 +23,13 @@ import {
   run,
   type Db,
 } from "../db/queries.js";
+import {
+  requireBarMember,
+  requireBartender,
+  requireBartenderForBar,
+  requireGuest,
+  requireSession,
+} from "../auth/middleware.js";
 import { liveUpdates } from "../realtime.js";
 import { assertCanMove, isOrderStatus, OPEN_STATUSES } from "../orders/status.js";
 import { ordersAreClosed } from "../orders/closing.js";
@@ -53,6 +59,9 @@ export default function createOrderRoutes(db: Db): Router {
     "/bar/:barId",
     route((req, res) => {
       const barId = idParam(req, "barId");
+      // Both the bartender's queue and the guest's own view read this, so it's
+      // open to anyone signed in to this bar — but nobody else.
+      const session = requireBarMember(res, barId);
       const { status, customerName } = req.query;
       const limit = Math.min(Number(req.query["limit"] ?? 100) || 100, 500);
 
@@ -64,9 +73,19 @@ export default function createOrderRoutes(db: Db): Router {
         params.push(status);
       }
 
-      if (typeof customerName === "string") {
+      // The bartender sees the whole room and may narrow by name. A guest only
+      // ever sees their own orders — the name comes from their cookie, so they
+      // can't widen it to anyone else's by asking.
+      const onlyName =
+        session.role === "guest"
+          ? (session.name ?? "")
+          : typeof customerName === "string"
+            ? customerName
+            : null;
+
+      if (onlyName !== null) {
         filters.push("o.customer_name = ?");
-        params.push(customerName);
+        params.push(onlyName);
       }
 
       res.json(
@@ -84,12 +103,14 @@ export default function createOrderRoutes(db: Db): Router {
   router.get(
     "/bar/:barId/pending",
     route((req, res) => {
+      const barId = idParam(req, "barId");
+      requireBartenderForBar(res, barId);
       res.json(
         all<OrderForBartender>(
           db,
           `${WITH_RECIPE} WHERE o.bar_id = ? AND o.status IN (${OPEN})
            ORDER BY o.created_at ASC`,
-          idParam(req, "barId")
+          barId
         )
       );
     })
@@ -100,6 +121,12 @@ export default function createOrderRoutes(db: Db): Router {
     route((req, res) => {
       const barId = idParam(req, "barId");
       const customerName = decodeURIComponent(req.params.customerName ?? "");
+
+      // A guest may only look up their own waiting order; the bartender, anyone's.
+      const session = requireBarMember(res, barId);
+      if (session.role === "guest" && session.name !== customerName) {
+        throw HttpError.forbidden("You can only see your own orders");
+      }
 
       res.json(
         one<Order>(
@@ -117,9 +144,10 @@ export default function createOrderRoutes(db: Db): Router {
   router.post(
     "/",
     route((req, res) => {
-      const barId = requireId(req.body, "barId");
+      // The name on the order is the one the guest signed in with, so nobody
+      // can order under someone else's name.
+      const { barId, name: customerName } = requireGuest(res);
       const drinkId = requireId(req.body, "drinkId");
-      const customerName = requireText(req.body, "customerName");
       const drinkTitle = requireText(req.body, "drinkTitle");
 
       const bar = findBar(db, barId);
@@ -173,7 +201,7 @@ export default function createOrderRoutes(db: Db): Router {
     "/:orderId/status",
     route((req, res) => {
       const orderId = idParam(req, "orderId");
-      const barId = requireId(req.body, "barId");
+      const { barId } = requireBartender(res);
       const status = requireText(req.body, "status");
 
       if (!isOrderStatus(status)) throw HttpError.badRequest("Invalid status");
@@ -205,6 +233,7 @@ export default function createOrderRoutes(db: Db): Router {
     "/bar/:barId/analytics",
     route((req, res) => {
       const barId = idParam(req, "barId");
+      requireBartenderForBar(res, barId);
       const days = periodInDays(req.query["days"]);
       // A window expressed for SQLite, built from a checked number.
       const since = `-${days} days`;
@@ -276,14 +305,15 @@ export default function createOrderRoutes(db: Db): Router {
     "/:orderId",
     route((req, res) => {
       const orderId = idParam(req, "orderId");
-      const barId = requireId(req.body, "barId");
-      const customerName = optionalText(req.body, "customerName");
+      const session = requireSession(res);
+      const { barId } = session;
 
       const order = findOrder(db, orderId, barId);
 
-      // A guest may cancel their own order, and only before it is handed over.
-      if (customerName) {
-        if (order.customer_name !== customerName) {
+      // The bartender may cancel anything in their bar. A guest may cancel only
+      // their own order, and only before it is handed over.
+      if (session.role === "guest") {
+        if (order.customer_name !== session.name) {
           throw new HttpError(403, "You can only cancel your own orders");
         }
         if (order.status === "processed") {

@@ -6,7 +6,10 @@ import type { Express } from "express";
 
 import { openDatabase } from "../src/db/index.js";
 import { createApp } from "../src/app.js";
+import { signSession } from "../src/auth/session.js";
+import { signOperator } from "../src/auth/operator.js";
 import type { Db } from "../src/db/queries.js";
+import type { UserType } from "../../shared/types.js";
 
 const tempDirs: string[] = [];
 
@@ -42,14 +45,20 @@ export interface TestApp {
 }
 
 /** The app, wired to a throwaway database and uploads folder. */
-export function makeTestApp(): TestApp {
+export function makeTestApp({
+  operatorPassword,
+}: { operatorPassword?: string } = {}): TestApp {
   const db = makeTestDatabase();
   const uploadsDir = makeTempDir("barkeep-uploads-");
   // Pointed at a folder with no web pages in it, so the tests only ever see
   // the API and never the single-page-app catch-all.
   const frontendDir = makeTempDir("barkeep-frontend-");
 
-  return { app: createApp({ db, uploadsDir, frontendDir }), db, uploadsDir };
+  return {
+    app: createApp({ db, uploadsDir, frontendDir, operatorPassword }),
+    db,
+    uploadsDir,
+  };
 }
 
 export interface SeededBar {
@@ -74,4 +83,21 @@ export function seedBar(db: Db, { name = "Test Bar" } = {}): SeededBar {
     .run(barId);
 
   return { barId, drinkId: Number(drink.lastInsertRowid) };
+}
+
+/**
+ * A Cookie header carrying a signed session, so a test can act as a bartender
+ * or a guest without going through a password.
+ */
+export function sessionCookie(session: {
+  barId: number;
+  role: UserType;
+  name?: string;
+}): string {
+  return `session=${signSession(session)}`;
+}
+
+/** A Cookie header carrying a signed operator session. */
+export function operatorCookie(): string {
+  return `operator=${signOperator()}`;
 }

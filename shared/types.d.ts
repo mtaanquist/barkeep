@@ -97,13 +97,38 @@ export interface Favourite {
   created_at: string;
 }
 
-/** The reply to signing in, or to checking a session is still good. */
+/**
+ * The reply to signing in, and to `GET /api/auth/me`, which reads the cookie
+ * back to say who is signed in (or answers 401 with `ApiError`).
+ */
 export interface SignedIn {
   success: true;
   userType: UserType;
   bar: Bar;
   /** Only when a guest signs in. */
   customerName?: string;
+}
+
+/**
+ * One bar as the operator panel sees it: enough to tell live bars apart, spot a
+ * dead one, and know when each was last used. The operator sees retired bars
+ * too, which is why `deletedAt` is here and not on the guest-facing `Bar`.
+ */
+export interface OperatorBar {
+  id: number;
+  name: string;
+  created_at: string;
+  /** The most recent order, or null if the bar has never taken one. */
+  lastUsed: string | null;
+  /** When the bar was retired, or null while it is live. */
+  deletedAt: string | null;
+  drinkCount: number;
+  orderCount: number;
+}
+
+/** The reply to `GET /api/operator/me`, or 401 with `ApiError` when not signed in. */
+export interface OperatorMe {
+  operator: true;
 }
 
 /** A printable code that takes a guest straight to the bar. */

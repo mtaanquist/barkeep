@@ -12,6 +12,7 @@ import DrinkForm from "./components/DrinkForm";
 import RecipeView from "./components/RecipeView";
 import ErrorDisplay from "./components/ErrorDisplay";
 import QRRedirect from "./components/QRRedirect";
+import OperatorPanel from "./components/operator/OperatorPanel";
 import { AppProvider } from "./context/AppContext";
 import { useApp } from "./hooks/useApp";
 import { LiveUpdatesProvider } from "./context/LiveUpdatesContext";
@@ -41,6 +42,9 @@ const AppContent: React.FC = () => {
     <>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        {/* The operator panel. Reached only by the hidden gesture on the
+            landing sign; it gates itself on the operator cookie. */}
+        <Route path="/operator" element={<OperatorPanel />} />
         <Route path="/bar/:id" element={<QRRedirect />} />
         <Route
           path="/customer"

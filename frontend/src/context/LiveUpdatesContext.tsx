@@ -52,7 +52,10 @@ export const LiveUpdatesProvider: React.FC<{ children: ReactNode }> = ({
       return;
     }
 
-    const source = new EventSource(`/api/events?barId=${barId}`);
+    // The server reads the bar from the sign-in cookie, so no id in the address.
+    // withCredentials sends that cookie in development, where the pages come
+    // from a different origin.
+    const source = new EventSource("/api/events", { withCredentials: true });
 
     const startComplaining = () => {
       if (complainTimer.current) return;

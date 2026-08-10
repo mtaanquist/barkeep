@@ -12,11 +12,14 @@ export async function apiCall<T = unknown>(
   options: RequestInit = {}
 ): Promise<T> {
   const response = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    // Send the sign-in cookie along. Same-origin already would; this also
+    // covers development, where the pages come from a different address.
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
     },
-    ...options,
   });
 
   if (!response.ok) {

@@ -10,9 +10,11 @@ import {
   PUBLIC_URL,
   TRUST_PROXY,
   NODE_ENV,
+  OPERATOR_PASSWORD,
   type TrustProxy,
 } from "./config.js";
 import { errorReply, route } from "./http.js";
+import { attachSession } from "./auth/middleware.js";
 import { createRealtime } from "./realtime.js";
 import type { Db } from "./db/queries.js";
 
@@ -21,6 +23,7 @@ import createDrinkRoutes from "./routes/drinks.js";
 import createOrderRoutes from "./routes/orders.js";
 import createAuthRoutes from "./routes/auth.js";
 import createCategoryRoutes from "./routes/categories.js";
+import createOperatorRoutes from "./routes/operator.js";
 
 export interface AppOptions {
   db: Db;
@@ -30,6 +33,8 @@ export interface AppOptions {
   publicUrl?: string;
   trustProxy?: TrustProxy;
   requestLogging?: boolean;
+  /** The operator panel's password. Unset switches the panel off. */
+  operatorPassword?: string | undefined;
 }
 
 /**
@@ -44,6 +49,7 @@ export function createApp({
   publicUrl = PUBLIC_URL,
   trustProxy = TRUST_PROXY,
   requestLogging = NODE_ENV !== "test",
+  operatorPassword = OPERATOR_PASSWORD,
 }: AppOptions): Express {
   if (!db) throw new Error("createApp needs a database");
 
@@ -59,6 +65,9 @@ export function createApp({
 
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+  // Reads the sign-in cookie, if any, before the routes and the live feed run.
+  app.use(attachSession);
 
   if (requestLogging) {
     app.use((req, _res, next) => {
@@ -109,6 +118,7 @@ export function createApp({
   app.use("/api/orders", createOrderRoutes(db));
   app.use("/api/auth", createAuthRoutes(db));
   app.use("/api/categories", createCategoryRoutes(db));
+  app.use("/api/operator", createOperatorRoutes({ db, operatorPassword }));
 
   // Must come before the catch-all below, or unknown addresses under /api
   // would answer with a web page instead of an error.

@@ -1,8 +1,12 @@
 import express, { type Router } from "express";
 
 import type { Category } from "../../../shared/types.js";
-import { HttpError, idParam, requireId, requireText, route } from "../http.js";
+import { HttpError, idParam, requireText, route } from "../http.js";
 import { all, count, findCategory, one, run, type Db } from "../db/queries.js";
+import {
+  requireBartender,
+  requireBartenderForBar,
+} from "../auth/middleware.js";
 
 export default function createCategoryRoutes(db: Db): Router {
   const router = express.Router();
@@ -11,6 +15,7 @@ export default function createCategoryRoutes(db: Db): Router {
     "/bar/:barId",
     route((req, res) => {
       const barId = idParam(req, "barId");
+      requireBartenderForBar(res, barId);
 
       res.json(
         all<Category>(
@@ -25,7 +30,7 @@ export default function createCategoryRoutes(db: Db): Router {
   router.post(
     "/",
     route((req, res) => {
-      const barId = requireId(req.body, "barId");
+      const { barId } = requireBartender(res);
       const name = requireText(req.body, "name");
 
       const taken = one<Pick<Category, "id">>(
@@ -54,7 +59,7 @@ export default function createCategoryRoutes(db: Db): Router {
     "/:id",
     route((req, res) => {
       const categoryId = idParam(req, "id");
-      const barId = requireId(req.body, "barId");
+      const { barId } = requireBartender(res);
       const name = requireText(req.body, "name");
 
       findCategory(db, categoryId, barId);
@@ -85,7 +90,7 @@ export default function createCategoryRoutes(db: Db): Router {
     "/:id",
     route((req, res) => {
       const categoryId = idParam(req, "id");
-      const barId = requireId(req.body, "barId");
+      const { barId } = requireBartender(res);
 
       findCategory(db, categoryId, barId);
 

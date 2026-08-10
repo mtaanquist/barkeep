@@ -7,18 +7,29 @@ import type { Request, Response } from "express";
 import type { LiveUpdate, Order } from "../../shared/types.js";
 
 import { createRealtime } from "../src/realtime.js";
-import { makeTestApp, cleanUpTempDirs, seedBar } from "./helpers.js";
+import {
+  makeTestApp,
+  cleanUpTempDirs,
+  seedBar,
+  sessionCookie,
+} from "./helpers.js";
 
 afterAll(cleanUpTempDirs);
 
-/** Stands in for a browser holding the connection open. */
-function fakeListener(barId: number) {
-  const req = Object.assign(new EventEmitter(), {
-    query: { barId: String(barId) } as Record<string, string>,
-  });
+/**
+ * Stands in for a browser holding the connection open. The bar it watches now
+ * comes from the session on res.locals, the way attachSession would leave it.
+ * Pass null to stand in for someone with no session.
+ */
+function fakeListener(barId: number | null) {
+  const req = new EventEmitter();
 
   const written: string[] = [];
   const res = {
+    locals:
+      barId === null
+        ? ({} as Record<string, unknown>)
+        : { session: { barId, role: "bartender" as const } },
     writeHead: vi.fn(),
     write: (chunk: string) => written.push(chunk),
     end: vi.fn(),
@@ -128,14 +139,13 @@ describe("live updates", () => {
     expect(realtime.listenerCount).toBe(0);
   });
 
-  it("turns away a connection that names no bar", () => {
+  it("turns away a connection with no session", () => {
     const realtime = createRealtime();
-    const listener = fakeListener(1);
-    (listener.req as unknown as { query: object }).query = {};
+    const listener = fakeListener(null);
 
     realtime.subscribe(listener.req, listener.res);
 
-    expect(listener.res.status).toHaveBeenCalledWith(400);
+    expect(listener.res.status).toHaveBeenCalledWith(401);
     expect(realtime.listenerCount).toBe(0);
   });
 
@@ -162,7 +172,12 @@ describe("the updates address", () => {
       firstChunk: string;
     }>((resolve, reject) => {
       const req = get(
-        { host: "127.0.0.1", port, path: "/api/events?barId=1" },
+        {
+          host: "127.0.0.1",
+          port,
+          path: "/api/events",
+          headers: { Cookie: sessionCookie({ barId: 1, role: "bartender" }) },
+        },
         (res) => {
           res.once("data", (chunk) => {
             resolve({ headers: res.headers, firstChunk: chunk.toString() });
@@ -181,12 +196,12 @@ describe("the updates address", () => {
     server.close();
   });
 
-  it("turns away a connection that names no bar", async () => {
+  it("turns away a connection with no session", async () => {
     const { app } = makeTestApp();
 
     const res = await request(app).get("/api/events");
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
   });
 });
 
@@ -200,7 +215,8 @@ describe("orders reach the people watching", () => {
 
     await request(app)
       .post("/api/orders")
-      .send({ barId, customerName: "Mads", drinkId, drinkTitle: "Negroni" });
+      .set("Cookie", sessionCookie({ barId, role: "guest", name: "Mads" }))
+      .send({ drinkId, drinkTitle: "Negroni" });
 
     expect(listener.messages()).toEqual([
       expect.objectContaining({ type: "new_order" }),
