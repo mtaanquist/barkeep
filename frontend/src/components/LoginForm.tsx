@@ -209,9 +209,15 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 type="text"
                 placeholder={t("enterName")}
                 value={loginForm.name}
-                onChange={(e) =>
-                  setLoginForm((prev) => ({ ...prev, name: e.target.value }))
-                }
+                onChange={(e) => {
+                  setLoginForm((prev) => ({ ...prev, name: e.target.value }));
+                  // A different name is a different question — drop the "that
+                  // name is registered" prompt tied to the old one.
+                  if (nameClaimed) {
+                    setNameClaimed(false);
+                    setError(null);
+                  }
+                }}
                 className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
                 onKeyPress={(e) => e.key === "Enter" && handleLogin()}
               />

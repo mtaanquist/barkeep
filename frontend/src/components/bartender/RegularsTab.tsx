@@ -7,6 +7,10 @@ import { ApiError } from "../../utils/api";
 const INPUT =
   "h-12 px-3.5 rounded-md border border-border bg-surface-raised text-body focus:outline-none focus:border-border-strong focus:shadow-focus";
 
+// Mirrors the server's minimum, so the button doesn't invite a password the
+// server will only reject.
+const PASSWORD_MIN = 4;
+
 /** The row being edited, and which of its two actions is open. */
 type Edit = { id: number; mode: "rename" | "password"; value: string };
 
@@ -52,15 +56,18 @@ const RegularsTab: React.FC = () => {
     setError(null);
   };
 
-  const save = async (regular: Regular) => {
-    if (!edit || !barId) return;
+  // What makes a save worth sending: a real new name, or a long-enough password.
+  const canSave = (regular: Regular): boolean => {
+    if (!edit) return false;
     const value = edit.value.trim();
+    return edit.mode === "rename"
+      ? value.length >= 2 && value !== regular.name
+      : value.length >= PASSWORD_MIN;
+  };
 
-    if (edit.mode === "rename") {
-      if (value.length < 2 || value === regular.name) return;
-    } else if (value.length < 4) {
-      return;
-    }
+  const save = async (regular: Regular) => {
+    if (!edit || !barId || !canSave(regular)) return;
+    const value = edit.value.trim();
 
     setBusy(true);
     setError(null);
@@ -135,7 +142,7 @@ const RegularsTab: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => save(regular)}
-                        disabled={busy || edit?.value.trim().length === 0}
+                        disabled={busy || !canSave(regular)}
                         className="h-12 px-3.5 shrink-0 rounded-md bg-text text-text-inverse text-label transition-colors hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         {edit?.mode === "password"

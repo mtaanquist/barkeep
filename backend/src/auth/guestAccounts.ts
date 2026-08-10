@@ -36,6 +36,16 @@ function supplied(password: string | undefined): string | undefined {
   return password && password.length > 0 ? password : undefined;
 }
 
+/** A SQLite unique-constraint error, as thrown when a name is claimed twice. */
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    String((err as { code: unknown }).code).includes("CONSTRAINT")
+  );
+}
+
 /**
  * Settles who a guest is before we hand them a session.
  *
@@ -81,9 +91,11 @@ export async function resolveGuest(
         name,
         passwordHash
       );
-    } catch {
-      // Someone claimed the same name between our look-up and this insert.
-      // Treat it like any other claimed name — the password they set isn't it.
+    } catch (err) {
+      // The one expected failure is the unique name: someone claimed it between
+      // our look-up and this insert. Treat that like any other claimed name;
+      // let a real database fault surface as itself rather than a fib.
+      if (!isUniqueViolation(err)) throw err;
       throw new HttpError(409, "That name was just claimed", NAME_CLAIMED);
     }
 
