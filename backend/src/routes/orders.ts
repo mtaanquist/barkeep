@@ -61,7 +61,7 @@ export default function createOrderRoutes(db: Db): Router {
       const barId = idParam(req, "barId");
       // Both the bartender's queue and the guest's own view read this, so it's
       // open to anyone signed in to this bar — but nobody else.
-      requireBarMember(res, barId);
+      const session = requireBarMember(res, barId);
       const { status, customerName } = req.query;
       const limit = Math.min(Number(req.query["limit"] ?? 100) || 100, 500);
 
@@ -73,9 +73,19 @@ export default function createOrderRoutes(db: Db): Router {
         params.push(status);
       }
 
-      if (typeof customerName === "string") {
+      // The bartender sees the whole room and may narrow by name. A guest only
+      // ever sees their own orders — the name comes from their cookie, so they
+      // can't widen it to anyone else's by asking.
+      const onlyName =
+        session.role === "guest"
+          ? (session.name ?? "")
+          : typeof customerName === "string"
+            ? customerName
+            : null;
+
+      if (onlyName !== null) {
         filters.push("o.customer_name = ?");
-        params.push(customerName);
+        params.push(onlyName);
       }
 
       res.json(
