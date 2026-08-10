@@ -58,8 +58,9 @@ describe("live updates", () => {
   it("watches the bar the guest is in", async () => {
     show();
 
+    // The bar comes from the sign-in cookie now, not the address.
     await waitFor(() => expect(FakeEventSource.live).toHaveLength(1));
-    expect(FakeEventSource.live[0].url).toBe("/api/events?barId=1");
+    expect(FakeEventSource.live[0].url).toBe("/api/events");
   });
 
   it("fetches the orders again when one arrives or changes", async () => {

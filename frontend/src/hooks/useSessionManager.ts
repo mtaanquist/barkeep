@@ -23,7 +23,7 @@ export function rememberMe(remember: boolean): void {
 const isRemembered = () => localStorage.getItem(REMEMBER_KEY) === "true";
 
 export const useSessionManager = () => {
-  const { setUserType, setCurrentBar, setCustomerName, setLoginForm } =
+  const { setUserType, setCurrentBar, setCustomerName, setLoginForm, apiCall } =
     useApp();
 
   const navigate = useNavigate();
@@ -42,6 +42,9 @@ export const useSessionManager = () => {
   }, []);
 
   const clearSession = useCallback(() => {
+    // Drop the cookie on the server too, or the next visit would just sign
+    // back in from it. Fire and forget — signing out here happens regardless.
+    void apiCall("/auth/logout", { method: "POST" }).catch(() => {});
     navigate("/");
     setUserType(null);
     setCurrentBar(null);
@@ -50,7 +53,14 @@ export const useSessionManager = () => {
     localStorage.removeItem(ACTIVITY_KEY);
     // Signing out is the guest saying it is not them, so forget them too.
     localStorage.removeItem(REMEMBER_KEY);
-  }, [navigate, setUserType, setCurrentBar, setCustomerName, setLoginForm]);
+  }, [
+    apiCall,
+    navigate,
+    setUserType,
+    setCurrentBar,
+    setCustomerName,
+    setLoginForm,
+  ]);
 
   useEffect(() => {
     const isOnLandingPage = location.pathname === "/";

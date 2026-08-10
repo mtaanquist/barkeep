@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useState, ReactNode } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  ReactNode,
+} from "react";
 
 import { AppContext, type AppContextType } from "../hooks/useApp";
 import { apiCall } from "../utils/api";
@@ -11,6 +17,7 @@ import type {
   Drink,
   Language,
   Order,
+  SignedIn,
   UserType,
 } from "../types";
 
@@ -81,49 +88,42 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
     setLanguageChosen,
   ]);
 
-  // Session validation effect
+  // Reconcile the remembered sign-in with the real one. The cookie is the
+  // session now; the stored bar and name are only for showing something while
+  // we ask. If the server says we are not signed in, forget it here too — so a
+  // stale localStorage without a live cookie can't look signed in.
+  const reconciled = useRef(false);
   useEffect(() => {
-    const validateSession = () => {
-      // Only validate sessions that should be fully authenticated
-      // This means checking routes that require authentication, not just the presence of userType/currentBar
-      const currentPath = window.location.pathname;
-      const isOnProtectedRoute =
-        currentPath.startsWith("/customer") ||
-        currentPath.startsWith("/bartender");
+    if (reconciled.current) return;
+    reconciled.current = true;
+    // Nothing to reconcile for someone who was never signed in.
+    if (!userType) return;
 
-      // Only validate if user is on a protected route
-      if (isOnProtectedRoute) {
-        // If on customer route but missing authentication requirements
-        if (currentPath.startsWith("/customer")) {
-          if (
-            !userType ||
-            !currentBar ||
-            userType !== "guest" ||
-            !customerName
-          ) {
-            console.log(
-              "Invalid customer session on protected route, resetting..."
-            );
-            clearAllData();
-            return;
-          }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (cancelled) return;
+        if (res.status === 401) {
+          clearAllData();
+          return;
         }
+        // A blip rather than a sign-out — keep showing what we remembered.
+        if (!res.ok) return;
 
-        // If on bartender route but missing authentication requirements
-        if (currentPath.startsWith("/bartender")) {
-          if (!userType || !currentBar || userType !== "bartender") {
-            console.log(
-              "Invalid bartender session on protected route, resetting..."
-            );
-            clearAllData();
-            return;
-          }
-        }
+        const me = (await res.json()) as SignedIn;
+        setUserType(me.userType);
+        setCurrentBar(me.bar);
+        if (me.userType === "guest") setCustomerName(me.customerName ?? "");
+      } catch {
+        // Offline or unreachable: leave the remembered state be.
       }
-    };
+    })();
 
-    validateSession();
-  }, [userType, currentBar, customerName, clearAllData]);
+    return () => {
+      cancelled = true;
+    };
+  }, [userType, clearAllData, setUserType, setCurrentBar, setCustomerName]);
 
   const value: AppContextType = {
     // App state
