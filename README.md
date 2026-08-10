@@ -69,6 +69,10 @@ services:
     volumes:
       - ./data:/app/data
       - ./uploads:/app/uploads
+    environment:
+      # Switches on the operator panel (see below). Leave it out and the panel
+      # stays off; everything else runs without any settings at all.
+      OPERATOR_PASSWORD: choose-a-long-one
 ```
 
 [`compose.yaml`](compose.yaml) is the same with a healthcheck and the optional
@@ -103,6 +107,20 @@ views, which is about the right amount of security for a party in a garden.
 
 The QR code is in the settings. Show it on a screen, or print it and leave it
 on the bar.
+
+### The operator panel
+
+One screen above all the bars, for whoever runs the server: it lists every bar,
+when each was last used, and lets you retire a dead one. Switch it on by setting
+`OPERATOR_PASSWORD`; leave it unset and the panel does not exist.
+
+There is no link to it. Open the front page and tap the word **Barkeep**, top
+left, seven times — a sign-in appears. The password is the one you set, checked
+on the server; the hidden tap only keeps the door out of sight.
+
+Retiring a bar can be undone: it disappears for guests and bartenders straight
+away but can be restored, and is removed for good after
+`SOFT_DELETE_RETENTION_DAYS` (60 days by default).
 
 ### Image tags
 
