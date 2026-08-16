@@ -471,3 +471,20 @@ describe("the surprise me reveal", () => {
     expect(labels[2]).toMatch(/Cancel/);
   });
 });
+
+// The menu is over a hundred drinks in a real bar, and every photo on it used
+// to be fetched before the guest saw anything.
+describe("a menu full of photos", () => {
+  it("waits to fetch a photo until it is scrolled to", async () => {
+    menu = [
+      aDrink({ id: 1, title: "Negroni", image_url: "/uploads/negroni.jpg" }),
+    ];
+    serve();
+    await showMenu();
+
+    // The same drink can sit in more than one section of the menu.
+    for (const photo of screen.getAllByAltText("Negroni")) {
+      expect(photo).toHaveAttribute("loading", "lazy");
+    }
+  });
+});

@@ -3,6 +3,7 @@ import path from "path";
 
 import { all } from "./db/queries.js";
 import type { Db } from "./db/queries.js";
+import { shrinkToFit } from "./images.js";
 
 const UPLOAD_PREFIX = "/uploads/";
 
@@ -42,6 +43,42 @@ export function deletePhotoIfUnused(
 
   fs.unlinkSync(filePath);
   return true;
+}
+
+/**
+ * Shrinks any photo already on disk that is bigger than we show it. Names
+ * the ones it changed.
+ *
+ * Photos were kept at whatever size the camera gave them until now, so a bar
+ * that has been running a while has a folder full of them. This catches those
+ * up on the next start; new ones are shrunk as they arrive. Safe to run again
+ * — a photo already small enough is left alone, so the second run does
+ * nothing.
+ *
+ * One bad file does not stop the rest: a photo that cannot be read is left as
+ * it is and noted.
+ */
+export async function shrinkStoredPhotos({
+  uploadsDir,
+}: {
+  uploadsDir: string;
+}): Promise<string[]> {
+  if (!fs.existsSync(uploadsDir)) return [];
+
+  const shrunk: string[] = [];
+
+  for (const name of fs.readdirSync(uploadsDir)) {
+    const filePath = path.join(uploadsDir, name);
+
+    try {
+      if (!fs.statSync(filePath).isFile()) continue;
+      if (await shrinkToFit(filePath)) shrunk.push(name);
+    } catch (error) {
+      console.error(`Could not shrink ${name}:`, error);
+    }
+  }
+
+  return shrunk;
 }
 
 /**

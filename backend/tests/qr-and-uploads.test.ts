@@ -4,6 +4,7 @@ import type { Db } from "../src/db/queries.js";
 import request from "supertest";
 import fs from "fs";
 import path from "path";
+import sharp from "sharp";
 
 import { createApp } from "../src/app.js";
 import {
@@ -14,6 +15,7 @@ import {
   seedBar,
   sessionCookie,
 } from "./helpers.js";
+import { shrinkStoredPhotos } from "../src/uploads.js";
 
 /** A bartender cookie; the bar id only matters for drink routes, not uploads. */
 const asBartender = (barId = 1) => sessionCookie({ barId, role: "bartender" });
@@ -229,5 +231,108 @@ describe("photo uploads", () => {
 
     expect(fs.existsSync(outside)).toBe(true);
     fs.rmSync(outside, { force: true });
+  });
+});
+
+// Photos were kept at whatever size the camera gave them. A phone takes them
+// around 4000 pixels across, the menu has over a hundred, and every one was
+// sent whole — which is what made the bar slow to open.
+describe("photos too big for any screen here", () => {
+  let app: Express;
+  let uploadsDir: string;
+
+  beforeAll(() => ({ app, uploadsDir } = makeTestApp()));
+
+  /** A photograph of the given size, as a camera would hand one over. */
+  const photo = (width: number, height: number, orientation?: number) => {
+    let image = sharp({
+      create: {
+        width,
+        height,
+        channels: 3,
+        background: { r: 120, g: 30, b: 40 },
+      },
+    });
+
+    if (orientation) image = image.withMetadata({ orientation });
+
+    return image.jpeg().toBuffer();
+  };
+
+  const sizeOf = async (filename: string) => {
+    const { width = 0, height = 0 } = await sharp(
+      path.join(uploadsDir, filename)
+    ).metadata();
+    return { width, height };
+  };
+
+  const send = async (body: Buffer, filename: string) => {
+    const res = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
+      .attach("image", body, { filename, contentType: "image/jpeg" });
+
+    expect(res.status).toBe(200);
+    return res.body.filename as string;
+  };
+
+  it("shrinks one on its way in", async () => {
+    const original = await photo(4032, 3024);
+    const stored = await send(original, "negroni.jpg");
+
+    expect(await sizeOf(stored)).toEqual({ width: 1600, height: 1200 });
+    expect(fs.statSync(path.join(uploadsDir, stored)).size).toBeLessThan(
+      original.length
+    );
+  });
+
+  it("leaves one alone that is already small enough", async () => {
+    const original = await photo(800, 600);
+    const stored = await send(original, "small.jpg");
+
+    expect(await sizeOf(stored)).toEqual({ width: 800, height: 600 });
+    // Untouched, rather than read and written back out a little worse.
+    expect(fs.statSync(path.join(uploadsDir, stored)).size).toBe(
+      original.length
+    );
+  });
+
+  // The turn a photo was taken at is noted beside the picture rather than in
+  // it. Drop the note while shrinking and a portrait photo lands on its side.
+  it("keeps a photo the right way up", async () => {
+    const stored = await send(await photo(4032, 3024, 6), "portrait.jpg");
+
+    // Turned a quarter, so the tall side is now the long one.
+    expect(await sizeOf(stored)).toEqual({ width: 1200, height: 1600 });
+  });
+});
+
+describe("catching up photos already on disk", () => {
+  it("shrinks the big ones and says which, then has nothing left to do", async () => {
+    const uploadsDir = makeTempDir();
+    const big = path.join(uploadsDir, "drink-big.jpg");
+    const small = path.join(uploadsDir, "drink-small.jpg");
+
+    await sharp({
+      create: { width: 3000, height: 2000, channels: 3, background: "#701e28" },
+    })
+      .jpeg()
+      .toFile(big);
+    await sharp({
+      create: { width: 400, height: 300, channels: 3, background: "#701e28" },
+    })
+      .jpeg()
+      .toFile(small);
+
+    const smallBefore = fs.statSync(small).size;
+
+    expect(await shrinkStoredPhotos({ uploadsDir })).toEqual(["drink-big.jpg"]);
+
+    const { width } = await sharp(big).metadata();
+    expect(width).toBe(1600);
+    expect(fs.statSync(small).size).toBe(smallBefore);
+
+    // Safe to run again: everything now fits, so nothing is touched twice.
+    expect(await shrinkStoredPhotos({ uploadsDir })).toEqual([]);
   });
 });
