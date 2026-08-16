@@ -118,3 +118,53 @@ describe("finding your way around the bar", () => {
     );
   });
 });
+
+// The recipe used to be one switch for the whole queue, which opened every
+// order at once and forgot itself on the way back from another screen.
+describe("reading a recipe while making the drink", () => {
+  it("opens the drink to read when its order is tapped", async () => {
+    openBar("/bartender/queue");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Negroni" }));
+
+    expect(
+      await screen.findByRole("dialog", { name: "Negroni" })
+    ).toBeInTheDocument();
+  });
+
+  // The tap target lies across the row, so the buttons on it have to stay
+  // reachable — accepting is the thing that must not become a lucky hit.
+  it("leaves the order's own buttons working", async () => {
+    openBar("/bartender/queue");
+
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Accept" })
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).toBeNull()
+    );
+    await screen.findByRole("button", { name: "Mark Ready" });
+  });
+
+  // A drink can be taken off the menu while an order for it is still waiting.
+  it("still opens an order whose drink has left the menu", async () => {
+    orders = [
+      anOrder({
+        id: 3,
+        status: "accepted",
+        drink_id: 99,
+        drink_title: "Sazerac",
+        drink_recipe: "rye, absinthe, sugar",
+      }),
+    ];
+    serve();
+    openBar("/bartender/queue");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Sazerac" }));
+
+    expect(
+      await screen.findByRole("dialog", { name: "Sazerac" })
+    ).toBeInTheDocument();
+  });
+});
