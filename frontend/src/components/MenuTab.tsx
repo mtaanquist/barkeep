@@ -52,6 +52,8 @@ const Thumbnail: React.FC<{ drink: Drink; t: T }> = ({ drink, t }) => {
       <img
         src={drink.image_url}
         alt=""
+        loading="lazy"
+        decoding="async"
         className="w-full h-full object-cover"
         style={{
           transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,

@@ -41,6 +41,7 @@ import { deletePhotoIfUnused } from "../uploads.js";
 import {
   extensionFor,
   isAllowedImageType,
+  shrinkToFit,
   sniffImageFile,
   type AllowedImageType,
 } from "../images.js";
@@ -190,7 +191,7 @@ export default function createDrinkRoutes({
     "/upload-image",
     bartenderOnly,
     upload.single("image"),
-    route((req, res) => {
+    route(async (req, res) => {
       if (!req.file) throw HttpError.badRequest("No image file provided");
 
       // The filter trusted the browser's label; this checks the bytes really
@@ -200,6 +201,10 @@ export default function createDrinkRoutes({
         fs.unlinkSync(req.file.path);
         throw HttpError.badRequest("Only image files are allowed.");
       }
+
+      // A photo off a phone is far bigger than anything here shows it at, and
+      // a menu of them is what made the bar slow to open.
+      await shrinkToFit(req.file.path);
 
       res.json({
         success: true,
