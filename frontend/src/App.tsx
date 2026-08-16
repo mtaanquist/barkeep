@@ -1,5 +1,11 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
 import LandingPage from "./components/LandingPage";
 import BartenderShell from "./components/bartender/BartenderShell";
 import OrdersTab from "./components/OrdersTab";
@@ -28,6 +34,8 @@ const AppContent: React.FC = () => {
     currentBar,
     customerName,
   } = useApp();
+
+  const navigate = useNavigate();
 
   // Protected route logic
   const isAuthenticated = userType && currentBar;
@@ -98,6 +106,17 @@ const AppContent: React.FC = () => {
         <RecipeView
           drink={viewingRecipe}
           onClose={() => setViewingRecipe(null)}
+          // Who may change a drink is decided here, once, rather than by each
+          // screen that opens one.
+          onEdit={
+            isBartenderAuthenticated
+              ? () => {
+                  const { id } = viewingRecipe;
+                  setViewingRecipe(null);
+                  navigate(`/bartender/menu/${id}`);
+                }
+              : undefined
+          }
         />
       )}
 
