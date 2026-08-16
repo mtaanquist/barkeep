@@ -6,8 +6,10 @@ import {
   List,
   LogOut,
   QrCode,
+  Search,
   Settings,
   Users,
+  X,
 } from "lucide-react";
 import { useApp } from "../../hooks/useApp";
 import type { Analytics, BarQrCode, Drink, Order } from "../../types";
@@ -15,6 +17,7 @@ import { useTranslation } from "../../utils/translations";
 import { useSessionManager } from "../../hooks/useSessionManager";
 import { useLiveUpdates } from "../../hooks/useLiveUpdates";
 import { ConnectionLost } from "../ConnectionLost";
+import DrinkSearch from "./DrinkSearch";
 import QrCodeDialog from "./QrCodeDialog";
 import QueueTile from "./QueueTile";
 
@@ -52,6 +55,7 @@ const BartenderShell: React.FC = () => {
   const [noticeDismissed, setNoticeDismissed] = useState(false);
   const [qrData, setQrData] = useState<BarQrCode | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Show the notice again if updates drop out a second time.
   useEffect(() => {
@@ -150,6 +154,12 @@ const BartenderShell: React.FC = () => {
           </p>
         </div>
 
+        {/* In the rail rather than on the menu screen, because the drink
+            being asked about is usually asked about from the queue. */}
+        <div className="px-3 pb-3">
+          <DrinkSearch />
+        </div>
+
         <div className="px-3">
           <QueueTile
             count={pendingCount}
@@ -204,6 +214,16 @@ const BartenderShell: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-1">
+            {/* No room for the field itself up here, so it opens over the
+                screen — where the whole panel is the target. */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label={t("searchDrinks")}
+              title={t("searchDrinks")}
+              className="w-11 h-11 flex items-center justify-center rounded-md border border-border text-text transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+            >
+              <Search className="w-5 h-5" />
+            </button>
             <button
               onClick={showQrCode}
               disabled={qrLoading}
@@ -258,6 +278,23 @@ const BartenderShell: React.FC = () => {
           t={t}
         />
       </div>
+
+      {searchOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-surface flex flex-col">
+          <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <DrinkSearch autoFocus onPicked={() => setSearchOpen(false)} />
+            </div>
+            <button
+              onClick={() => setSearchOpen(false)}
+              aria-label={t("close")}
+              className="w-11 h-11 shrink-0 flex items-center justify-center rounded-md text-text-muted transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {qrData && (
         <QrCodeDialog data={qrData} onClose={() => setQrData(null)} t={t} />

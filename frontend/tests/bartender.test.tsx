@@ -168,3 +168,59 @@ describe("reading a recipe while making the drink", () => {
     ).toBeInTheDocument();
   });
 });
+
+// Finding a recipe used to mean scrolling the whole menu and opening the
+// drink's edit form, which is no good with a queue waiting.
+describe("finding a drink without leaving the queue", () => {
+  const stock = () => {
+    menu = [
+      aDrink({ id: 1, title: "Negroni" }),
+      aDrink({ id: 5, title: "Sazerac" }),
+      aDrink({ id: 6, title: "Crème de Menthe" }),
+    ];
+    serve();
+  };
+
+  it("is on hand from the queue, not only from the menu", async () => {
+    stock();
+    openBar("/bartender/queue");
+
+    const field = await screen.findByRole("searchbox", {
+      name: "Search drinks",
+    });
+    await userEvent.type(field, "saz");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Sazerac" }));
+
+    expect(
+      await screen.findByRole("dialog", { name: "Sazerac" })
+    ).toBeInTheDocument();
+  });
+
+  // Nobody types the accent, and nobody matches the bartender's capitals.
+  it("finds a drink however its name was typed", async () => {
+    stock();
+    openBar("/bartender/queue");
+
+    await userEvent.type(
+      await screen.findByRole("searchbox", { name: "Search drinks" }),
+      "CREME DE"
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Crème de Menthe" })
+    ).toBeInTheDocument();
+  });
+
+  it("says so when nothing matches", async () => {
+    stock();
+    openBar("/bartender/queue");
+
+    await userEvent.type(
+      await screen.findByRole("searchbox", { name: "Search drinks" }),
+      "espresso martini"
+    );
+
+    expect(await screen.findByText("Nothing matches")).toBeInTheDocument();
+  });
+});
