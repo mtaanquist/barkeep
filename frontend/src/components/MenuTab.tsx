@@ -96,6 +96,7 @@ const MenuTab: React.FC = () => {
     setDrinks,
     setLoading,
     setError,
+    setViewingRecipe,
     apiCall,
   } = useApp();
 
@@ -218,17 +219,19 @@ const MenuTab: React.FC = () => {
                   >
                     <Thumbnail drink={drink} t={t} />
 
-                    {/* The whole row is the way in — no second pencil. */}
+                    {/* The whole row opens the drink to read. Changing one is
+                        a button on that screen, because there is no undo. */}
                     <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                       <span className="flex items-center gap-2.5">
-                        <Link
-                          to={String(drink.id)}
-                          className={`text-heading truncate after:absolute after:inset-0 ${
+                        <button
+                          type="button"
+                          onClick={() => setViewingRecipe(drink)}
+                          className={`text-heading truncate text-left after:absolute after:inset-0 cursor-pointer ${
                             inStock ? "" : "text-text-muted"
                           }`}
                         >
                           {drink.title}
-                        </Link>
+                        </button>
                         {!inStock && <SoldOutTag t={t} />}
                       </span>
                       <span className="text-body text-text-muted truncate">

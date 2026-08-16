@@ -8,6 +8,9 @@ import { LazyMarkdownViewer } from "./LazyMDEditor";
 interface RecipeViewProps {
   drink: Drink;
   onClose: () => void;
+  /** Given only for a bartender. Reading a drink never leads to changing one
+      by accident, so editing is its own button rather than the way in. */
+  onEdit?: () => void;
 }
 
 /**
@@ -47,7 +50,7 @@ const Chip: React.FC<{
   </span>
 );
 
-const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
+const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose, onEdit }) => {
   const { language } = useApp();
   const t = useTranslation(language);
 
@@ -177,6 +180,15 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
           >
             {t("close")}
           </button>
+
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="h-14 px-5 rounded-md bg-text text-text-inverse text-label transition-colors duration-(--duration-instant) hover:bg-neutral-800 cursor-pointer"
+            >
+              {t("edit")}
+            </button>
+          )}
         </div>
       </div>
     </div>

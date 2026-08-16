@@ -289,6 +289,16 @@ describe("looking at a recipe", () => {
     expect(screen.getByText("Negroni")).toBeInTheDocument();
   });
 
+  // The same view serves the bartender, where it does have a way in to the
+  // form. A guest must never be handed one.
+  it("offers no way to edit unless the caller gives one", () => {
+    render(<RecipeView drink={aDrink()} onClose={vi.fn()} />, {
+      wrapper: withApp,
+    });
+
+    expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
+  });
+
   it("closes when Escape is pressed", async () => {
     const onClose = vi.fn();
     render(<RecipeView drink={aDrink()} onClose={onClose} />, {
