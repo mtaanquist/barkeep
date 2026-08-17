@@ -289,6 +289,16 @@ describe("looking at a recipe", () => {
     expect(screen.getByText("Negroni")).toBeInTheDocument();
   });
 
+  // The same view serves the bartender, where it does have a way in to the
+  // form. A guest must never be handed one.
+  it("offers no way to edit unless the caller gives one", () => {
+    render(<RecipeView drink={aDrink()} onClose={vi.fn()} />, {
+      wrapper: withApp,
+    });
+
+    expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
+  });
+
   it("closes when Escape is pressed", async () => {
     const onClose = vi.fn();
     render(<RecipeView drink={aDrink()} onClose={onClose} />, {
@@ -469,5 +479,42 @@ describe("the surprise me reveal", () => {
     expect(labels).toHaveLength(3);
     expect(labels[1]).toMatch(/Try another/);
     expect(labels[2]).toMatch(/Cancel/);
+  });
+});
+
+// The menu is over a hundred drinks in a real bar, and every photo on it used
+// to be fetched before the guest saw anything.
+describe("a menu full of photos", () => {
+  it("waits to fetch a photo until it is scrolled to", async () => {
+    menu = [
+      aDrink({ id: 1, title: "Negroni", image_url: "/uploads/negroni.jpg" }),
+    ];
+    serve();
+    await showMenu();
+
+    // The same drink can sit in more than one section of the menu.
+    for (const photo of screen.getAllByAltText("Negroni")) {
+      expect(photo).toHaveAttribute("loading", "lazy");
+    }
+  });
+});
+
+// The component takes an edit action only when it is given one; this is the
+// gate that decides whether a guest is ever given one at all.
+describe("what a guest is allowed to do with a recipe", () => {
+  it("is never offered a way into the form", async () => {
+    menu = [
+      aDrink({ id: 1, title: "Negroni", recipe: "gin", show_recipe_to_guests: 1 }),
+    ];
+    serve();
+    window.history.pushState({}, "", "/customer");
+    render(<App />);
+
+    await userEvent.click(
+      (await screen.findAllByRole("button", { name: "View Recipe" }))[0]
+    );
+
+    const dialog = await screen.findByRole("dialog", { name: "Negroni" });
+    expect(within(dialog).queryByRole("button", { name: "Edit" })).toBeNull();
   });
 });

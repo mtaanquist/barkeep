@@ -73,6 +73,24 @@ export interface DrinkForGuest extends DrinkWithCategory {
   is_favourite?: Flag;
 }
 
+/**
+ * Just enough of a drink to read it. An order remembers the name and the
+ * recipe, so one placed for a drink that has since left the menu can still be
+ * read — with the rest left empty. Whether it is in stock is left out when
+ * nobody knows: off the menu is not the same as run out.
+ */
+export type DrinkToRead = Pick<
+  Drink,
+  | "id"
+  | "title"
+  | "recipe"
+  | "image_url"
+  | "image_crop_x"
+  | "image_crop_y"
+  | "image_crop_zoom"
+  | "base_spirit"
+> & { in_stock?: Flag };
+
 export interface Order {
   id: number;
   bar_id: number;

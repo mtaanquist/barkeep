@@ -5,6 +5,7 @@ import express, {
 } from "express";
 import multer from "multer";
 import fs from "fs";
+import path from "path";
 
 import type {
   Drink,
@@ -37,10 +38,11 @@ import {
   requireBartenderForBar,
   requireGuest,
 } from "../auth/middleware.js";
-import { deletePhotoIfUnused } from "../uploads.js";
+import { deletePhotoIfUnused, isStoredPhoto } from "../uploads.js";
 import {
   extensionFor,
   isAllowedImageType,
+  preparePhoto,
   sniffImageFile,
   type AllowedImageType,
 } from "../images.js";
@@ -123,6 +125,18 @@ export default function createDrinkRoutes({
     },
   });
 
+  /**
+   * A photo we still have, or nothing. A page open while the bar was upgraded
+   * knows photos by the names they had before it renamed them.
+   */
+  function onFileOrNothing(sent: unknown): string | null {
+    if (!sent) return null;
+    if (!isStoredPhoto(sent)) return String(sent);
+    return fs.existsSync(path.join(uploadsDir, path.basename(sent)))
+      ? sent
+      : null;
+  }
+
   /** Turns whichever fields were sent into the columns they belong to. */
   function changedColumns(body: unknown): Record<string, unknown> {
     const sent = <T>(field: string, convert: (value: unknown) => T) =>
@@ -190,7 +204,7 @@ export default function createDrinkRoutes({
     "/upload-image",
     bartenderOnly,
     upload.single("image"),
-    route((req, res) => {
+    route(async (req, res) => {
       if (!req.file) throw HttpError.badRequest("No image file provided");
 
       // The filter trusted the browser's label; this checks the bytes really
@@ -201,10 +215,42 @@ export default function createDrinkRoutes({
         throw HttpError.badRequest("Only image files are allowed.");
       }
 
+      // A photo off a phone is far bigger than anything here shows it at, and
+      // a menu of them is what made the bar slow to open. This also settles it
+      // into the one format we keep, which may change the name.
+      let settled: string | null;
+      try {
+        settled = await preparePhoto(req.file.path);
+      } catch (error) {
+        fs.unlinkSync(req.file.path);
+
+        // Worth saying which, because "not a picture" and "too big to open"
+        // send whoever is fixing it looking in different places — and anything
+        // else here is the server's fault, not the photo's.
+        const why = error instanceof Error ? error.message : String(error);
+
+        if (/pixel limit/i.test(why)) {
+          throw HttpError.badRequest(
+            "That picture is too large to open. Please use a smaller one."
+          );
+        }
+
+        if (/unsupported|corrupt|bad|header|magic/i.test(why)) {
+          throw HttpError.badRequest("Only image files are allowed.");
+        }
+
+        console.error("Could not prepare an uploaded photo:", error);
+        throw error;
+      }
+
+      if (settled && settled !== req.file.path) fs.unlinkSync(req.file.path);
+
+      const filename = path.basename(settled ?? req.file.path);
+
       res.json({
         success: true,
-        imageUrl: `/uploads/${req.file.filename}`,
-        filename: req.file.filename,
+        imageUrl: `/uploads/${filename}`,
+        filename,
       });
     })
   );
@@ -222,6 +268,11 @@ export default function createDrinkRoutes({
       const categoryId = body["categoryId"] ? Number(body["categoryId"]) : null;
       if (categoryId) findCategory(db, categoryId, barId);
 
+      // A form left open while the bar was upgraded knows the photo by the
+      // name it had before. There is nothing to fall back on for a new drink,
+      // so it is saved without one rather than pointing at a gap.
+      const photo = onFileOrNothing(body["imageUrl"]);
+
       const { lastInsertRowid } = run(
         db,
         `INSERT INTO drinks (
@@ -231,7 +282,7 @@ export default function createDrinkRoutes({
          ) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)`,
         barId,
         title,
-        body["imageUrl"] || null,
+        photo,
         recipe,
         body["baseSpirit"] || null,
         body["guestDescription"] || null,
@@ -257,6 +308,18 @@ export default function createDrinkRoutes({
       const changes = changedColumns(req.body);
       if (changes["category_id"]) {
         findCategory(db, Number(changes["category_id"]), barId);
+      }
+
+      // A page left open while the bar was upgraded still knows a photo by the
+      // name it had before, and an upgrade can rename photos. Saving from that
+      // page would hand back a name that has gone, and the real photo would be
+      // thrown away as the one being replaced. Keep what is on file instead.
+      const sent = changes["image_url"];
+      if (
+        isStoredPhoto(sent) &&
+        !fs.existsSync(path.join(uploadsDir, path.basename(sent)))
+      ) {
+        changes["image_url"] = existing.image_url;
       }
 
       const { clause, values } = buildUpdate(changes);

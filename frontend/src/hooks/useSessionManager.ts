@@ -23,7 +23,13 @@ export function rememberMe(remember: boolean): void {
 const isRemembered = () => localStorage.getItem(REMEMBER_KEY) === "true";
 
 export const useSessionManager = () => {
-  const { setUserType, setCurrentBar, setCustomerName, setLoginForm, apiCall } =
+  const {
+    setUserType,
+    setCurrentBar,
+    setCustomerName,
+    setLoginForm,
+    apiCall,
+  } =
     useApp();
 
   const navigate = useNavigate();

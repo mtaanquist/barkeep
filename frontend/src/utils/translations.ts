@@ -165,6 +165,8 @@ export interface TranslationMap {
   // The drink list
   newDrink: string;
   inTotal: string;
+  searchDrinks: string;
+  searchNoMatches: string;
   columnName: string;
   columnCategory: string;
   columnStock: string;
@@ -463,6 +465,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     // The drink list
     newDrink: "New drink",
     inTotal: "in total",
+    searchDrinks: "Search drinks",
+    searchNoMatches: "Nothing matches",
     columnName: "name",
     columnCategory: "category",
     columnStock: "stock",
@@ -759,6 +763,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     // The drink list
     newDrink: "Ny drink",
     inTotal: "i alt",
+    searchDrinks: "Søg drinks",
+    searchNoMatches: "Ingen resultater",
     columnName: "navn",
     columnCategory: "kategori",
     columnStock: "lager",

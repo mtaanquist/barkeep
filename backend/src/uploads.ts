@@ -3,6 +3,7 @@ import path from "path";
 
 import { all } from "./db/queries.js";
 import type { Db } from "./db/queries.js";
+import { preparePhoto } from "./images.js";
 
 const UPLOAD_PREFIX = "/uploads/";
 
@@ -42,6 +43,50 @@ export function deletePhotoIfUnused(
 
   fs.unlinkSync(filePath);
   return true;
+}
+
+/**
+ * Brings photos already on disk up to how we keep them now. Names the ones it
+ * changed. Safe to run again, and one bad file does not stop the rest.
+ *
+ * Changing the format changes the name, so the drinks are pointed at the new
+ * file before the old one goes — a crash part way through leaves every drink
+ * pointing at a photo that is really there. More than one can share a photo.
+ */
+export async function prepareStoredPhotos({
+  db,
+  uploadsDir,
+}: PhotoStore): Promise<string[]> {
+  if (!fs.existsSync(uploadsDir)) return [];
+
+  const prepared: string[] = [];
+
+  for (const name of fs.readdirSync(uploadsDir)) {
+    const filePath = path.join(uploadsDir, name);
+
+    try {
+      if (!fs.statSync(filePath).isFile()) continue;
+
+      const settled = await preparePhoto(filePath);
+      if (!settled) continue;
+
+      const newName = path.basename(settled);
+      if (newName !== name) {
+        db.prepare("UPDATE drinks SET image_url = ? WHERE image_url = ?").run(
+          `${UPLOAD_PREFIX}${newName}`,
+          `${UPLOAD_PREFIX}${name}`
+        );
+        // Last, so nothing ever points at a photo that has gone.
+        fs.unlinkSync(filePath);
+      }
+
+      prepared.push(name);
+    } catch (error) {
+      console.error(`Could not prepare ${name}:`, error);
+    }
+  }
+
+  return prepared;
 }
 
 /**

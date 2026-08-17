@@ -10,7 +10,7 @@ import {
 import { openDatabase, closeDatabase } from "./db/index.js";
 import { createApp } from "./app.js";
 import type { Realtime } from "./realtime.js";
-import { sweepUnusedPhotos } from "./uploads.js";
+import { prepareStoredPhotos, sweepUnusedPhotos } from "./uploads.js";
 import { purgeSoftDeleted } from "./db/purge.js";
 
 const db = openDatabase(DB_PATH);
@@ -35,6 +35,16 @@ const sweepPhotos = (): void => {
 
 sweepPhotos();
 setInterval(sweepPhotos, SWEEP_EVERY_MS).unref();
+
+// Photos used to be kept at whatever size and format they arrived in, which
+// is what made the bar slow to open. Bars that have been running a while have
+// a folder full of those, so they are caught up once on start. Nothing waits
+// on it.
+prepareStoredPhotos({ db, uploadsDir: UPLOADS_DIR })
+  .then((prepared) => {
+    if (prepared.length) console.log(`Prepared ${prepared.length} photo(s)`);
+  })
+  .catch((error) => console.error("Could not prepare photos:", error));
 
 // A bar the operator retired sits recoverable for a while, then goes for good.
 // Checked on start and once a day, so one left past the window is cleared even

@@ -1,13 +1,16 @@
 import React, { useEffect } from "react";
 import { X, Clock, Users, ChefHat } from "lucide-react";
 import { useApp } from "../hooks/useApp";
-import type { Drink } from "../types";
+import type { DrinkToRead } from "../types";
 import { useTranslation } from "../utils/translations";
 import { LazyMarkdownViewer } from "./LazyMDEditor";
 
 interface RecipeViewProps {
-  drink: Drink;
+  drink: DrinkToRead;
   onClose: () => void;
+  /** Given only for a bartender. Reading a drink never leads to changing one
+      by accident, so editing is its own button rather than the way in. */
+  onEdit?: () => void;
 }
 
 /**
@@ -47,7 +50,7 @@ const Chip: React.FC<{
   </span>
 );
 
-const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
+const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose, onEdit }) => {
   const { language } = useApp();
   const t = useTranslation(language);
 
@@ -62,8 +65,10 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
     return () => window.removeEventListener("keydown", close);
   }, [onClose]);
 
+  // The bottom padding keeps this clear of the queue bar on a phone, which
+  // rides above it so the pending count stays readable while a drink is made.
   return (
-    <div className="fixed inset-0 z-50 bg-overlay flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-overlay flex items-center justify-center p-4 pb-28 lg:pb-4 overflow-y-auto">
       <div
         role="dialog"
         aria-modal="true"
@@ -161,19 +166,36 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose }) => {
         </div>
 
         <div className="shrink-0 p-4 border-t border-border bg-surface-sunken flex items-center gap-3">
+          {/* Nothing is said about stock for a drink that is no longer on the
+              menu, rather than calling it sold out. */}
           <p className="flex-1 flex items-center gap-2 text-body text-text-muted">
-            {/* Running out is a state, not a fault, so it is not red. */}
-            <span
-              className={`inline-block w-2 h-2 rounded-full ${
-                drink.in_stock === 1 ? "bg-text" : "bg-disabled-fg"
-              }`}
-            />
-            {drink.in_stock === 1 ? t("inStock") : t("outOfStock")}
+            {drink.in_stock !== undefined && (
+              <>
+                {/* Running out is a state, not a fault, so it is not red. */}
+                <span
+                  className={`inline-block w-2 h-2 rounded-full ${
+                    drink.in_stock === 1 ? "bg-text" : "bg-disabled-fg"
+                  }`}
+                />
+                {drink.in_stock === 1 ? t("inStock") : t("outOfStock")}
+              </>
+            )}
           </p>
+
+          {/* Editing is the quiet one and sits away from the thumb. Reading a
+              drink must not lead to changing it by a stray tap. */}
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="h-14 px-5 rounded-md border border-border text-label text-text-muted transition-colors duration-(--duration-instant) hover:bg-surface-sunken hover:text-text cursor-pointer"
+            >
+              {t("edit")}
+            </button>
+          )}
 
           <button
             onClick={onClose}
-            className="h-14 px-5 rounded-md border border-border-strong bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+            className="h-14 px-5 rounded-md bg-text text-text-inverse text-label transition-colors duration-(--duration-instant) hover:bg-neutral-800 cursor-pointer"
           >
             {t("close")}
           </button>

@@ -1,9 +1,26 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp, Coffee, X } from "lucide-react";
 import { useApp } from "../hooks/useApp";
-import type { OrderStatus } from "../types";
+import type { DrinkToRead, Order, OrderStatus } from "../types";
 import { statusPill, statusRail } from "../utils/orderStatus";
 import { useTranslation } from "../utils/translations";
+
+/**
+ * The drink an order was for, to read while making it. A drink taken off the
+ * menu mid-service still has orders in the queue, so fall back to what the
+ * order itself remembers rather than leaving the row dead.
+ */
+const drinkFor = (order: Order, menu: DrinkToRead[]): DrinkToRead =>
+  menu.find((drink) => drink.id === order.drink_id) ?? {
+    id: order.drink_id,
+    title: order.drink_title,
+    recipe: order.drink_recipe ?? null,
+    image_url: null,
+    base_spirit: null,
+    image_crop_x: 0,
+    image_crop_y: 0,
+    image_crop_zoom: 1,
+  };
 
 /** Rightmost, always the same size and place, so it can be hit without looking. */
 const PRIMARY =
@@ -25,9 +42,11 @@ const OrdersTab: React.FC = () => {
     language,
     loading,
     orders,
+    drinks,
     setOrders,
     setLoading,
     setError,
+    setViewingRecipe,
     apiCall,
   } = useApp();
 
@@ -188,14 +207,24 @@ const OrdersTab: React.FC = () => {
                   />
 
                   <div className="flex-1 min-w-0 p-4">
-                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                    {/* The overlay covers this line only, so an opened recipe
+                        below it stays readable rather than being sat on. */}
+                    <div className="relative flex flex-col lg:flex-row lg:items-center gap-4">
                       <div className="flex-1 min-w-0">
                         <p className="font-mono text-caption uppercase text-text-muted">
                           {order.customer_name} · {formatTime(order.created_at)}
                         </p>
-                        <p className="text-heading mt-1 break-words">
+                        {/* Tapping the order is how the recipe comes up while
+                            the drink is being made. */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setViewingRecipe(drinkFor(order, drinks))
+                          }
+                          className="text-heading mt-1 break-words text-left after:absolute after:inset-0 cursor-pointer"
+                        >
                           {order.drink_title}
-                        </p>
+                        </button>
                       </div>
 
                       <div className="lg:w-60 shrink-0">
@@ -207,7 +236,7 @@ const OrdersTab: React.FC = () => {
                       {/* Fixed width whether or not there is a reject button,
                           so the action and the status stay in their columns
                           instead of sliding about from row to row. */}
-                      <div className="flex items-center justify-end gap-5 lg:w-74 shrink-0">
+                      <div className="relative flex items-center justify-end gap-5 lg:w-74 shrink-0">
                         {order.status === "new" && (
                           <button
                             onClick={() => {

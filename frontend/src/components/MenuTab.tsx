@@ -52,6 +52,8 @@ const Thumbnail: React.FC<{ drink: Drink; t: T }> = ({ drink, t }) => {
       <img
         src={drink.image_url}
         alt=""
+        loading="lazy"
+        decoding="async"
         className="w-full h-full object-cover"
         style={{
           transform: `translate(${drink.image_crop_x || 0}%, ${drink.image_crop_y || 0}%) scale(${drink.image_crop_zoom || 1})`,
@@ -96,6 +98,7 @@ const MenuTab: React.FC = () => {
     setDrinks,
     setLoading,
     setError,
+    setViewingRecipe,
     apiCall,
   } = useApp();
 
@@ -218,17 +221,19 @@ const MenuTab: React.FC = () => {
                   >
                     <Thumbnail drink={drink} t={t} />
 
-                    {/* The whole row is the way in — no second pencil. */}
+                    {/* The whole row opens the drink to read. Changing one is
+                        a button on that screen, because there is no undo. */}
                     <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                       <span className="flex items-center gap-2.5">
-                        <Link
-                          to={String(drink.id)}
-                          className={`text-heading truncate after:absolute after:inset-0 ${
+                        <button
+                          type="button"
+                          onClick={() => setViewingRecipe(drink)}
+                          className={`text-heading truncate text-left after:absolute after:inset-0 cursor-pointer ${
                             inStock ? "" : "text-text-muted"
                           }`}
                         >
                           {drink.title}
-                        </Link>
+                        </button>
                         {!inStock && <SoldOutTag t={t} />}
                       </span>
                       <span className="text-body text-text-muted truncate">

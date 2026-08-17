@@ -42,6 +42,11 @@ const DrinkCard: React.FC<DrinkCardProps> = ({
             <img
               src={drink.image_url}
               alt={drink.title}
+              // A full menu is over a hundred photos. Fetching the ones the
+              // guest has scrolled to is the difference between the bar
+              // opening at once and opening in a minute.
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-contain"
               style={{
                 transform: `translate(${imageCropX}%, ${imageCropY}%) scale(${imageCropZoom})`,

@@ -6,8 +6,10 @@ import {
   List,
   LogOut,
   QrCode,
+  Search,
   Settings,
   Users,
+  X,
 } from "lucide-react";
 import { useApp } from "../../hooks/useApp";
 import type { Analytics, BarQrCode, Drink, Order } from "../../types";
@@ -15,6 +17,7 @@ import { useTranslation } from "../../utils/translations";
 import { useSessionManager } from "../../hooks/useSessionManager";
 import { useLiveUpdates } from "../../hooks/useLiveUpdates";
 import { ConnectionLost } from "../ConnectionLost";
+import DrinkSearch from "./DrinkSearch";
 import QrCodeDialog from "./QrCodeDialog";
 import QueueTile from "./QueueTile";
 
@@ -52,11 +55,26 @@ const BartenderShell: React.FC = () => {
   const [noticeDismissed, setNoticeDismissed] = useState(false);
   const [qrData, setQrData] = useState<BarQrCode | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Show the notice again if updates drop out a second time.
   useEffect(() => {
     if (!connectionError) setNoticeDismissed(false);
   }, [connectionError]);
+
+  // The sheet belongs to the screen it was opened from. The count under it
+  // stays tappable, so leaving this way is easy to do by accident.
+  useEffect(() => setSearchOpen(false), [location.pathname]);
+
+  // Escape closes the search, the same as tapping away from it.
+  useEffect(() => {
+    if (!searchOpen) return;
+    const close = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSearchOpen(false);
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [searchOpen]);
 
   const barId = currentBar?.id;
   const onQueue = location.pathname.endsWith("/queue");
@@ -142,7 +160,7 @@ const BartenderShell: React.FC = () => {
       )}
 
       {/* The rail, on a laptop or a tablet in landscape. */}
-      <nav className="hidden lg:flex w-58 shrink-0 flex-col bg-surface border-r border-border sticky top-0 h-screen">
+      <nav className="hidden lg:flex w-58 shrink-0 flex-col overflow-y-auto bg-surface border-r border-border sticky top-0 h-screen">
         <div className="px-4 pt-4 pb-3.5">
           <p className="text-heading truncate">{currentBar?.name}</p>
           <p className="font-mono text-caption uppercase text-text-muted mt-0.5">
@@ -157,6 +175,13 @@ const BartenderShell: React.FC = () => {
             onClick={() => navigate("/bartender/queue")}
             t={t}
           />
+        </div>
+
+        {/* In the rail rather than on the menu screen, because the drink
+            being asked about is usually asked about from the queue. Below the
+            count, so the results hang over the setup rows and never over it. */}
+        <div className="px-3 pt-3">
+          <DrinkSearch />
         </div>
 
         <p className="px-4 pt-5 pb-2 font-mono text-caption uppercase text-text-muted">
@@ -204,6 +229,16 @@ const BartenderShell: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-1">
+            {/* No room for the field itself up here, so it opens over the
+                screen — where the whole panel is the target. */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              aria-label={t("searchDrinks")}
+              title={t("searchDrinks")}
+              className="w-11 h-11 flex items-center justify-center rounded-md border border-border text-text transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+            >
+              <Search className="w-5 h-5" />
+            </button>
             <button
               onClick={showQrCode}
               disabled={qrLoading}
@@ -250,7 +285,7 @@ const BartenderShell: React.FC = () => {
 
       {/* Below the rail's width the queue lives here instead, and is still
           never off screen. */}
-      <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 p-3 bg-surface border-t-2 border-border-strong">
+      <div className="lg:hidden fixed inset-x-0 bottom-0 z-60 p-3 bg-surface border-t-2 border-border-strong">
         <QueueTile
           count={pendingCount}
           arrived={arrived}
@@ -258,6 +293,33 @@ const BartenderShell: React.FC = () => {
           t={t}
         />
       </div>
+
+      {searchOpen && (
+        <div className="lg:hidden fixed inset-0 z-30 flex flex-col">
+          {/* A sheet at the top rather than a full screen, so the pending
+              count along the bottom stays readable while looking something
+              up. Anything below it closes, which is the easier reach. */}
+          <div className="shrink-0 bg-surface border-b border-border px-4 py-3 flex items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <DrinkSearch autoFocus onPicked={() => setSearchOpen(false)} />
+            </div>
+            <button
+              onClick={() => setSearchOpen(false)}
+              aria-label={t("close")}
+              className="w-11 h-11 shrink-0 flex items-center justify-center rounded-md text-text-muted transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <button
+            type="button"
+            aria-label={t("close")}
+            onClick={() => setSearchOpen(false)}
+            className="flex-1 bg-overlay cursor-default"
+          />
+        </div>
+      )}
 
       {qrData && (
         <QrCodeDialog data={qrData} onClose={() => setQrData(null)} t={t} />

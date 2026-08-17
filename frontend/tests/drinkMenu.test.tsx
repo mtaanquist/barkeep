@@ -56,7 +56,7 @@ describe("the drink list", () => {
   it("puts stock and category on the row, so drinks compare down the column", async () => {
     openAt("/bartender/menu");
 
-    const mojito = await screen.findByRole("link", { name: "Mojito" });
+    const mojito = await screen.findByRole("button", { name: "Mojito" });
     const row = mojito.closest("li")!;
 
     expect(row).toHaveTextContent("Classics");
@@ -71,35 +71,42 @@ describe("the drink list", () => {
   it("keeps a drink that has run out on the list rather than hiding it", async () => {
     openAt("/bartender/menu");
 
-    const row = (await screen.findByRole("link", { name: "Mojito" })).closest(
+    const row = (await screen.findByRole("button", { name: "Mojito" })).closest(
       "li"
     )!;
 
     expect(row).toHaveTextContent("Out of stock");
-    expect(within(row).getByRole("link", { name: "Mojito" })).toHaveAttribute(
-      "href",
-      "/bartender/menu/2"
-    );
   });
 
-  it("makes the row itself the way in, rather than a second edit button", async () => {
+  // There is no undo in Barkeep, so a stray tap must not land in an editor.
+  it("opens a drink to read rather than to change", async () => {
     openAt("/bartender/menu");
 
-    await screen.findByRole("link", { name: "Negroni" });
+    await userEvent.click(await screen.findByRole("button", { name: "Negroni" }));
 
-    expect(screen.queryByRole("button", { name: "Edit" })).toBeNull();
-    await userEvent.click(screen.getByRole("link", { name: "Negroni" }));
+    // The drink, to read — and still on the list, not on the form.
+    expect(await screen.findByRole("dialog", { name: "Negroni" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Name")).toBeNull();
+    expect(window.location.pathname).toBe("/bartender/menu");
+  });
+
+  it("has editing as its own button, one step further in", async () => {
+    openAt("/bartender/menu");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Negroni" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Edit" }));
 
     await waitFor(() =>
       expect(window.location.pathname).toBe("/bartender/menu/1")
     );
+    expect(await screen.findByLabelText("Name")).toHaveValue("Negroni");
   });
 
   it("asks before a drink goes from the menu for good", async () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     openAt("/bartender/menu");
 
-    const row = (await screen.findByRole("link", { name: "Negroni" })).closest(
+    const row = (await screen.findByRole("button", { name: "Negroni" })).closest(
       "li"
     )!;
     await userEvent.click(

@@ -1,5 +1,12 @@
-import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import LandingPage from "./components/LandingPage";
 import BartenderShell from "./components/bartender/BartenderShell";
 import OrdersTab from "./components/OrdersTab";
@@ -22,12 +29,21 @@ const AppContent: React.FC = () => {
   const {
     error,
     viewingRecipe,
+    drinks,
     setError,
     setViewingRecipe,
     userType,
     currentBar,
     customerName,
   } = useApp();
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // A drink never outlives the screen it was opened from. Leaving that screen
+  // by any route — a link, the back button, signing out — takes it with it,
+  // rather than leaving it sitting over whatever comes next.
+  useEffect(() => setViewingRecipe(null), [location.pathname, setViewingRecipe]);
 
   // Protected route logic
   const isAuthenticated = userType && currentBar;
@@ -96,8 +112,28 @@ const AppContent: React.FC = () => {
 
       {viewingRecipe && (
         <RecipeView
-          drink={viewingRecipe}
+          // The menu arrives a moment after the queue does, so a drink tapped
+          // in between is whatever the order remembered. Read it from the menu
+          // once that lands, or the recipe on screen stays the old one.
+          drink={
+            drinks.find((drink) => drink.id === viewingRecipe.id) ??
+            viewingRecipe
+          }
           onClose={() => setViewingRecipe(null)}
+          // Who may change a drink is decided here, once, rather than by each
+          // screen that opens one. A drink taken off the menu can still be
+          // read from an order that was already placed, but there is no longer
+          // a form to open for it.
+          onEdit={
+            isBartenderAuthenticated &&
+            drinks.some((drink) => drink.id === viewingRecipe.id)
+              ? () => {
+                  const { id } = viewingRecipe;
+                  setViewingRecipe(null);
+                  navigate(`/bartender/menu/${id}`);
+                }
+              : undefined
+          }
         />
       )}
 
