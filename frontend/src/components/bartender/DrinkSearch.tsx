@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { useApp } from "../../hooks/useApp";
 import type { Drink } from "../../types";
@@ -11,16 +11,16 @@ const MOST_SHOWN = 8;
  * Case and accents are not how anyone remembers a drink's name, so neither
  * gets in the way of finding it: "creme de" finds "Crème de Menthe".
  *
- * Danish ø and æ are spelled out, because they are typed on an English
- * keyboard as often as not. Stripping accents alone folded å alone, which is
- * worse than treating all three the same way.
+ * Danish letters are stood in for the way they are typed on a keyboard that
+ * lacks them — "oel" for "øl", "aeble" for "æble". Stripping accents alone
+ * would have folded å and left the other two, which is worse than either.
  */
-const DANISH: Record<string, string> = { "ø": "o", "æ": "ae" };
+const DANISH: Record<string, string> = { "ø": "oe", "æ": "ae" };
 
 const loosely = (text: string): string =>
   text
     .toLocaleLowerCase()
-    .replace(/[øæ]/g, (letter) => DANISH[letter] ?? letter)
+    .replace(/[øæ]/g, (letter) => DANISH[letter])
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "");
 
@@ -53,6 +53,17 @@ const DrinkSearch: React.FC<DrinkSearchProps> = ({ autoFocus, onPicked }) => {
 
   const found = useMemo(() => matches(drinks, term), [drinks, term]);
   const searching = term.trim().length > 0;
+
+  // On the rail there is nothing holding these, so they have to clear
+  // themselves or they sit over the queue count below.
+  useEffect(() => {
+    if (!term) return;
+    const close = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setTerm("");
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [term]);
 
   const pick = (drink: Drink) => {
     setViewingRecipe(drink);

@@ -62,6 +62,10 @@ const BartenderShell: React.FC = () => {
     if (!connectionError) setNoticeDismissed(false);
   }, [connectionError]);
 
+  // The sheet belongs to the screen it was opened from. The count under it
+  // stays tappable, so leaving this way is easy to do by accident.
+  useEffect(() => setSearchOpen(false), [location.pathname]);
+
   // Escape closes the search, the same as tapping away from it.
   useEffect(() => {
     if (!searchOpen) return;
@@ -164,12 +168,6 @@ const BartenderShell: React.FC = () => {
           </p>
         </div>
 
-        {/* In the rail rather than on the menu screen, because the drink
-            being asked about is usually asked about from the queue. */}
-        <div className="px-3 pb-3">
-          <DrinkSearch />
-        </div>
-
         <div className="px-3">
           <QueueTile
             count={pendingCount}
@@ -177,6 +175,13 @@ const BartenderShell: React.FC = () => {
             onClick={() => navigate("/bartender/queue")}
             t={t}
           />
+        </div>
+
+        {/* In the rail rather than on the menu screen, because the drink
+            being asked about is usually asked about from the queue. Below the
+            count, so the results hang over the setup rows and never over it. */}
+        <div className="px-3 pt-3">
+          <DrinkSearch />
         </div>
 
         <p className="px-4 pt-5 pb-2 font-mono text-caption uppercase text-text-muted">
@@ -280,7 +285,7 @@ const BartenderShell: React.FC = () => {
 
       {/* Below the rail's width the queue lives here instead, and is still
           never off screen. */}
-      <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 p-3 bg-surface border-t-2 border-border-strong">
+      <div className="lg:hidden fixed inset-x-0 bottom-0 z-60 p-3 bg-surface border-t-2 border-border-strong">
         <QueueTile
           count={pendingCount}
           arrived={arrived}

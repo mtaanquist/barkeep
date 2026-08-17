@@ -40,9 +40,9 @@ const AppContent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // On a phone, back is how a dialog gets closed. Opening a drink adds no
-  // history of its own, so without this the screen underneath changes and the
-  // drink stays sitting on top of it.
+  // A drink never outlives the screen it was opened from. Leaving that screen
+  // by any route — a link, the back button, signing out — takes it with it,
+  // rather than leaving it sitting over whatever comes next.
   useEffect(() => setViewingRecipe(null), [location.pathname, setViewingRecipe]);
 
   // Protected route logic
@@ -112,7 +112,13 @@ const AppContent: React.FC = () => {
 
       {viewingRecipe && (
         <RecipeView
-          drink={viewingRecipe}
+          // The menu arrives a moment after the queue does, so a drink tapped
+          // in between is whatever the order remembered. Read it from the menu
+          // once that lands, or the recipe on screen stays the old one.
+          drink={
+            drinks.find((drink) => drink.id === viewingRecipe.id) ??
+            viewingRecipe
+          }
           onClose={() => setViewingRecipe(null)}
           // Who may change a drink is decided here, once, rather than by each
           // screen that opens one. A drink taken off the menu can still be

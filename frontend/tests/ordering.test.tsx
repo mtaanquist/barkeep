@@ -498,3 +498,23 @@ describe("a menu full of photos", () => {
     }
   });
 });
+
+// The component takes an edit action only when it is given one; this is the
+// gate that decides whether a guest is ever given one at all.
+describe("what a guest is allowed to do with a recipe", () => {
+  it("is never offered a way into the form", async () => {
+    menu = [
+      aDrink({ id: 1, title: "Negroni", recipe: "gin", show_recipe_to_guests: 1 }),
+    ];
+    serve();
+    window.history.pushState({}, "", "/customer");
+    render(<App />);
+
+    await userEvent.click(
+      (await screen.findAllByRole("button", { name: "View Recipe" }))[0]
+    );
+
+    const dialog = await screen.findByRole("dialog", { name: "Negroni" });
+    expect(within(dialog).queryByRole("button", { name: "Edit" })).toBeNull();
+  });
+});

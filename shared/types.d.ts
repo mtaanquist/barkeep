@@ -74,10 +74,10 @@ export interface DrinkForGuest extends DrinkWithCategory {
 }
 
 /**
- * Just enough of a drink to read it. An order remembers this much on its own,
- * so one placed for a drink that has since left the menu can still be read.
- * Whether it is in stock is left out when nobody knows — a drink that is no
- * longer on the menu is not the same as one that has run out.
+ * Just enough of a drink to read it. An order remembers the name and the
+ * recipe, so one placed for a drink that has since left the menu can still be
+ * read — with the rest left empty. Whether it is in stock is left out when
+ * nobody knows: off the menu is not the same as run out.
  */
 export type DrinkToRead = Pick<
   Drink,
