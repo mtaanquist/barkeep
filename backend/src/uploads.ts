@@ -3,7 +3,7 @@ import path from "path";
 
 import { all } from "./db/queries.js";
 import type { Db } from "./db/queries.js";
-import { shrinkToFit } from "./images.js";
+import { preparePhoto } from "./images.js";
 
 const UPLOAD_PREFIX = "/uploads/";
 
@@ -46,39 +46,56 @@ export function deletePhotoIfUnused(
 }
 
 /**
- * Shrinks any photo already on disk that is bigger than we show it. Names
- * the ones it changed.
+ * Brings every photo already on disk up to how we keep them now: no bigger
+ * than we show them, and all in the one format. Names the ones it changed.
  *
- * Photos were kept at whatever size the camera gave them until now, so a bar
- * that has been running a while has a folder full of them. This catches those
- * up on the next start; new ones are shrunk as they arrive. Safe to run again
- * — a photo already small enough is left alone, so the second run does
- * nothing.
+ * Photos used to be kept at whatever size and format they arrived in, so a
+ * bar that has been running a while has a folder full of them. This catches
+ * those up on the next start; new ones are prepared as they arrive.
  *
- * One bad file does not stop the rest: a photo that cannot be read is left as
- * it is and noted.
+ * Changing the format changes the file's name, so the drinks pointing at it
+ * are moved across too — more than one drink can share a photo. The new file
+ * is written first, the drinks are pointed at it, and only then is the old
+ * one removed, so a crash part way through leaves every drink pointing at a
+ * photo that is really there.
+ *
+ * Safe to run again: a photo already the right size and format is left alone,
+ * so a second start does nothing. One bad file does not stop the rest.
  */
-export async function shrinkStoredPhotos({
+export async function prepareStoredPhotos({
+  db,
   uploadsDir,
-}: {
-  uploadsDir: string;
-}): Promise<string[]> {
+}: PhotoStore): Promise<string[]> {
   if (!fs.existsSync(uploadsDir)) return [];
 
-  const shrunk: string[] = [];
+  const prepared: string[] = [];
 
   for (const name of fs.readdirSync(uploadsDir)) {
     const filePath = path.join(uploadsDir, name);
 
     try {
       if (!fs.statSync(filePath).isFile()) continue;
-      if (await shrinkToFit(filePath)) shrunk.push(name);
+
+      const settled = await preparePhoto(filePath);
+      if (!settled) continue;
+
+      const newName = path.basename(settled);
+      if (newName !== name) {
+        db.prepare("UPDATE drinks SET image_url = ? WHERE image_url = ?").run(
+          `${UPLOAD_PREFIX}${newName}`,
+          `${UPLOAD_PREFIX}${name}`
+        );
+        // Last, so nothing ever points at a photo that has gone.
+        fs.unlinkSync(filePath);
+      }
+
+      prepared.push(name);
     } catch (error) {
-      console.error(`Could not shrink ${name}:`, error);
+      console.error(`Could not prepare ${name}:`, error);
     }
   }
 
-  return shrunk;
+  return prepared;
 }
 
 /**
