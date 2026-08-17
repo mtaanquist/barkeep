@@ -763,7 +763,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     // The drink list
     newDrink: "Ny drink",
     inTotal: "i alt",
-    searchDrinks: "Søg i drinks",
+    searchDrinks: "Søg drinks",
     searchNoMatches: "Ingen resultater",
     columnName: "navn",
     columnCategory: "kategori",
