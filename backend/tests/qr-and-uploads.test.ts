@@ -15,7 +15,7 @@ import {
   seedBar,
   sessionCookie,
 } from "./helpers.js";
-import { shrinkStoredPhotos } from "../src/uploads.js";
+import { prepareStoredPhotos } from "../src/uploads.js";
 
 /** A bartender cookie; the bar id only matters for drink routes, not uploads. */
 const asBartender = (barId = 1) => sessionCookie({ barId, role: "bartender" });
@@ -286,9 +286,35 @@ describe("photos too big for any screen here", () => {
     );
   });
 
-  it("leaves one alone that is already small enough", async () => {
-    const original = await photo(800, 600);
-    const stored = await send(original, "small.jpg");
+  // A photograph kept as PNG was three quarters of what the folder weighed
+  // once everything had been shrunk.
+  it("settles one into the one format we keep, whatever arrived", async () => {
+    const stored = await send(await photo(800, 600), "small.jpg");
+
+    expect(stored.endsWith(".webp")).toBe(true);
+    expect((await sharp(path.join(uploadsDir, stored)).metadata()).format).toBe(
+      "webp"
+    );
+    // The one it arrived as does not linger beside the one we keep.
+    expect(fs.existsSync(path.join(uploadsDir, stored.replace(".webp", ".jpg"))))
+      .toBe(false);
+  });
+
+  it("leaves one alone that is already the right size and format", async () => {
+    const original = await sharp({
+      create: { width: 800, height: 600, channels: 3, background: "#701e28" },
+    })
+      .webp()
+      .toBuffer();
+
+    const res = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
+      .attach("image", original, {
+        filename: "already.webp",
+        contentType: "image/webp",
+      });
+    const stored = res.body.filename as string;
 
     expect(await sizeOf(stored)).toEqual({ width: 800, height: 600 });
     // Untouched, rather than read and written back out a little worse.
@@ -308,10 +334,22 @@ describe("photos too big for any screen here", () => {
 });
 
 describe("catching up photos already on disk", () => {
-  it("shrinks the big ones and says which, then has nothing left to do", async () => {
+  it("prepares them, moves the drinks across, then has nothing left to do", async () => {
     const uploadsDir = makeTempDir();
+    const db = makeTestDatabase();
+    seedBar(db);
+
     const big = path.join(uploadsDir, "drink-big.jpg");
     const small = path.join(uploadsDir, "drink-small.jpg");
+
+    const drinkId = Number(
+      db
+        .prepare(
+          `INSERT INTO drinks (bar_id, title, image_url, recipe, in_stock)
+           VALUES (1, 'Negroni', '/uploads/drink-big.jpg', 'gin', 1)`
+        )
+        .run().lastInsertRowid
+    );
 
     await sharp({
       create: { width: 3000, height: 2000, channels: 3, background: "#701e28" },
@@ -326,13 +364,63 @@ describe("catching up photos already on disk", () => {
 
     const smallBefore = fs.statSync(small).size;
 
-    expect(await shrinkStoredPhotos({ uploadsDir })).toEqual(["drink-big.jpg"]);
+    expect((await prepareStoredPhotos({ db, uploadsDir })).sort()).toEqual([
+      "drink-big.jpg",
+      "drink-small.jpg",
+    ]);
 
-    const { width } = await sharp(big).metadata();
-    expect(width).toBe(1600);
-    expect(fs.statSync(small).size).toBe(smallBefore);
+    // The big one shrank; both ended up in the one format, under a new name.
+    const settled = path.join(uploadsDir, "drink-big.webp");
+    expect((await sharp(settled).metadata()).width).toBe(1600);
+    expect(fs.existsSync(big)).toBe(false);
+    expect(fs.existsSync(small)).toBe(false);
+    expect(smallBefore).toBeGreaterThan(0);
+
+    // The drink moved across with its photo, rather than pointing at a gap.
+    expect(
+      db.prepare("SELECT image_url FROM drinks WHERE id = ?").get(drinkId)
+    ).toEqual({ image_url: "/uploads/drink-big.webp" });
 
     // Safe to run again: everything now fits, so nothing is touched twice.
-    expect(await shrinkStoredPhotos({ uploadsDir })).toEqual([]);
+    expect(await prepareStoredPhotos({ db, uploadsDir })).toEqual([]);
+  });
+});
+
+// There was already a test for script wearing a .png name. A real picture of
+// a type we do not accept takes a different path: the label passes the filter
+// and only the bytes give it away.
+describe("a real picture of a type we do not keep", () => {
+  let app: Express;
+  let uploadsDir: string;
+  let avif: Buffer;
+
+  beforeAll(async () => {
+    ({ app, uploadsDir } = makeTestApp());
+    avif = await sharp({
+      create: { width: 40, height: 40, channels: 3, background: "#701e28" },
+    })
+      .avif()
+      .toBuffer();
+  });
+
+  it("turns it away when it says what it is", async () => {
+    const res = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
+      .attach("image", avif, { filename: "x.avif", contentType: "image/avif" });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("turns it away wearing a .png name, leaving nothing behind", async () => {
+    const before = drinkPhotoCount(uploadsDir);
+
+    const res = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
+      .attach("image", avif, { filename: "x.png", contentType: "image/png" });
+
+    expect(res.status).toBe(400);
+    expect(drinkPhotoCount(uploadsDir)).toBe(before);
   });
 });

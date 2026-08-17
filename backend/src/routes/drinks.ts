@@ -5,6 +5,7 @@ import express, {
 } from "express";
 import multer from "multer";
 import fs from "fs";
+import path from "path";
 
 import type {
   Drink,
@@ -41,7 +42,7 @@ import { deletePhotoIfUnused } from "../uploads.js";
 import {
   extensionFor,
   isAllowedImageType,
-  shrinkToFit,
+  preparePhoto,
   sniffImageFile,
   type AllowedImageType,
 } from "../images.js";
@@ -203,13 +204,18 @@ export default function createDrinkRoutes({
       }
 
       // A photo off a phone is far bigger than anything here shows it at, and
-      // a menu of them is what made the bar slow to open.
-      await shrinkToFit(req.file.path);
+      // a menu of them is what made the bar slow to open. This also settles it
+      // into the one format we keep, which may change the name.
+      const settled = await preparePhoto(req.file.path);
+
+      if (settled && settled !== req.file.path) fs.unlinkSync(req.file.path);
+
+      const filename = path.basename(settled ?? req.file.path);
 
       res.json({
         success: true,
-        imageUrl: `/uploads/${req.file.filename}`,
-        filename: req.file.filename,
+        imageUrl: `/uploads/${filename}`,
+        filename,
       });
     })
   );

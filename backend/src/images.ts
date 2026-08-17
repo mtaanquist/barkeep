@@ -74,13 +74,24 @@ export function sniffImageType(header: Buffer): AllowedImageType | null {
  */
 export const LONGEST_SIDE = 1600;
 
+/** The one format we keep photos in. Everything else is turned into it. */
+export const STORED_FORMAT = "webp";
+
 /**
- * Shrinks a photo where it sits, if it is bigger than we ever show it. Says
- * whether it did.
+ * Formats left exactly as they are. A moving picture would come back as a
+ * single frame, and AVIF is already smaller than what we would turn it into.
+ */
+const LEAVE_ALONE = new Set(["gif", "heif", "avif"]);
+
+/**
+ * Gets a photo ready to be shown: no bigger than we ever show it, and in the
+ * one format we store. Gives back where it ended up, or null if there was
+ * nothing to do.
  *
- * A phone photo is around 4000 pixels across and a couple of megabytes. The
- * menu has over a hundred of them, and every one used to be sent whole, so
- * the first look at the bar could be tens of megabytes.
+ * A phone photo is around 4000 pixels across and a couple of megabytes, and
+ * the menu has over a hundred of them — the first look at the bar used to be
+ * tens of megabytes. Keeping photographs as PNG was most of what was left
+ * after the shrinking: 44 of them weighed more than the other 92 together.
  *
  * The turn a photo was taken at is written beside the picture rather than
  * into it, so that gets applied here — otherwise a portrait photo comes out
@@ -89,22 +100,30 @@ export const LONGEST_SIDE = 1600;
  * Written beside the original and moved into place, because a picture cannot
  * be read from and written to at once, and a half-written photo would be
  * worse than a large one.
+ *
+ * Changing the format changes the name, and in that case the original is left
+ * where it is: whoever called this has to point the drinks at the new one
+ * before removing the old one, or a crash in between would leave a drink
+ * pointing at nothing.
  */
-export async function shrinkToFit(
+export async function preparePhoto(
   filePath: string,
   longestSide: number = LONGEST_SIDE
-): Promise<boolean> {
-  const source = sharp(filePath);
-  const { format, width = 0, height = 0 } = await source.metadata();
+): Promise<string | null> {
+  const { format, width = 0, height = 0 } = await sharp(filePath).metadata();
 
-  // A moving picture would come out as one frame, so leave it alone.
-  if (format === "gif") return false;
-  if (Math.max(width, height) <= longestSide) return false;
+  if (format && LEAVE_ALONE.has(format)) return null;
 
-  const beside = path.join(
-    path.dirname(filePath),
-    `.shrinking-${path.basename(filePath)}`
+  const tooBig = Math.max(width, height) > longestSide;
+  const wrongFormat = format !== STORED_FORMAT;
+  if (!tooBig && !wrongFormat) return null;
+
+  const directory = path.dirname(filePath);
+  const settled = path.join(
+    directory,
+    `${path.basename(filePath, path.extname(filePath))}.${STORED_FORMAT}`
   );
+  const beside = path.join(directory, `.preparing-${path.basename(settled)}`);
 
   try {
     await sharp(filePath)
@@ -115,10 +134,11 @@ export async function shrinkToFit(
         fit: "inside",
         withoutEnlargement: true,
       })
+      .webp()
       .toFile(beside);
 
-    fs.renameSync(beside, filePath);
-    return true;
+    fs.renameSync(beside, settled);
+    return settled;
   } catch (error) {
     if (fs.existsSync(beside)) fs.unlinkSync(beside);
     throw error;
