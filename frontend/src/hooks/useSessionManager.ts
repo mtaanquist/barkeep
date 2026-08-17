@@ -23,7 +23,14 @@ export function rememberMe(remember: boolean): void {
 const isRemembered = () => localStorage.getItem(REMEMBER_KEY) === "true";
 
 export const useSessionManager = () => {
-  const { setUserType, setCurrentBar, setCustomerName, setLoginForm, apiCall } =
+  const {
+    setUserType,
+    setCurrentBar,
+    setCustomerName,
+    setLoginForm,
+    setViewingRecipe,
+    apiCall,
+  } =
     useApp();
 
   const navigate = useNavigate();
@@ -50,6 +57,9 @@ export const useSessionManager = () => {
     setCurrentBar(null);
     setCustomerName("");
     setLoginForm({ password: "", name: "" });
+    // An open recipe would otherwise sit over the sign-in page for whoever
+    // picks the tablet up next.
+    setViewingRecipe(null);
     localStorage.removeItem(ACTIVITY_KEY);
     // Signing out is the guest saying it is not them, so forget them too.
     localStorage.removeItem(REMEMBER_KEY);
@@ -60,6 +70,7 @@ export const useSessionManager = () => {
     setCurrentBar,
     setCustomerName,
     setLoginForm,
+    setViewingRecipe,
   ]);
 
   useEffect(() => {

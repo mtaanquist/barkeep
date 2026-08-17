@@ -67,54 +67,49 @@ export function sniffImageType(header: Buffer): AllowedImageType | null {
   return null;
 }
 
-/**
- * The longest side we keep a photo at. A drink is never shown bigger than a
- * card or the top of a recipe, so this is already generous on a sharp screen.
- * A phone camera hands us something four or five times this.
- */
-export const LONGEST_SIDE = 1600;
-
-/** The one format we keep photos in. Everything else is turned into it. */
-export const STORED_FORMAT = "webp";
+/** The longest side we keep a photo at, and the one format we keep it in. */
+const LONGEST_SIDE = 1600;
+const STORED_FORMAT = "webp";
 
 /**
- * Formats left exactly as they are. A moving picture would come back as a
- * single frame, and AVIF is already smaller than what we would turn it into.
+ * How many pixels we are willing to open. A picture can be small on disk and
+ * enormous once unpacked, which would take the whole bar down with it.
  */
-const LEAVE_ALONE = new Set(["gif", "heif", "avif"]);
+const MOST_PIXELS = 40_000_000;
+
+/**
+ * Left as they are. A moving picture would come back as one frame.
+ *
+ * "heif" is how an AVIF photo is reported, not a mistake: AVIF is one of that
+ * family. A few are on disk from before the accepted types were narrowed, they
+ * can no longer be uploaded, and they are already smaller than WebP would be.
+ */
+const LEAVE_ALONE = new Set(["gif", "heif"]);
 
 /**
  * Gets a photo ready to be shown: no bigger than we ever show it, and in the
- * one format we store. Gives back where it ended up, or null if there was
+ * one format we keep. Gives back where it ended up, or null if there was
  * nothing to do.
- *
- * A phone photo is around 4000 pixels across and a couple of megabytes, and
- * the menu has over a hundred of them — the first look at the bar used to be
- * tens of megabytes. Keeping photographs as PNG was most of what was left
- * after the shrinking: 44 of them weighed more than the other 92 together.
  *
  * The turn a photo was taken at is written beside the picture rather than
  * into it, so that gets applied here — otherwise a portrait photo comes out
  * on its side once the note is dropped.
  *
  * Written beside the original and moved into place, because a picture cannot
- * be read from and written to at once, and a half-written photo would be
- * worse than a large one.
+ * be read from and written to at once.
  *
  * Changing the format changes the name, and in that case the original is left
  * where it is: whoever called this has to point the drinks at the new one
  * before removing the old one, or a crash in between would leave a drink
  * pointing at nothing.
  */
-export async function preparePhoto(
-  filePath: string,
-  longestSide: number = LONGEST_SIDE
-): Promise<string | null> {
-  const { format, width = 0, height = 0 } = await sharp(filePath).metadata();
+export async function preparePhoto(filePath: string): Promise<string | null> {
+  const open = { limitInputPixels: MOST_PIXELS };
+  const { format, width = 0, height = 0 } = await sharp(filePath, open).metadata();
 
   if (format && LEAVE_ALONE.has(format)) return null;
 
-  const tooBig = Math.max(width, height) > longestSide;
+  const tooBig = Math.max(width, height) > LONGEST_SIDE;
   const wrongFormat = format !== STORED_FORMAT;
   if (!tooBig && !wrongFormat) return null;
 
@@ -126,11 +121,11 @@ export async function preparePhoto(
   const beside = path.join(directory, `.preparing-${path.basename(settled)}`);
 
   try {
-    await sharp(filePath)
+    await sharp(filePath, open)
       .rotate()
       .resize({
-        width: longestSide,
-        height: longestSide,
+        width: LONGEST_SIDE,
+        height: LONGEST_SIDE,
         fit: "inside",
         withoutEnlargement: true,
       })

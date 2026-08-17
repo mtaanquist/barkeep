@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
   Route,
   Navigate,
+  useLocation,
   useNavigate,
 } from "react-router-dom";
 import LandingPage from "./components/LandingPage";
@@ -28,6 +29,7 @@ const AppContent: React.FC = () => {
   const {
     error,
     viewingRecipe,
+    drinks,
     setError,
     setViewingRecipe,
     userType,
@@ -36,6 +38,12 @@ const AppContent: React.FC = () => {
   } = useApp();
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // On a phone, back is how a dialog gets closed. Opening a drink adds no
+  // history of its own, so without this the screen underneath changes and the
+  // drink stays sitting on top of it.
+  useEffect(() => setViewingRecipe(null), [location.pathname, setViewingRecipe]);
 
   // Protected route logic
   const isAuthenticated = userType && currentBar;
@@ -107,9 +115,12 @@ const AppContent: React.FC = () => {
           drink={viewingRecipe}
           onClose={() => setViewingRecipe(null)}
           // Who may change a drink is decided here, once, rather than by each
-          // screen that opens one.
+          // screen that opens one. A drink taken off the menu can still be
+          // read from an order that was already placed, but there is no longer
+          // a form to open for it.
           onEdit={
-            isBartenderAuthenticated
+            isBartenderAuthenticated &&
+            drinks.some((drink) => drink.id === viewingRecipe.id)
               ? () => {
                   const { id } = viewingRecipe;
                   setViewingRecipe(null);

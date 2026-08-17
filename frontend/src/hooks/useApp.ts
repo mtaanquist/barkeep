@@ -8,6 +8,7 @@ import type {
   Language,
   Order,
   UserType,
+  DrinkToRead,
 } from "../types";
 
 /** The two sign-in forms hold the same handful of fields throughout. */
@@ -45,7 +46,7 @@ export interface AppContextType {
   categories: Category[];
 
   // UI states
-  viewingRecipe: Drink | null;
+  viewingRecipe: DrinkToRead | null;
   showPassword: boolean;
 
   // Setters
@@ -63,7 +64,7 @@ export interface AppContextType {
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
   setAnalytics: React.Dispatch<React.SetStateAction<Analytics | null>>;
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
-  setViewingRecipe: (drink: Drink | null) => void;
+  setViewingRecipe: (drink: DrinkToRead | null) => void;
   setShowPassword: (show: boolean) => void;
 
   // API helper

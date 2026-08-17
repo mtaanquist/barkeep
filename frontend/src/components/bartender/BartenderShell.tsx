@@ -62,6 +62,16 @@ const BartenderShell: React.FC = () => {
     if (!connectionError) setNoticeDismissed(false);
   }, [connectionError]);
 
+  // Escape closes the search, the same as tapping away from it.
+  useEffect(() => {
+    if (!searchOpen) return;
+    const close = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSearchOpen(false);
+    };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [searchOpen]);
+
   const barId = currentBar?.id;
   const onQueue = location.pathname.endsWith("/queue");
 
@@ -146,7 +156,7 @@ const BartenderShell: React.FC = () => {
       )}
 
       {/* The rail, on a laptop or a tablet in landscape. */}
-      <nav className="hidden lg:flex w-58 shrink-0 flex-col bg-surface border-r border-border sticky top-0 h-screen">
+      <nav className="hidden lg:flex w-58 shrink-0 flex-col overflow-y-auto bg-surface border-r border-border sticky top-0 h-screen">
         <div className="px-4 pt-4 pb-3.5">
           <p className="text-heading truncate">{currentBar?.name}</p>
           <p className="font-mono text-caption uppercase text-text-muted mt-0.5">
@@ -280,8 +290,11 @@ const BartenderShell: React.FC = () => {
       </div>
 
       {searchOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-surface flex flex-col">
-          <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+        <div className="lg:hidden fixed inset-0 z-30 flex flex-col">
+          {/* A sheet at the top rather than a full screen, so the pending
+              count along the bottom stays readable while looking something
+              up. Anything below it closes, which is the easier reach. */}
+          <div className="shrink-0 bg-surface border-b border-border px-4 py-3 flex items-start gap-3">
             <div className="flex-1 min-w-0">
               <DrinkSearch autoFocus onPicked={() => setSearchOpen(false)} />
             </div>
@@ -293,6 +306,13 @@ const BartenderShell: React.FC = () => {
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          <button
+            type="button"
+            aria-label={t("close")}
+            onClick={() => setSearchOpen(false)}
+            className="flex-1 bg-overlay cursor-default"
+          />
         </div>
       )}
 

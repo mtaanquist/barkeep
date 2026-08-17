@@ -19,6 +19,7 @@ import type {
   Order,
   SignedIn,
   UserType,
+  DrinkToRead,
 } from "../types";
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({
@@ -68,7 +69,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({
   const [categories, setCategories] = useState<Category[]>([]);
 
   // UI states
-  const [viewingRecipe, setViewingRecipe] = useState<Drink | null>(null);
+  const [viewingRecipe, setViewingRecipe] = useState<DrinkToRead | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   /** Puts everything back as it was before anyone signed in. */

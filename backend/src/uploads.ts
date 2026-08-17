@@ -46,12 +46,9 @@ export function deletePhotoIfUnused(
 }
 
 /**
- * Brings every photo already on disk up to how we keep them now: no bigger
- * than we show them, and all in the one format. Names the ones it changed.
- *
- * Photos used to be kept at whatever size and format they arrived in, so a
- * bar that has been running a while has a folder full of them. This catches
- * those up on the next start; new ones are prepared as they arrive.
+ * Brings photos already on disk up to how we keep them now: no bigger than we
+ * show them, and in the one format. Moving pictures are left as they are.
+ * Names the ones it changed.
  *
  * Changing the format changes the file's name, so the drinks pointing at it
  * are moved across too — more than one drink can share a photo. The new file
@@ -59,8 +56,7 @@ export function deletePhotoIfUnused(
  * one removed, so a crash part way through leaves every drink pointing at a
  * photo that is really there.
  *
- * Safe to run again: a photo already the right size and format is left alone,
- * so a second start does nothing. One bad file does not stop the rest.
+ * Safe to run again, and one bad file does not stop the rest.
  */
 export async function prepareStoredPhotos({
   db,
