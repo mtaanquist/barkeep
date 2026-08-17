@@ -65,8 +65,10 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose, onEdit }) => {
     return () => window.removeEventListener("keydown", close);
   }, [onClose]);
 
+  // The bottom padding keeps this clear of the queue bar on a phone, which
+  // rides above it so the pending count stays readable while a drink is made.
   return (
-    <div className="fixed inset-0 z-50 bg-overlay flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-overlay flex items-center justify-center p-4 pb-28 lg:pb-4 overflow-y-auto">
       <div
         role="dialog"
         aria-modal="true"

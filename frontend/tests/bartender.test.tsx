@@ -161,7 +161,6 @@ describe("reading a recipe while making the drink", () => {
       ).toBe(true)
     );
 
-    expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.queryByRole("button", { name: "Accept" })).toBeNull();
   });
 
@@ -228,6 +227,10 @@ describe("finding a drink without leaving the queue", () => {
     expect(
       await screen.findByRole("dialog", { name: "Sazerac" })
     ).toBeInTheDocument();
+    // Nothing is left hanging over the pending count in the rail below.
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "Sazerac" })).toBeNull()
+    );
   });
 
   // Nobody types the accent, and nobody matches the bartender's capitals.
@@ -243,6 +246,21 @@ describe("finding a drink without leaving the queue", () => {
     expect(
       await screen.findByRole("button", { name: "Crème de Menthe" })
     ).toBeInTheDocument();
+  });
+
+  // A keyboard without the Danish letters is what the bartender often has.
+  it("finds a Danish name typed the way it sounds", async () => {
+    menu = [aDrink({ id: 7, title: "Gløgg" }), aDrink({ id: 8, title: "Æblemost" })];
+    serve();
+    openBar("/bartender/queue");
+
+    const field = await screen.findByRole("searchbox", { name: "Search drinks" });
+    await userEvent.type(field, "gloegg");
+    expect(await screen.findByRole("button", { name: "Gløgg" })).toBeInTheDocument();
+
+    await userEvent.clear(field);
+    await userEvent.type(field, "aeble");
+    expect(await screen.findByRole("button", { name: "Æblemost" })).toBeInTheDocument();
   });
 
   it("says so when nothing matches", async () => {
@@ -306,5 +324,63 @@ describe("searching on a phone", () => {
         screen.getAllByRole("searchbox", { name: "Search drinks" })
       ).toHaveLength(1)
     );
+  });
+});
+
+// Two things the release changed that nothing was holding in place.
+describe("a drink never outlives the screen it was opened from", () => {
+  it("closes when the bartender leaves for another screen", async () => {
+    menu = [aDrink({ id: 1, title: "Negroni" })];
+    serve();
+    openBar("/bartender/menu");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Negroni" }));
+    await screen.findByRole("dialog", { name: "Negroni" });
+
+    await userEvent.click(screen.getAllByRole("link", { name: "Settings" })[0]);
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("is gone after signing out, rather than left on a shared tablet", async () => {
+    menu = [aDrink({ id: 1, title: "Negroni" })];
+    serve();
+    openBar("/bartender/menu");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Negroni" }));
+    await screen.findByRole("dialog", { name: "Negroni" });
+
+    await userEvent.click(screen.getAllByRole("button", { name: "Logout" })[0]);
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  // The order keeps its own copy of the recipe from when it was placed, which
+  // can be out of date. The menu is the one to believe when both are there.
+  // (The narrow window where the menu has not landed yet is reasoned about
+  // rather than covered — the fake server here answers everything at once.)
+  it("reads the recipe from the menu, not the copy the order kept", async () => {
+    orders = [anOrder({ id: 1, status: "accepted", drink_id: 1, drink_title: "Negroni", drink_recipe: "OLD: three parts gin" })];
+    menu = [aDrink({ id: 1, title: "Negroni", recipe: "NEW: one part gin" })];
+    serve();
+    openBar("/bartender/queue");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Negroni" }));
+    const dialog = await screen.findByRole("dialog", { name: "Negroni" });
+
+    expect(await within(dialog).findByText(/NEW: one part gin/)).toBeInTheDocument();
+    expect(within(dialog).queryByText(/OLD: three parts gin/)).toBeNull();
+  });
+
+  it("offers Edit for a drink that is still on the menu", async () => {
+    orders = [anOrder({ id: 1, status: "accepted", drink_id: 1, drink_title: "Negroni" })];
+    menu = [aDrink({ id: 1, title: "Negroni" })];
+    serve();
+    openBar("/bartender/queue");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Negroni" }));
+    const dialog = await screen.findByRole("dialog", { name: "Negroni" });
+
+    expect(within(dialog).getByRole("button", { name: "Edit" })).toBeInTheDocument();
   });
 });

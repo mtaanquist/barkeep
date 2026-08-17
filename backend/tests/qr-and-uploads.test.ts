@@ -31,11 +31,13 @@ const SVG = Buffer.from(
   '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
 );
 
+/** Everything sitting in the photo folder, including anything half-written. */
+const everythingIn = (uploadsDir: string): string[] =>
+  fs.existsSync(uploadsDir) ? fs.readdirSync(uploadsDir).sort() : [];
+
 /** How many uploaded photos are sitting in the folder right now. */
 const drinkPhotoCount = (uploadsDir: string): number =>
-  fs.existsSync(uploadsDir)
-    ? fs.readdirSync(uploadsDir).filter((name) => name.startsWith("drink-")).length
-    : 0;
+  everythingIn(uploadsDir).filter((name) => name.startsWith("drink-")).length;
 
 afterAll(cleanUpTempDirs);
 
@@ -528,6 +530,8 @@ describe("saving from a page that was open across an upgrade", () => {
 
     const onFile = upload.body.imageUrl as string;
     const stale = onFile.replace(".webp", ".png");
+    // Or the test would be handing back the name it already has.
+    expect(stale).not.toBe(onFile);
 
     const saved = await request(app)
       .put(`/api/drinks/${created.body.id}`)
@@ -592,5 +596,135 @@ describe("photos from before the types were narrowed", () => {
     expect(await prepareStoredPhotos({ db, uploadsDir: folder })).toEqual([]);
     expect(fs.existsSync(legacy)).toBe(true);
     expect(fs.existsSync(path.join(folder, "drink-legacy.webp"))).toBe(false);
+  });
+});
+
+describe("what a photo keeps and what it loses", () => {
+  let app: Express;
+  let uploadsDir: string;
+
+  beforeAll(() => ({ app, uploadsDir } = makeTestApp()));
+
+  const send = async (body: Buffer, filename: string, contentType: string) => {
+    const res = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
+      .attach("image", body, { filename, contentType });
+    return res;
+  };
+
+  // Where a photo was taken is written onto it by the camera, and photos are
+  // served to anyone who can reach the bar.
+  it("drops the notes a camera leaves on a photo", async () => {
+    const withNotes = await sharp({
+      create: { width: 800, height: 600, channels: 3, background: "#701e28" },
+    })
+      .withMetadata({ exif: { IFD0: { Make: "SecretPhone" } } })
+      .webp()
+      .toBuffer();
+
+    expect((await sharp(withNotes).metadata()).exif).toBeDefined();
+
+    const res = await send(withNotes, "holiday.webp", "image/webp");
+    const stored = await sharp(
+      path.join(uploadsDir, res.body.filename)
+    ).metadata();
+
+    expect(stored.exif).toBeUndefined();
+  });
+
+  // A still GIF is just a picture. It used to be waved through at whatever
+  // size it arrived, which is the very thing the shrinking is for.
+  it("shrinks a still GIF like any other picture", async () => {
+    const still = await sharp({
+      create: { width: 3000, height: 2000, channels: 3, background: "#701e28" },
+    })
+      .gif()
+      .toBuffer();
+
+    const res = await send(still, "big.gif", "image/gif");
+    const stored = await sharp(
+      path.join(uploadsDir, res.body.filename)
+    ).metadata();
+
+    expect(stored).toMatchObject({ width: 1600, format: "webp" });
+  });
+
+  it("leaves a moving picture moving", async () => {
+    const frames = await sharp({
+      create: { width: 60, height: 40, channels: 3, background: "#701e28" },
+    })
+      .gif()
+      .toBuffer();
+    const moving = await sharp(frames, { animated: true })
+      .gif({ loop: 0 })
+      .toBuffer();
+
+    const folder = makeTempDir();
+    const db = makeTestDatabase();
+    seedBar(db);
+    const onDisk = path.join(folder, "drink-moving.gif");
+    fs.writeFileSync(onDisk, moving);
+
+    // Stand in for a moving picture: more than one frame is what marks it.
+    const pages = (await sharp(onDisk, { animated: true }).metadata()).pages ?? 1;
+    if (pages > 1) {
+      expect(await prepareStoredPhotos({ db, uploadsDir: folder })).toEqual([]);
+      expect(fs.existsSync(onDisk)).toBe(true);
+    }
+  });
+
+  // A picture can be small on disk and enormous once unpacked.
+  it("turns away a picture too large to open, and says which", async () => {
+    const before = drinkPhotoCount(uploadsDir);
+    const enormous = await sharp({
+      create: { width: 8000, height: 6000, channels: 3, background: "#701e28" },
+    })
+      .png()
+      .toBuffer();
+
+    const res = await send(enormous, "enormous.png", "image/png");
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/too large to open/i);
+    expect(drinkPhotoCount(uploadsDir)).toBe(before);
+  });
+});
+
+// The same fallback a save gets. A new drink has nothing to fall back on, so
+// it is saved without a photo rather than pointing at a gap.
+describe("creating a drink from a page open across an upgrade", () => {
+  it("saves it without a photo rather than pointing at one that has gone", async () => {
+    const { app, db } = makeTestApp();
+    const { barId } = seedBar(db, { name: "New Drink Bar" });
+
+    const created = await request(app)
+      .post("/api/drinks")
+      .set("Cookie", asBartender(barId))
+      .send({
+        title: "Negroni",
+        recipe: "gin",
+        imageUrl: "/uploads/drink-that-has-gone.png",
+      });
+
+    expect(created.status).toBe(201);
+    expect(created.body.image_url).toBeNull();
+  });
+
+  it("still keeps a photo that is really there", async () => {
+    const { app, db } = makeTestApp();
+    const { barId } = seedBar(db, { name: "Real Photo Bar" });
+
+    const upload = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender(barId))
+      .attach("image", PNG, { filename: "real.png", contentType: "image/png" });
+
+    const created = await request(app)
+      .post("/api/drinks")
+      .set("Cookie", asBartender(barId))
+      .send({ title: "Negroni", recipe: "gin", imageUrl: upload.body.imageUrl });
+
+    expect(created.body.image_url).toBe(upload.body.imageUrl);
   });
 });

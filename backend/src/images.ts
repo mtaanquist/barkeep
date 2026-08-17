@@ -78,40 +78,45 @@ const STORED_FORMAT = "webp";
 const MOST_PIXELS = 40_000_000;
 
 /**
- * Left as they are. A moving picture would come back as one frame.
- *
- * "heif" is how an AVIF photo is reported, not a mistake: AVIF is one of that
- * family. A few are on disk from before the accepted types were narrowed, they
- * can no longer be uploaded, and they are already smaller than WebP would be.
+ * AVIF is reported as "heif", not a mistake: AVIF is one of that family. A
+ * handful are on disk from before the accepted types were narrowed, they can
+ * no longer be uploaded, and they are all small already.
  */
-const LEAVE_ALONE = new Set(["gif", "heif"]);
+const LEAVE_ALONE = new Set(["heif"]);
+
+// One photo at a time and nothing kept between them. The catch-up runs over a
+// whole folder at once, and libvips will happily hold on to all of it.
+sharp.cache(false);
+sharp.concurrency(1);
 
 /**
- * Gets a photo ready to be shown: no bigger than we ever show it, and in the
- * one format we keep. Gives back where it ended up, or null if there was
- * nothing to do.
- *
- * The turn a photo was taken at is written beside the picture rather than
- * into it, so that gets applied here — otherwise a portrait photo comes out
- * on its side once the note is dropped.
+ * Gets a photo ready to be shown: no bigger than we ever show it, in the one
+ * format we keep, and without the notes a camera leaves on it. Gives back
+ * where it ended up, or null if there was nothing to do.
  *
  * Written beside the original and moved into place, because a picture cannot
- * be read from and written to at once.
- *
- * Changing the format changes the name, and in that case the original is left
- * where it is: whoever called this has to point the drinks at the new one
- * before removing the old one, or a crash in between would leave a drink
- * pointing at nothing.
+ * be read from and written to at once. Changing the format changes the name,
+ * and the original is left where it is: whoever called this has to point the
+ * drinks at the new one before removing the old one.
  */
 export async function preparePhoto(filePath: string): Promise<string | null> {
   const open = { limitInputPixels: MOST_PIXELS };
-  const { format, width = 0, height = 0 } = await sharp(filePath, open).metadata();
+  const picture = await sharp(filePath, open).metadata();
+  const { format, width = 0, height = 0, pages = 1 } = picture;
 
+  // A moving picture would come back as a single frame. Told apart by having
+  // more than one, rather than by its type — a still GIF is just a picture,
+  // and a moving one can be a WebP.
+  if (pages > 1) return null;
   if (format && LEAVE_ALONE.has(format)) return null;
 
   const tooBig = Math.max(width, height) > LONGEST_SIDE;
   const wrongFormat = format !== STORED_FORMAT;
-  if (!tooBig && !wrongFormat) return null;
+  // Where the picture was taken is written onto it by the camera, and photos
+  // are served to anyone who can reach the bar. Writing it out again drops it.
+  const carriesNotes = Boolean(picture.exif ?? picture.xmp ?? picture.iptc);
+
+  if (!tooBig && !wrongFormat && !carriesNotes) return null;
 
   const directory = path.dirname(filePath);
   const settled = path.join(
@@ -131,6 +136,13 @@ export async function preparePhoto(filePath: string): Promise<string | null> {
       })
       .webp()
       .toFile(beside);
+
+    // Two photos whose names differ only by their type would otherwise settle
+    // on the same name and quietly destroy each other.
+    if (settled !== filePath && fs.existsSync(settled)) {
+      fs.unlinkSync(beside);
+      throw new Error(`${path.basename(settled)} is already taken`);
+    }
 
     fs.renameSync(beside, settled);
     return settled;

@@ -28,7 +28,6 @@ export const useSessionManager = () => {
     setCurrentBar,
     setCustomerName,
     setLoginForm,
-    setViewingRecipe,
     apiCall,
   } =
     useApp();
@@ -57,9 +56,6 @@ export const useSessionManager = () => {
     setCurrentBar(null);
     setCustomerName("");
     setLoginForm({ password: "", name: "" });
-    // An open recipe would otherwise sit over the sign-in page for whoever
-    // picks the tablet up next.
-    setViewingRecipe(null);
     localStorage.removeItem(ACTIVITY_KEY);
     // Signing out is the guest saying it is not them, so forget them too.
     localStorage.removeItem(REMEMBER_KEY);
@@ -70,7 +66,6 @@ export const useSessionManager = () => {
     setCurrentBar,
     setCustomerName,
     setLoginForm,
-    setViewingRecipe,
   ]);
 
   useEffect(() => {
