@@ -362,7 +362,6 @@ describe("catching up photos already on disk", () => {
       .jpeg()
       .toFile(small);
 
-    const smallBefore = fs.statSync(small).size;
 
     expect((await prepareStoredPhotos({ db, uploadsDir })).sort()).toEqual([
       "drink-big.jpg",
@@ -374,7 +373,11 @@ describe("catching up photos already on disk", () => {
     expect((await sharp(settled).metadata()).width).toBe(1600);
     expect(fs.existsSync(big)).toBe(false);
     expect(fs.existsSync(small)).toBe(false);
-    expect(smallBefore).toBeGreaterThan(0);
+    // Under the size limit, so only the format changed — not the dimensions.
+    const smallSettled = await sharp(
+      path.join(uploadsDir, "drink-small.webp")
+    ).metadata();
+    expect(smallSettled).toMatchObject({ width: 400, height: 300, format: "webp" });
 
     // The drink moved across with its photo, rather than pointing at a gap.
     expect(
@@ -422,5 +425,172 @@ describe("a real picture of a type we do not keep", () => {
 
     expect(res.status).toBe(400);
     expect(drinkPhotoCount(uploadsDir)).toBe(before);
+  });
+});
+
+describe("photos that go wrong", () => {
+  let app: Express;
+  let uploadsDir: string;
+
+  beforeAll(() => ({ app, uploadsDir } = makeTestApp()));
+
+  // A phone upload that gets cut off starts with the right few bytes and is
+  // rubbish after that. It used to answer "Something went wrong" and leave the
+  // remains on disk for a day.
+  it("turns away a picture that is only a picture at the front", async () => {
+    const before = drinkPhotoCount(uploadsDir);
+    const truncated = Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      Buffer.from("and then nothing that makes a picture"),
+    ]);
+
+    const res = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender())
+      .attach("image", truncated, {
+        filename: "cutoff.png",
+        contentType: "image/png",
+      });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/image/i);
+    expect(drinkPhotoCount(uploadsDir)).toBe(before);
+  });
+
+  it("keeps going when something in the folder is not a picture at all", async () => {
+    const folder = makeTempDir();
+    const db = makeTestDatabase();
+    seedBar(db);
+
+    fs.writeFileSync(path.join(folder, ".DS_Store"), "not a picture");
+    for (const name of ["drink-one.png", "drink-two.png"]) {
+      await sharp({
+        create: { width: 30, height: 20, channels: 3, background: "#701e28" },
+      })
+        .png()
+        .toFile(path.join(folder, name));
+    }
+
+    expect((await prepareStoredPhotos({ db, uploadsDir: folder })).sort()).toEqual([
+      "drink-one.png",
+      "drink-two.png",
+    ]);
+    expect(fs.existsSync(path.join(folder, ".DS_Store"))).toBe(true);
+  });
+
+  it("moves every drink sharing one photo, not just the first", async () => {
+    const folder = makeTempDir();
+    const db = makeTestDatabase();
+    seedBar(db);
+
+    await sharp({
+      create: { width: 30, height: 20, channels: 3, background: "#701e28" },
+    })
+      .png()
+      .toFile(path.join(folder, "drink-shared.png"));
+
+    for (const title of ["Negroni", "Boulevardier"]) {
+      db.prepare(
+        `INSERT INTO drinks (bar_id, title, image_url, recipe, in_stock)
+         VALUES (1, ?, '/uploads/drink-shared.png', 'gin', 1)`
+      ).run(title);
+    }
+
+    await prepareStoredPhotos({ db, uploadsDir: folder });
+
+    expect(
+      db
+        .prepare("SELECT COUNT(*) AS n FROM drinks WHERE image_url = ?")
+        .get("/uploads/drink-shared.webp")
+    ).toEqual({ n: 2 });
+  });
+});
+
+// A page left open while the bar was upgraded still knows a photo by the name
+// it had before. Saving from that page used to hand back the old name, and the
+// real photo was thrown away as "the one being replaced" — gone from disk,
+// with the drink pointing at nothing.
+describe("saving from a page that was open across an upgrade", () => {
+  it("keeps the photo on file rather than the name the page remembers", async () => {
+    const { app, db, uploadsDir } = makeTestApp();
+    const { barId } = seedBar(db, { name: "Upgraded Bar" });
+
+    const upload = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender(barId))
+      .attach("image", PNG, { filename: "negroni.png", contentType: "image/png" });
+
+    const created = await request(app)
+      .post("/api/drinks")
+      .set("Cookie", asBartender(barId))
+      .send({ title: "Negroni", recipe: "gin", imageUrl: upload.body.imageUrl });
+    expect(created.status).toBe(201);
+
+    const onFile = upload.body.imageUrl as string;
+    const stale = onFile.replace(".webp", ".png");
+
+    const saved = await request(app)
+      .put(`/api/drinks/${created.body.id}`)
+      .set("Cookie", asBartender(barId))
+      .send({ title: "Negroni", recipe: "gin, campari", imageUrl: stale });
+
+    expect(saved.status).toBe(200);
+    expect(saved.body.image_url).toBe(onFile);
+    expect(
+      fs.existsSync(path.join(uploadsDir, path.basename(onFile)))
+    ).toBe(true);
+  });
+
+  it("still swaps the photo when the new one is really there", async () => {
+    const { app, db, uploadsDir } = makeTestApp();
+    const { barId } = seedBar(db, { name: "Swapping Bar" });
+
+    const first = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender(barId))
+      .attach("image", PNG, { filename: "one.png", contentType: "image/png" });
+
+    const created = await request(app)
+      .post("/api/drinks")
+      .set("Cookie", asBartender(barId))
+      .send({ title: "Negroni", recipe: "gin", imageUrl: first.body.imageUrl });
+
+    const second = await request(app)
+      .post("/api/drinks/upload-image")
+      .set("Cookie", asBartender(barId))
+      .attach("image", PNG, { filename: "two.png", contentType: "image/png" });
+
+    const saved = await request(app)
+      .put(`/api/drinks/${created.body.id}`)
+      .set("Cookie", asBartender(barId))
+      .send({ title: "Negroni", recipe: "gin", imageUrl: second.body.imageUrl });
+
+    expect(saved.body.image_url).toBe(second.body.imageUrl);
+    // The one it replaced is cleared away, as it always was.
+    expect(
+      fs.existsSync(path.join(uploadsDir, path.basename(first.body.imageUrl)))
+    ).toBe(false);
+  });
+});
+
+// A handful of AVIF photos are on disk from before the accepted types were
+// narrowed. They cannot be uploaded any more, but they are already smaller
+// than WebP would be, so the catch-up leaves them where they are.
+describe("photos from before the types were narrowed", () => {
+  it("leaves an AVIF already on disk alone", async () => {
+    const folder = makeTempDir();
+    const db = makeTestDatabase();
+    seedBar(db);
+
+    const legacy = path.join(folder, "drink-legacy.avif");
+    await sharp({
+      create: { width: 40, height: 30, channels: 3, background: "#701e28" },
+    })
+      .avif()
+      .toFile(legacy);
+
+    expect(await prepareStoredPhotos({ db, uploadsDir: folder })).toEqual([]);
+    expect(fs.existsSync(legacy)).toBe(true);
+    expect(fs.existsSync(path.join(folder, "drink-legacy.webp"))).toBe(false);
   });
 });

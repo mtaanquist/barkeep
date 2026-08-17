@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronUp, Coffee, X } from "lucide-react";
 import { useApp } from "../hooks/useApp";
-import type { Drink, Order, OrderStatus } from "../types";
+import type { DrinkToRead, Order, OrderStatus } from "../types";
 import { statusPill, statusRail } from "../utils/orderStatus";
 import { useTranslation } from "../utils/translations";
 
@@ -10,23 +10,16 @@ import { useTranslation } from "../utils/translations";
  * menu mid-service still has orders in the queue, so fall back to what the
  * order itself remembers rather than leaving the row dead.
  */
-const drinkFor = (order: Order, menu: Drink[]): Drink =>
+const drinkFor = (order: Order, menu: DrinkToRead[]): DrinkToRead =>
   menu.find((drink) => drink.id === order.drink_id) ?? {
     id: order.drink_id,
-    bar_id: order.bar_id,
     title: order.drink_title,
-    image_url: null,
     recipe: order.drink_recipe ?? null,
-    in_stock: 0,
+    image_url: null,
     base_spirit: null,
-    guest_description: null,
-    show_recipe_to_guests: 0,
-    category_id: null,
-    category_name: null,
     image_crop_x: 0,
     image_crop_y: 0,
     image_crop_zoom: 1,
-    created_at: order.created_at,
   };
 
 /** Rightmost, always the same size and place, so it can be hit without looking. */

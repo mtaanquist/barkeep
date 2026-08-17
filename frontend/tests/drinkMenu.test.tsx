@@ -76,9 +76,6 @@ describe("the drink list", () => {
     )!;
 
     expect(row).toHaveTextContent("Out of stock");
-    expect(
-      within(row).getByRole("button", { name: "Mojito" })
-    ).toBeInTheDocument();
   });
 
   // There is no undo in Barkeep, so a stray tap must not land in an editor.

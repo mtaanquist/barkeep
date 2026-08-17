@@ -9,13 +9,20 @@ const MOST_SHOWN = 8;
 
 /**
  * Case and accents are not how anyone remembers a drink's name, so neither
- * gets in the way of finding it. Danish å, ø and æ stand as they are.
+ * gets in the way of finding it: "creme de" finds "Crème de Menthe".
+ *
+ * Danish ø and æ are spelled out, because they are typed on an English
+ * keyboard as often as not. Stripping accents alone folded å alone, which is
+ * worse than treating all three the same way.
  */
+const DANISH: Record<string, string> = { "ø": "o", "æ": "ae" };
+
 const loosely = (text: string): string =>
   text
+    .toLocaleLowerCase()
+    .replace(/[øæ]/g, (letter) => DANISH[letter] ?? letter)
     .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLocaleLowerCase();
+    .replace(/\p{Diacritic}/gu, "");
 
 const matches = (drinks: Drink[], term: string): Drink[] => {
   const wanted = loosely(term.trim());
@@ -54,7 +61,9 @@ const DrinkSearch: React.FC<DrinkSearchProps> = ({ autoFocus, onPicked }) => {
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    // The results hang over what is below rather than pushing it down: the
+    // pending count sits under this in the rail and must not move.
+    <div className="relative">
       <div className="relative">
         <Search
           className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted"
@@ -71,13 +80,14 @@ const DrinkSearch: React.FC<DrinkSearchProps> = ({ autoFocus, onPicked }) => {
         />
       </div>
 
-      {searching &&
-        (found.length === 0 ? (
-          <p className="px-1 py-2 text-body text-text-muted">
-            {t("searchNoMatches")}
-          </p>
-        ) : (
-          <ul className="flex flex-col max-h-72 overflow-y-auto">
+      {searching && (
+        <div className="absolute top-full inset-x-0 z-30 mt-2 p-1 rounded-md border border-border bg-surface-raised shadow-float">
+          {found.length === 0 ? (
+            <p className="px-2 py-2 text-body text-text-muted">
+              {t("searchNoMatches")}
+            </p>
+          ) : (
+            <ul className="flex flex-col max-h-72 overflow-y-auto">
             {found.map((drink) => (
               <li key={drink.id}>
                 <button
@@ -95,9 +105,11 @@ const DrinkSearch: React.FC<DrinkSearchProps> = ({ autoFocus, onPicked }) => {
                   )}
                 </button>
               </li>
-            ))}
-          </ul>
-        ))}
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -9,13 +9,16 @@ import {
   fakeApi,
   FakeEventSource,
   signIn,
+  type FakeApi,
 } from "./helpers";
 
 let orders: ReturnType<typeof anOrder>[];
 let menu: ReturnType<typeof aDrink>[];
 
+let api: FakeApi;
+
 const serve = () => {
-  fakeApi((path) => {
+  api = fakeApi((path) => {
     if (path.includes("/analytics"))
       return {
         totalOrders: 2,
@@ -30,6 +33,9 @@ const serve = () => {
     if (path.includes("/categories")) return [];
     if (path.includes("/drinks/bar/")) return menu;
     if (path.includes("/orders/bar/")) return orders;
+    // The status change the Accept button sends. Without this it 404s and the
+    // order never moves, which is how this file used to look green for nothing.
+    if (/\/orders\/\d+\/status$/.test(path)) return { success: true };
     return undefined;
   });
 };
@@ -119,8 +125,9 @@ describe("finding your way around the bar", () => {
   });
 });
 
-// The recipe used to be one switch for the whole queue, which opened every
-// order at once and forgot itself on the way back from another screen.
+// Reading a recipe used to mean the one switch in the header, which opens
+// every pending order at once. That switch is still there on purpose; this is
+// the way to one recipe without unfolding the rest of the queue.
 describe("reading a recipe while making the drink", () => {
   it("opens the drink to read when its order is tapped", async () => {
     openBar("/bartender/queue");
@@ -132,19 +139,30 @@ describe("reading a recipe while making the drink", () => {
     ).toBeInTheDocument();
   });
 
-  // The tap target lies across the row, so the buttons on it have to stay
-  // reachable — accepting is the thing that must not become a lucky hit.
-  it("leaves the order's own buttons working", async () => {
+  // Accepting must not become a lucky hit now that the row itself is a tap
+  // target. Whether the two overlap on screen is a question for a real
+  // browser; what this pins down is that Accept still does its own job and
+  // does not open the recipe on the way.
+  it("accepts the order from its own button, without opening the drink", async () => {
+    orders = [anOrder({ id: 1, status: "new", drink_title: "Negroni" })];
+    serve();
     openBar("/bartender/queue");
 
-    await userEvent.click(
-      await screen.findByRole("button", { name: "Accept" })
-    );
+    await userEvent.click(await screen.findByRole("button", { name: "Accept" }));
 
     await waitFor(() =>
-      expect(screen.queryByRole("dialog")).toBeNull()
+      expect(
+        api.calls.some(
+          (call) =>
+            call.method === "PATCH" &&
+            call.path.includes("/orders/1/status") &&
+            (call.body as { status?: string })?.status === "accepted"
+        )
+      ).toBe(true)
     );
-    await screen.findByRole("button", { name: "Mark Ready" });
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Accept" })).toBeNull();
   });
 
   // A drink can be taken off the menu while an order for it is still waiting.
@@ -163,9 +181,24 @@ describe("reading a recipe while making the drink", () => {
 
     await userEvent.click(await screen.findByRole("button", { name: "Sazerac" }));
 
-    expect(
-      await screen.findByRole("dialog", { name: "Sazerac" })
-    ).toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog", { name: "Sazerac" });
+    // The recipe the order remembered is the reason for the fallback.
+    expect(await within(dialog).findByText(/rye, absinthe, sugar/)).toBeInTheDocument();
+    // Nothing is claimed about stock for a drink that has left the menu.
+    expect(within(dialog).queryByText("Out of stock")).toBeNull();
+  });
+
+  // There is no form to open for a drink that is no longer on the menu, and
+  // the form would sit on "Loading..." for ever if offered.
+  it("offers no way to edit a drink that has left the menu", async () => {
+    orders = [anOrder({ id: 3, status: "accepted", drink_id: 99, drink_title: "Sazerac" })];
+    serve();
+    openBar("/bartender/queue");
+
+    await userEvent.click(await screen.findByRole("button", { name: "Sazerac" }));
+    const dialog = await screen.findByRole("dialog", { name: "Sazerac" });
+
+    expect(within(dialog).queryByRole("button", { name: "Edit" })).toBeNull();
   });
 });
 
@@ -222,5 +255,56 @@ describe("finding a drink without leaving the queue", () => {
     );
 
     expect(await screen.findByText("Nothing matches")).toBeInTheDocument();
+  });
+});
+
+// The phone is the bartender's actual device, and the search there is a panel
+// over the screen rather than a field in the rail.
+describe("searching on a phone", () => {
+  it("opens over the screen, finds a drink, and gets out of the way", async () => {
+    menu = [aDrink({ id: 5, title: "Sazerac" })];
+    serve();
+    openBar("/bartender/queue");
+
+    await userEvent.click(
+      (await screen.findAllByRole("button", { name: "Search drinks" }))[0]
+    );
+
+    const fields = await screen.findAllByRole("searchbox", {
+      name: "Search drinks",
+    });
+    await userEvent.type(fields[fields.length - 1], "saz");
+    await userEvent.click(await screen.findByRole("button", { name: "Sazerac" }));
+
+    expect(
+      await screen.findByRole("dialog", { name: "Sazerac" })
+    ).toBeInTheDocument();
+    // The panel closes behind it, rather than staying over the queue.
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole("searchbox", { name: "Search drinks" })
+      ).toHaveLength(1)
+    );
+  });
+
+  it("closes on Escape", async () => {
+    openBar("/bartender/queue");
+
+    await userEvent.click(
+      (await screen.findAllByRole("button", { name: "Search drinks" }))[0]
+    );
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole("searchbox", { name: "Search drinks" })
+      ).toHaveLength(2)
+    );
+
+    await userEvent.keyboard("{Escape}");
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole("searchbox", { name: "Search drinks" })
+      ).toHaveLength(1)
+    );
   });
 });

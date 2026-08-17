@@ -38,7 +38,7 @@ import {
   requireBartenderForBar,
   requireGuest,
 } from "../auth/middleware.js";
-import { deletePhotoIfUnused } from "../uploads.js";
+import { deletePhotoIfUnused, isStoredPhoto } from "../uploads.js";
 import {
   extensionFor,
   isAllowedImageType,
@@ -206,7 +206,16 @@ export default function createDrinkRoutes({
       // A photo off a phone is far bigger than anything here shows it at, and
       // a menu of them is what made the bar slow to open. This also settles it
       // into the one format we keep, which may change the name.
-      const settled = await preparePhoto(req.file.path);
+      let settled: string | null;
+      try {
+        settled = await preparePhoto(req.file.path);
+      } catch {
+        // The first few bytes looked right but the rest of the file does not,
+        // which a cut-off upload from a phone will do. Same answer as anything
+        // else that isn't a picture, and nothing left behind.
+        fs.unlinkSync(req.file.path);
+        throw HttpError.badRequest("Only image files are allowed.");
+      }
 
       if (settled && settled !== req.file.path) fs.unlinkSync(req.file.path);
 
@@ -268,6 +277,18 @@ export default function createDrinkRoutes({
       const changes = changedColumns(req.body);
       if (changes["category_id"]) {
         findCategory(db, Number(changes["category_id"]), barId);
+      }
+
+      // A page left open while the bar was upgraded still knows a photo by the
+      // name it had before, and an upgrade can rename photos. Saving from that
+      // page would hand back a name that has gone, and the real photo would be
+      // thrown away as the one being replaced. Keep what is on file instead.
+      const sent = changes["image_url"];
+      if (
+        isStoredPhoto(sent) &&
+        !fs.existsSync(path.join(uploadsDir, path.basename(sent)))
+      ) {
+        changes["image_url"] = existing.image_url;
       }
 
       const { clause, values } = buildUpdate(changes);

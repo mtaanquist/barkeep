@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 import { X, Clock, Users, ChefHat } from "lucide-react";
 import { useApp } from "../hooks/useApp";
-import type { Drink } from "../types";
+import type { DrinkToRead } from "../types";
 import { useTranslation } from "../utils/translations";
 import { LazyMarkdownViewer } from "./LazyMDEditor";
 
 interface RecipeViewProps {
-  drink: Drink;
+  drink: DrinkToRead;
   onClose: () => void;
   /** Given only for a bartender. Reading a drink never leads to changing one
       by accident, so editing is its own button rather than the way in. */
@@ -164,31 +164,39 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose, onEdit }) => {
         </div>
 
         <div className="shrink-0 p-4 border-t border-border bg-surface-sunken flex items-center gap-3">
+          {/* Nothing is said about stock for a drink that is no longer on the
+              menu, rather than calling it sold out. */}
           <p className="flex-1 flex items-center gap-2 text-body text-text-muted">
-            {/* Running out is a state, not a fault, so it is not red. */}
-            <span
-              className={`inline-block w-2 h-2 rounded-full ${
-                drink.in_stock === 1 ? "bg-text" : "bg-disabled-fg"
-              }`}
-            />
-            {drink.in_stock === 1 ? t("inStock") : t("outOfStock")}
+            {drink.in_stock !== undefined && (
+              <>
+                {/* Running out is a state, not a fault, so it is not red. */}
+                <span
+                  className={`inline-block w-2 h-2 rounded-full ${
+                    drink.in_stock === 1 ? "bg-text" : "bg-disabled-fg"
+                  }`}
+                />
+                {drink.in_stock === 1 ? t("inStock") : t("outOfStock")}
+              </>
+            )}
           </p>
 
-          <button
-            onClick={onClose}
-            className="h-14 px-5 rounded-md border border-border-strong bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
-          >
-            {t("close")}
-          </button>
-
+          {/* Editing is the quiet one and sits away from the thumb. Reading a
+              drink must not lead to changing it by a stray tap. */}
           {onEdit && (
             <button
               onClick={onEdit}
-              className="h-14 px-5 rounded-md bg-text text-text-inverse text-label transition-colors duration-(--duration-instant) hover:bg-neutral-800 cursor-pointer"
+              className="h-14 px-5 rounded-md border border-border text-label text-text-muted transition-colors duration-(--duration-instant) hover:bg-surface-sunken hover:text-text cursor-pointer"
             >
               {t("edit")}
             </button>
           )}
+
+          <button
+            onClick={onClose}
+            className="h-14 px-5 rounded-md bg-text text-text-inverse text-label transition-colors duration-(--duration-instant) hover:bg-neutral-800 cursor-pointer"
+          >
+            {t("close")}
+          </button>
         </div>
       </div>
     </div>
