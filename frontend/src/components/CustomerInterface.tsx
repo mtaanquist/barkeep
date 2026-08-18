@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { saidPlainly } from "../utils/apiErrors";
 import { Coffee } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
@@ -104,7 +105,7 @@ const CustomerInterface: React.FC = () => {
       await menu.refreshOrders();
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to place order");
+      setError(saidPlainly(err, t, "errorOrderFailed"));
       return false;
     } finally {
       setLoading(false);
@@ -129,7 +130,7 @@ const CustomerInterface: React.FC = () => {
       await Promise.all([menu.refreshDrinks(), menu.refreshFavourites()]);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to update favourites"
+        saidPlainly(err, t, "errorFavouriteFailed")
       );
     }
   };
@@ -146,7 +147,7 @@ const CustomerInterface: React.FC = () => {
       });
       await menu.refreshOrders();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cancel order");
+      setError(saidPlainly(err, t, "errorCancelFailed"));
     } finally {
       setLoading(false);
     }

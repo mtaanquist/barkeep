@@ -15,26 +15,26 @@ export class HttpError extends Error {
     this.name = "HttpError";
   }
 
-  static badRequest(message: string): HttpError {
-    return new HttpError(400, message);
+  static badRequest(message: string, code?: string): HttpError {
+    return new HttpError(400, message, code);
   }
 
-  static notFound(message: string): HttpError {
-    return new HttpError(404, message);
+  static notFound(message: string, code?: string): HttpError {
+    return new HttpError(404, message, code);
   }
 
-  static conflict(message: string): HttpError {
-    return new HttpError(409, message);
+  static conflict(message: string, code?: string): HttpError {
+    return new HttpError(409, message, code);
   }
 
   /** Not signed in — no cookie, or one that no longer holds up. */
-  static unauthorized(message: string): HttpError {
-    return new HttpError(401, message);
+  static unauthorized(message: string, code?: string): HttpError {
+    return new HttpError(401, message, code);
   }
 
   /** Signed in, but not as someone allowed to do this. */
-  static forbidden(message: string): HttpError {
-    return new HttpError(403, message);
+  static forbidden(message: string, code?: string): HttpError {
+    return new HttpError(403, message, code);
   }
 }
 

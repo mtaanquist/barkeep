@@ -202,4 +202,23 @@ export type LiveUpdate =
 export interface ApiError {
   error: string;
   message?: string;
+  /** See ApiErrorCode. Absent for anything the pages have no wording for. */
+  code?: ApiErrorCode;
 }
+
+/**
+ * A short tag on the errors a guest can actually run into, so the pages can
+ * say it in the bar's language. The server's own message is English and is
+ * only shown when there is no tag to go on.
+ */
+export type ApiErrorCode =
+  | "orders_closed"
+  | "drink_out_of_stock"
+  | "order_limit_reached"
+  | "not_signed_in"
+  | "bar_not_found"
+  | "drink_not_found"
+  | "name_too_short"
+  | "no_account_for_name"
+  | "password_incorrect"
+  | "name_claimed";

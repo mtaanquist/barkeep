@@ -80,7 +80,7 @@ export function findBar(db: Db, barId: number): BarRow {
     "SELECT * FROM bars WHERE id = ? AND deleted_at IS NULL",
     barId
   );
-  if (!bar) throw HttpError.notFound("Bar not found");
+  if (!bar) throw HttpError.notFound("Bar not found", "bar_not_found");
   return bar;
 }
 
@@ -108,7 +108,7 @@ export function findDrink(db: Db, drinkId: number, barId: number): Drink {
     drinkId,
     barId
   );
-  if (!drink) throw HttpError.notFound("Drink not found");
+  if (!drink) throw HttpError.notFound("Drink not found", "drink_not_found");
   return drink;
 }
 

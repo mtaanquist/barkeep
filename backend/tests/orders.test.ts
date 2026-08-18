@@ -250,3 +250,115 @@ describe("orders", () => {
     expect(res.status).toBe(201);
   });
 });
+
+// The bar has a switch for whether guests may see a recipe. The order list
+// handed the recipe over regardless, which made that switch a lie — #15 coming
+// back by a different door.
+describe("what a guest's own orders tell them", () => {
+  let app: Express;
+  let db: Db;
+  let barId: number;
+  let drinkId: number;
+
+  beforeEach(() => {
+    ({ app, db } = makeTestApp());
+    ({ barId, drinkId } = seedBar(db));
+  });
+
+  const order = (name: string) =>
+    request(app)
+      .post("/api/orders")
+      .set("Cookie", sessionCookie({ barId, role: "guest", name }))
+      .send({ drinkId });
+
+  const ordersAs = (cookie: string) =>
+    request(app).get(`/api/orders/bar/${barId}`).set("Cookie", cookie);
+
+  it("keeps the recipe back from the guest who ordered it", async () => {
+    await order("Mads");
+
+    const res = await ordersAs(
+      sessionCookie({ barId, role: "guest", name: "Mads" })
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].drink_title).toBe("Negroni");
+    expect(res.body[0].drink_recipe).toBeNull();
+  });
+
+  it("still hands it to the bartender, who has to make the drink", async () => {
+    await order("Mads");
+
+    const res = await ordersAs(sessionCookie({ barId, role: "bartender" }));
+
+    expect(res.body[0].drink_recipe).toBe("gin, campari, vermouth");
+  });
+
+  // A recipe is read from the menu, where the bar's own setting decides. An
+  // order is not the place for it either way, so this does not vary.
+  it("keeps it back even from a bar that shows recipes to guests", async () => {
+    db.prepare("UPDATE drinks SET show_recipe_to_guests = 1 WHERE id = ?").run(
+      drinkId
+    );
+    await order("Mads");
+
+    const res = await ordersAs(
+      sessionCookie({ barId, role: "guest", name: "Mads" })
+    );
+
+    expect(res.body[0].drink_recipe).toBeNull();
+  });
+});
+
+// The pages say what went wrong in the bar's language, which they can only do
+// if the server tags the things a guest can really run into.
+describe("errors a guest can run into carry a tag", () => {
+  let app: Express;
+  let db: Db;
+  let barId: number;
+  let drinkId: number;
+
+  beforeEach(() => {
+    ({ app, db } = makeTestApp());
+    ({ barId, drinkId } = seedBar(db));
+  });
+
+  const order = (name = "Mads") =>
+    request(app)
+      .post("/api/orders")
+      .set("Cookie", sessionCookie({ barId, role: "guest", name }))
+      .send({ drinkId });
+
+  it("tags a bar that has stopped taking orders", async () => {
+    db.prepare("UPDATE bars SET orders_closed = 1 WHERE id = ?").run(barId);
+
+    const res = await order();
+
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe("orders_closed");
+  });
+
+  it("tags a drink that has run out", async () => {
+    db.prepare("UPDATE drinks SET in_stock = 0 WHERE id = ?").run(drinkId);
+
+    const res = await order();
+
+    expect(res.body.code).toBe("drink_out_of_stock");
+  });
+
+  it("tags a guest who already has as many on the go as they may", async () => {
+    await order();
+
+    const res = await order();
+
+    expect(res.body.code).toBe("order_limit_reached");
+  });
+
+  it("tags a request from someone not signed in", async () => {
+    const res = await request(app).get(`/api/orders/bar/${barId}`);
+
+    expect(res.status).toBe(401);
+    expect(res.body.code).toBe("not_signed_in");
+  });
+});

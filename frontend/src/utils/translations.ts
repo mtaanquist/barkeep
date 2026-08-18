@@ -284,6 +284,26 @@ export interface TranslationMap {
   operatorConfirmButton: string;
   operatorNoBars: string;
   operatorLoadError: string;
+
+  // What went wrong, in the bar's language
+  errorOrdersClosed: string;
+  errorOutOfStock: string;
+  errorOrderLimit: string;
+  errorNotSignedIn: string;
+  errorBarNotFound: string;
+  errorDrinkNotFound: string;
+  errorNameTooShort: string;
+  errorNoAccount: string;
+  errorWrongPassword: string;
+  errorBarNotFoundQr: string;
+  errorEnterName: string;
+  errorBadQrCode: string;
+  errorPasswordRequired: string;
+  errorNameRequired: string;
+  errorOrderFailed: string;
+  errorFavouriteFailed: string;
+  errorCancelFailed: string;
+  categoryNamePlaceholder: string;
 }
 
 export const translations: { en: TranslationMap; da: TranslationMap } = {
@@ -557,7 +577,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     retry: "Retry",
     logout: "Logout",
     settings: "Settings",
-    connectionLostTitle: "Not updating right now",
+    connectionLostTitle: "Connection lost",
     connectionLostBody:
       "You may not see new orders until this comes back. It usually sorts itself out in a moment.",
     connectionLostRetry: "Try again now",
@@ -584,6 +604,31 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     operatorConfirmButton: "Remove bar",
     operatorNoBars: "No bars on this server yet.",
     operatorLoadError: "Could not load the bars.",
+
+    // What went wrong, in the bar's language
+    errorOrdersClosed: "The bar has stopped taking orders",
+    errorOutOfStock: "That drink has run out",
+    errorOrderLimit:
+      "You already have as many drinks on the go as this bar allows",
+    errorNotSignedIn: "Please sign in",
+    errorBarNotFound: "The bar was not found",
+    errorDrinkNotFound: "That drink was not found",
+    errorNameTooShort: "Your name must be at least 2 characters",
+    errorNoAccount: "No account for that name",
+    errorWrongPassword: "That password is not right",
+    errorBarNotFoundQr:
+      "The bar was not found. Check the QR code or try again.",
+    errorEnterName: "Please enter your name (at least 2 characters)",
+    errorBadQrCode: "That QR code is not valid",
+    errorPasswordRequired: "A password is needed",
+    errorNameRequired: "A name is needed to order",
+    errorOrderFailed:
+      "Something went wrong. Your order was not placed",
+    errorFavouriteFailed:
+      "Something went wrong. Your favourites were not updated",
+    errorCancelFailed:
+      "Something went wrong. Your order was not cancelled",
+    categoryNamePlaceholder: "e.g. Summer drinks, bartender's favourites",
   },
   da: {
     // Landing page (Danish)
@@ -855,7 +900,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     retry: "Prøv igen",
     logout: "Log ud",
     settings: "Indstillinger",
-    connectionLostTitle: "Opdaterer ikke lige nu",
+    connectionLostTitle: "Forbindelse afbrudt",
     connectionLostBody:
       "Du ser måske ikke nye bestillinger, før forbindelsen er tilbage. Det plejer at løse sig af sig selv.",
     connectionLostRetry: "Prøv igen nu",
@@ -882,6 +927,29 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     operatorConfirmButton: "Fjern bar",
     operatorNoBars: "Ingen barer på denne server endnu.",
     operatorLoadError: "Kunne ikke hente barerne.",
+
+    // What went wrong, in the bar's language
+    errorOrdersClosed: "Baren tager ikke længere imod bestillinger",
+    errorOutOfStock: "Denne drink er ikke på lager",
+    errorOrderLimit:
+      "Du har allerede det antal af drinks bestilt som du må",
+    errorNotSignedIn: "Log ind",
+    errorBarNotFound: "Baren blev ikke fundet",
+    errorDrinkNotFound: "Drink blev ikke fundet",
+    errorNameTooShort: "Dit navn skal være mindst 2 tegn",
+    errorNoAccount: "Ingen konto fundet for navnet",
+    errorWrongPassword: "Ugyldig adgangskode",
+    errorBarNotFoundQr:
+      "Baren blev ikke fundet. Tjek QR-koden eller prøv igen.",
+    errorEnterName: "Indtast venligst dit navn (mindst 2 tegn)",
+    errorBadQrCode: "Ugyldig QR-kode",
+    errorPasswordRequired: "Adgangskode er påkrævet",
+    errorNameRequired: "Navn er påkrævet for gæster",
+    errorOrderFailed: "Noget gik galt. Din bestilling blev ikke lagt",
+    errorFavouriteFailed:
+      "Noget gik galt. Dine favoritter blev ikke opdateret",
+    errorCancelFailed: "Noget gik galt. Din bestilling er ikke annulleret",
+    categoryNamePlaceholder: "f.eks. sommerdrinks, bartenderens favoritter",
   },
 };
 

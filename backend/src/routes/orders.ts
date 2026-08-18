@@ -43,6 +43,19 @@ const WITH_RECIPE = `
   LEFT JOIN drinks d ON o.drink_id = d.id AND o.bar_id = d.bar_id
 `;
 
+/**
+ * The recipe rides along on an order so the bartender can make the drink. A
+ * guest reading their own orders has no use for it, and the bar may have
+ * chosen to keep it back — so it does not go out with their list at all.
+ *
+ * Stricter than the drinks routes, which hand a guest the recipe when the
+ * bartender has said they may see it. That is the place to read a recipe; an
+ * order is not, so this does not check the setting.
+ */
+function withoutRecipe(orders: OrderForBartender[]): OrderForBartender[] {
+  return orders.map((order) => ({ ...order, drink_recipe: null }));
+}
+
 /** Keeps a caller-supplied day count from reaching SQL unchecked. */
 function periodInDays(raw: unknown): number {
   const days = Number(raw ?? 7);
@@ -88,15 +101,15 @@ export default function createOrderRoutes(db: Db): Router {
         params.push(onlyName);
       }
 
-      res.json(
-        all<OrderForBartender>(
-          db,
-          `${WITH_RECIPE} WHERE ${filters.join(" AND ")}
-           ORDER BY o.created_at DESC LIMIT ?`,
-          ...params,
-          limit
-        )
+      const orders = all<OrderForBartender>(
+        db,
+        `${WITH_RECIPE} WHERE ${filters.join(" AND ")}
+         ORDER BY o.created_at DESC LIMIT ?`,
+        ...params,
+        limit
       );
+
+      res.json(session.role === "guest" ? withoutRecipe(orders) : orders);
     })
   );
 
@@ -154,11 +167,11 @@ export default function createOrderRoutes(db: Db): Router {
 
       // Last orders. What is already in still gets served; nothing new joins.
       if (ordersAreClosed(bar)) {
-        throw HttpError.badRequest("The bar has stopped taking orders");
+        throw HttpError.badRequest("The bar has stopped taking orders", "orders_closed");
       }
 
       if (!drink.in_stock) {
-        throw HttpError.badRequest("Drink is currently out of stock");
+        throw HttpError.badRequest("Drink is currently out of stock", "drink_out_of_stock");
       }
 
       const waiting = count(
@@ -172,7 +185,8 @@ export default function createOrderRoutes(db: Db): Router {
       // How many a guest may have on the go is the bar's to decide.
       if (waiting >= (bar.max_active_orders || 1)) {
         throw HttpError.badRequest(
-          "You already have as many orders on the go as this bar allows"
+          "You already have as many orders on the go as this bar allows",
+          "order_limit_reached"
         );
       }
 

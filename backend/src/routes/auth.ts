@@ -66,7 +66,7 @@ export default function createAuthRoutes(db: Db): Router {
     const bar = findBar(db, barId);
     const matches = await bcrypt.compare(password, bar[PASSWORD_FIELD[userType]]);
 
-    if (!matches) throw new HttpError(401, "Invalid password");
+    if (!matches) throw new HttpError(401, "Invalid password", "password_incorrect");
 
     return bar;
   }
