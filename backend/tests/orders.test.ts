@@ -250,3 +250,63 @@ describe("orders", () => {
     expect(res.status).toBe(201);
   });
 });
+
+// The bar has a switch for whether guests may see a recipe. The order list
+// handed the recipe over regardless, which made that switch a lie — #15 coming
+// back by a different door.
+describe("what a guest's own orders tell them", () => {
+  let app: Express;
+  let db: Db;
+  let barId: number;
+  let drinkId: number;
+
+  beforeEach(() => {
+    ({ app, db } = makeTestApp());
+    ({ barId, drinkId } = seedBar(db));
+  });
+
+  const order = (name: string) =>
+    request(app)
+      .post("/api/orders")
+      .set("Cookie", sessionCookie({ barId, role: "guest", name }))
+      .send({ drinkId });
+
+  const ordersAs = (cookie: string) =>
+    request(app).get(`/api/orders/bar/${barId}`).set("Cookie", cookie);
+
+  it("keeps the recipe back from the guest who ordered it", async () => {
+    await order("Mads");
+
+    const res = await ordersAs(
+      sessionCookie({ barId, role: "guest", name: "Mads" })
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].drink_title).toBe("Negroni");
+    expect(res.body[0].drink_recipe).toBeNull();
+  });
+
+  it("still hands it to the bartender, who has to make the drink", async () => {
+    await order("Mads");
+
+    const res = await ordersAs(sessionCookie({ barId, role: "bartender" }));
+
+    expect(res.body[0].drink_recipe).toBe("gin, campari, vermouth");
+  });
+
+  // A recipe is read from the menu, where the bar's own setting decides. An
+  // order is not the place for it either way, so this does not vary.
+  it("keeps it back even from a bar that shows recipes to guests", async () => {
+    db.prepare("UPDATE drinks SET show_recipe_to_guests = 1 WHERE id = ?").run(
+      drinkId
+    );
+    await order("Mads");
+
+    const res = await ordersAs(
+      sessionCookie({ barId, role: "guest", name: "Mads" })
+    );
+
+    expect(res.body[0].drink_recipe).toBeNull();
+  });
+});
