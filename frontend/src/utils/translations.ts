@@ -938,12 +938,12 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     errorDrinkNotFound: "Drink blev ikke fundet",
     errorNameTooShort: "Dit navn skal være mindst 2 tegn",
     errorNoAccount: "Ingen konto fundet for navnet",
-    errorWrongPassword: "Ugyldigt kodeord",
+    errorWrongPassword: "Ugyldig adgangskode",
     errorBarNotFoundQr:
       "Baren blev ikke fundet. Tjek QR-koden eller prøv igen.",
     errorEnterName: "Indtast venligst dit navn (mindst 2 tegn)",
     errorBadQrCode: "Ugyldig QR-kode",
-    errorPasswordRequired: "Kodeord er påkrævet",
+    errorPasswordRequired: "Adgangskode er påkrævet",
     errorNameRequired: "Navn er påkrævet for gæster",
     errorOrderFailed: "Noget gik galt. Din bestilling blev ikke lagt",
     errorFavouriteFailed:

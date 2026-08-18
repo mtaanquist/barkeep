@@ -308,6 +308,9 @@ describe("what a guest's own orders tell them", () => {
     );
 
     expect(res.body[0].drink_recipe).toBeNull();
+  });
+});
+
 // The pages say what went wrong in the bar's language, which they can only do
 // if the server tags the things a guest can really run into.
 describe("errors a guest can run into carry a tag", () => {
