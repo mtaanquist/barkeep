@@ -577,7 +577,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     retry: "Retry",
     logout: "Logout",
     settings: "Settings",
-    connectionLostTitle: "Not updating right now",
+    connectionLostTitle: "Connection lost",
     connectionLostBody:
       "You may not see new orders until this comes back. It usually sorts itself out in a moment.",
     connectionLostRetry: "Try again now",
@@ -900,7 +900,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     retry: "Prøv igen",
     logout: "Log ud",
     settings: "Indstillinger",
-    connectionLostTitle: "Opdaterer ikke lige nu",
+    connectionLostTitle: "Forbindelse afbrudt",
     connectionLostBody:
       "Du ser måske ikke nye bestillinger, før forbindelsen er tilbage. Det plejer at løse sig af sig selv.",
     connectionLostRetry: "Prøv igen nu",
@@ -929,7 +929,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     operatorLoadError: "Kunne ikke hente barerne.",
 
     // What went wrong, in the bar's language
-    errorOrdersClosed: "Baren tager ikke længere imod ordrer",
+    errorOrdersClosed: "Baren tager ikke længere imod bestillinger",
     errorOutOfStock: "Denne drink er ikke på lager",
     errorOrderLimit:
       "Du har allerede det antal af drinks bestilt som du må",
@@ -945,10 +945,10 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     errorBadQrCode: "Ugyldig QR-kode",
     errorPasswordRequired: "Kodeord er påkrævet",
     errorNameRequired: "Navn er påkrævet for gæster",
-    errorOrderFailed: "Noget gik galt. Din ordre blev ikke lagt",
+    errorOrderFailed: "Noget gik galt. Din bestilling blev ikke lagt",
     errorFavouriteFailed:
       "Noget gik galt. Dine favoritter blev ikke opdateret",
-    errorCancelFailed: "Noget gik galt. Din ordre er ikke annulleret",
+    errorCancelFailed: "Noget gik galt. Din bestilling er ikke annulleret",
     categoryNamePlaceholder: "f.eks. sommerdrinks, bartenderens favoritter",
   },
 };

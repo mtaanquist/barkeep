@@ -84,7 +84,7 @@ describe("what a guest is told when something goes wrong", () => {
     );
 
     expect(
-      await screen.findByText(/Noget gik galt\. Din ordre blev ikke lagt/)
+      await screen.findByText(/Noget gik galt\. Din bestilling blev ikke lagt/)
     ).toBeInTheDocument();
   });
 });
