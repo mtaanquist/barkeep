@@ -167,11 +167,11 @@ export default function createOrderRoutes(db: Db): Router {
 
       // Last orders. What is already in still gets served; nothing new joins.
       if (ordersAreClosed(bar)) {
-        throw HttpError.badRequest("The bar has stopped taking orders");
+        throw HttpError.badRequest("The bar has stopped taking orders", "orders_closed");
       }
 
       if (!drink.in_stock) {
-        throw HttpError.badRequest("Drink is currently out of stock");
+        throw HttpError.badRequest("Drink is currently out of stock", "drink_out_of_stock");
       }
 
       const waiting = count(
@@ -185,7 +185,8 @@ export default function createOrderRoutes(db: Db): Router {
       // How many a guest may have on the go is the bar's to decide.
       if (waiting >= (bar.max_active_orders || 1)) {
         throw HttpError.badRequest(
-          "You already have as many orders on the go as this bar allows"
+          "You already have as many orders on the go as this bar allows",
+          "order_limit_reached"
         );
       }
 

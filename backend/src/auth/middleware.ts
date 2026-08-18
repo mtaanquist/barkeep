@@ -41,7 +41,7 @@ export function currentSession(res: Response): Session | undefined {
 /** Whoever the cookie names, of either kind. Throws if there's no session. */
 export function requireSession(res: Response): Session {
   const session = currentSession(res);
-  if (!session) throw HttpError.unauthorized("Please sign in");
+  if (!session) throw HttpError.unauthorized("Please sign in", "not_signed_in");
   return session;
 }
 
@@ -110,6 +110,6 @@ export function requireBarMember(res: Response, barId: number): Session {
 export function requireOperator(req: Request): void {
   const token = readOperatorCookie(req);
   if (!token || !verifyOperator(token)) {
-    throw HttpError.unauthorized("Please sign in");
+    throw HttpError.unauthorized("Please sign in", "not_signed_in");
   }
 }

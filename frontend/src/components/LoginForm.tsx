@@ -58,12 +58,12 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
   const handleLogin = async () => {
     if (!loginForm.password) {
-      setError("Password is required");
+      setError(t("errorPasswordRequired"));
       return;
     }
 
     if (userType === "guest" && !loginForm.name) {
-      setError("Name is required for guests");
+      setError(t("errorNameRequired"));
       return;
     }
 

@@ -149,7 +149,7 @@ const CategoriesTab: React.FC = () => {
                 type="text"
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
-                placeholder="e.g., Summer Drinks, Bartender's Favorites"
+                placeholder={t("categoryNamePlaceholder")}
                 className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
                 required
                 autoFocus
