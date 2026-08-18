@@ -64,19 +64,19 @@ const QRRedirect: React.FC = () => {
         setError(null);
       } catch (err) {
         console.error("Error fetching bar:", err);
-        setError("Bar not found. Please check the QR code or try again.");
+        setError(t("errorBarNotFoundQr"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchBarInfo();
-  }, [id, navigate, apiCall, setCurrentBar, setLanguage]);
+  }, [id, navigate, apiCall, setCurrentBar, setLanguage, t]);
 
   // Handle guest login with token
   const handleGuestLogin = async () => {
     if (!guestName.trim() || guestName.trim().length < 2) {
-      setError("Please enter your name (at least 2 characters)");
+      setError(t("errorEnterName"));
       return;
     }
 
@@ -84,7 +84,7 @@ const QRRedirect: React.FC = () => {
     const token = urlParams.get('token');
 
     if (!token) {
-      setError("Invalid access token");
+      setError(t("errorBadQrCode"));
       return;
     }
 

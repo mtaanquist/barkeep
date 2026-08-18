@@ -152,7 +152,7 @@ export async function changeGuestPassword(
   newPassword: string
 ): Promise<void> {
   const account = findGuestAccount(db, barId, name);
-  if (!account) throw HttpError.notFound("No account for this name");
+  if (!account) throw HttpError.notFound("No account for this name", "no_account_for_name");
 
   const matches = await bcrypt.compare(currentPassword, account.password_hash);
   if (!matches) throw new HttpError(401, "Wrong password", PASSWORD_INCORRECT);
@@ -198,7 +198,7 @@ export function renameRegular(
 
   const trimmed = newName.trim();
   if (trimmed.length < 2) {
-    throw HttpError.badRequest("Name must be at least 2 characters long");
+    throw HttpError.badRequest("Name must be at least 2 characters long", "name_too_short");
   }
 
   // A rename can't land on a name another regular has already claimed. The same
