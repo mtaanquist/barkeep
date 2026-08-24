@@ -7,6 +7,7 @@
 import type { Request, Response } from "express";
 import type { LiveUpdate } from "../../shared/types.js";
 import { currentSession } from "./auth/middleware.js";
+import type { Session } from "./auth/session.js";
 
 const KEEPALIVE_MS = 25000;
 
@@ -18,6 +19,9 @@ type Update = WithoutTimestamp<LiveUpdate>;
 
 interface Listener {
   barId: number;
+  role: Session["role"];
+  /** The guest's name, so we only send them their own orders. */
+  name: string | undefined;
   res: Response;
 }
 
@@ -28,7 +32,12 @@ function flush(res: Response): void {
 
 export interface Realtime {
   subscribe(req: Request, res: Response): void;
-  broadcast(barId: number | string, data: Update): void;
+  /**
+   * `customerName` is whose order this is about. The bartender is told about
+   * every order; a guest is only told about their own. Saying the name is
+   * required so a new kind of update can't quietly go out to the whole room.
+   */
+  broadcast(barId: number | string, data: Update, customerName: string): void;
   closeAll(): void;
   readonly listenerCount: number;
 }
@@ -66,7 +75,12 @@ export function createRealtime(): Realtime {
     res.write("retry: 3000\n\n");
     flush(res);
 
-    const client = { barId, res };
+    const client: Listener = {
+      barId,
+      role: session.role,
+      name: session.name,
+      res,
+    };
     clients.add(client);
 
     // Something has to go down the wire now and then, or an idle connection
@@ -86,7 +100,11 @@ export function createRealtime(): Realtime {
     req.on("error", drop);
   }
 
-  function broadcast(barId: number | string, data: Update): void {
+  function broadcast(
+    barId: number | string,
+    data: Update,
+    customerName: string
+  ): void {
     const wanted = Number(barId);
     const payload = `data: ${JSON.stringify({
       ...data,
@@ -95,6 +113,10 @@ export function createRealtime(): Realtime {
 
     for (const client of clients) {
       if (client.barId !== wanted) continue;
+      // An order carries the name of whoever ordered it, so a guest is only
+      // sent their own. Otherwise every browser in the room would get a list
+      // of who is here and what they are drinking.
+      if (client.role === "guest" && client.name !== customerName) continue;
       try {
         client.res.write(payload);
         flush(client.res);

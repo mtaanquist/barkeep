@@ -208,7 +208,11 @@ export default function createOrderRoutes(db: Db): Router {
 
       const order = findOrder(db, Number(lastInsertRowid), barId);
 
-      liveUpdates(req)?.broadcast(barId, { type: "new_order", order });
+      liveUpdates(req)?.broadcast(
+        barId,
+        { type: "new_order", order },
+        order.customer_name
+      );
 
       res.status(201).json(order);
     })
@@ -237,10 +241,11 @@ export default function createOrderRoutes(db: Db): Router {
 
       const order = findOrder(db, orderId, barId);
 
-      liveUpdates(req)?.broadcast(barId, {
-        type: "order_status_updated",
-        order,
-      });
+      liveUpdates(req)?.broadcast(
+        barId,
+        { type: "order_status_updated", order },
+        order.customer_name
+      );
 
       res.json(order);
     })
@@ -342,7 +347,13 @@ export default function createOrderRoutes(db: Db): Router {
 
       run(db, "DELETE FROM orders WHERE id = ? AND bar_id = ?", orderId, barId);
 
-      liveUpdates(req)?.broadcast(barId, { type: "order_deleted", orderId });
+      // The order is gone, but we still know whose it was, so the guest who
+      // placed it is told it went away.
+      liveUpdates(req)?.broadcast(
+        barId,
+        { type: "order_deleted", orderId },
+        order.customer_name
+      );
 
       res.json({ success: true, message: "Order deleted successfully" });
     })

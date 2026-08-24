@@ -19,17 +19,20 @@ afterAll(cleanUpTempDirs);
 /**
  * Stands in for a browser holding the connection open. The bar it watches now
  * comes from the session on res.locals, the way attachSession would leave it.
- * Pass null to stand in for someone with no session.
+ * Pass null to stand in for someone with no session. Give a name to stand in
+ * for a guest instead of the bartender.
  */
-function fakeListener(barId: number | null) {
+function fakeListener(barId: number | null, name?: string) {
   const req = new EventEmitter();
+
+  const session =
+    name === undefined
+      ? { barId, role: "bartender" as const }
+      : { barId, role: "guest" as const, name };
 
   const written: string[] = [];
   const res = {
-    locals:
-      barId === null
-        ? ({} as Record<string, unknown>)
-        : { session: { barId, role: "bartender" as const } },
+    locals: barId === null ? ({} as Record<string, unknown>) : { session },
     writeHead: vi.fn(),
     write: (chunk: string) => written.push(chunk),
     end: vi.fn(),
@@ -66,7 +69,7 @@ describe("live updates", () => {
     const listener = fakeListener(1);
     realtime.subscribe(listener.req, listener.res);
 
-    realtime.broadcast(1, { type: "new_order", order: anOrder(7) });
+    realtime.broadcast(1, { type: "new_order", order: anOrder(7) }, "Mads");
 
     expect(listener.messages()).toEqual([
       expect.objectContaining({
@@ -83,7 +86,7 @@ describe("live updates", () => {
     realtime.subscribe(mine.req, mine.res);
     realtime.subscribe(theirs.req, theirs.res);
 
-    realtime.broadcast(1, { type: "new_order", order: anOrder() });
+    realtime.broadcast(1, { type: "new_order", order: anOrder() }, "Mads");
 
     expect(mine.messages()).toHaveLength(1);
     expect(theirs.messages()).toHaveLength(0);
@@ -94,7 +97,11 @@ describe("live updates", () => {
     const listener = fakeListener(3);
     realtime.subscribe(listener.req, listener.res);
 
-    realtime.broadcast("3", { type: "order_status_updated", order: anOrder() });
+    realtime.broadcast(
+      "3",
+      { type: "order_status_updated", order: anOrder() },
+      "Mads"
+    );
 
     expect(listener.messages()).toHaveLength(1);
   });
@@ -104,7 +111,7 @@ describe("live updates", () => {
     const listener = fakeListener(1);
     realtime.subscribe(listener.req, listener.res);
 
-    realtime.broadcast(1, { type: "order_deleted", orderId: 2 });
+    realtime.broadcast(1, { type: "order_deleted", orderId: 2 }, "Mads");
 
     expect(listener.messages()[0]?.timestamp).toEqual(expect.any(String));
   });
@@ -119,7 +126,7 @@ describe("live updates", () => {
 
     expect(realtime.listenerCount).toBe(0);
 
-    realtime.broadcast(1, { type: "new_order", order: anOrder() });
+    realtime.broadcast(1, { type: "new_order", order: anOrder() }, "Mads");
     expect(listener.messages()).toHaveLength(0);
   });
 
@@ -134,7 +141,7 @@ describe("live updates", () => {
     };
 
     expect(() =>
-      realtime.broadcast(1, { type: "new_order", order: anOrder() })
+      realtime.broadcast(1, { type: "new_order", order: anOrder() }, "Mads")
     ).not.toThrow();
     expect(realtime.listenerCount).toBe(0);
   });
@@ -205,6 +212,42 @@ describe("the updates address", () => {
   });
 });
 
+describe("a guest only hears about their own orders", () => {
+  it("sends an order to the guest who placed it", () => {
+    const realtime = createRealtime();
+    const mads = fakeListener(1, "Mads");
+    realtime.subscribe(mads.req, mads.res);
+
+    realtime.broadcast(1, { type: "new_order", order: anOrder() }, "Mads");
+
+    expect(mads.messages()).toHaveLength(1);
+  });
+
+  it("keeps someone else's order from the other guests", () => {
+    const realtime = createRealtime();
+    const mads = fakeListener(1, "Mads");
+    const bo = fakeListener(1, "Bo");
+    realtime.subscribe(mads.req, mads.res);
+    realtime.subscribe(bo.req, bo.res);
+
+    realtime.broadcast(1, { type: "new_order", order: anOrder() }, "Mads");
+
+    expect(bo.messages()).toHaveLength(0);
+    expect(mads.messages()).toHaveLength(1);
+  });
+
+  it("still sends everything to the bartender", () => {
+    const realtime = createRealtime();
+    const bartender = fakeListener(1);
+    realtime.subscribe(bartender.req, bartender.res);
+
+    realtime.broadcast(1, { type: "new_order", order: anOrder() }, "Mads");
+    realtime.broadcast(1, { type: "new_order", order: anOrder(2) }, "Bo");
+
+    expect(bartender.messages()).toHaveLength(2);
+  });
+});
+
 describe("orders reach the people watching", () => {
   it("sends an update when an order is placed", async () => {
     const { app, db } = makeTestApp();
@@ -221,5 +264,68 @@ describe("orders reach the people watching", () => {
     expect(listener.messages()).toEqual([
       expect.objectContaining({ type: "new_order" }),
     ]);
+  });
+
+  it("does not tell one guest what another ordered", async () => {
+    const { app, db } = makeTestApp();
+    const { barId, drinkId } = seedBar(db);
+
+    const bo = fakeListener(barId, "Bo");
+    app.locals.realtime.subscribe(bo.req, bo.res);
+
+    await request(app)
+      .post("/api/orders")
+      .set("Cookie", sessionCookie({ barId, role: "guest", name: "Mads" }))
+      .send({ drinkId });
+
+    expect(bo.messages()).toHaveLength(0);
+  });
+
+  it("tells a guest when their own order moves along", async () => {
+    const { app, db } = makeTestApp();
+    const { barId, drinkId } = seedBar(db);
+
+    const mads = fakeListener(barId, "Mads");
+    const bo = fakeListener(barId, "Bo");
+    app.locals.realtime.subscribe(mads.req, mads.res);
+    app.locals.realtime.subscribe(bo.req, bo.res);
+
+    const placed = await request(app)
+      .post("/api/orders")
+      .set("Cookie", sessionCookie({ barId, role: "guest", name: "Mads" }))
+      .send({ drinkId });
+
+    await request(app)
+      .patch(`/api/orders/${placed.body.id}/status`)
+      .set("Cookie", sessionCookie({ barId, role: "bartender" }))
+      .send({ status: "accepted" });
+
+    expect(mads.messages().map((m) => m.type)).toEqual([
+      "new_order",
+      "order_status_updated",
+    ]);
+    expect(bo.messages()).toHaveLength(0);
+  });
+
+  it("tells only the right guest when an order is cancelled", async () => {
+    const { app, db } = makeTestApp();
+    const { barId, drinkId } = seedBar(db);
+
+    const placed = await request(app)
+      .post("/api/orders")
+      .set("Cookie", sessionCookie({ barId, role: "guest", name: "Mads" }))
+      .send({ drinkId });
+
+    const mads = fakeListener(barId, "Mads");
+    const bo = fakeListener(barId, "Bo");
+    app.locals.realtime.subscribe(mads.req, mads.res);
+    app.locals.realtime.subscribe(bo.req, bo.res);
+
+    await request(app)
+      .delete(`/api/orders/${placed.body.id}`)
+      .set("Cookie", sessionCookie({ barId, role: "bartender" }));
+
+    expect(mads.messages().map((m) => m.type)).toEqual(["order_deleted"]);
+    expect(bo.messages()).toHaveLength(0);
   });
 });
