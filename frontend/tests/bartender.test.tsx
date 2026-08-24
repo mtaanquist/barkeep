@@ -139,6 +139,24 @@ describe("reading a recipe while making the drink", () => {
     ).toBeInTheDocument();
   });
 
+  // The panel said it was a dialog but never took the keyboard, so Tab kept
+  // walking the queue behind it.
+  it("takes the keyboard when it opens and gives it back on close", async () => {
+    openBar("/bartender/queue");
+
+    const row = await screen.findByRole("button", { name: "Negroni" });
+    await userEvent.click(row);
+
+    const dialog = await screen.findByRole("dialog", { name: "Negroni" });
+    await waitFor(() => expect(dialog).toHaveFocus());
+
+    await userEvent.click(
+      within(dialog).getAllByRole("button", { name: "Close" })[0]
+    );
+
+    await waitFor(() => expect(row).toHaveFocus());
+  });
+
   // Accepting must not become a lucky hit now that the row itself is a tap
   // target. Whether the two overlap on screen is a question for a real
   // browser; what this pins down is that Accept still does its own job and
@@ -272,7 +290,49 @@ describe("finding a drink without leaving the queue", () => {
       "espresso martini"
     );
 
-    expect(await screen.findByText("Nothing matches")).toBeInTheDocument();
+    // Once on screen, once for a screen reader to read out.
+    expect((await screen.findAllByText("Nothing matches")).length).toBeGreaterThan(0);
+  });
+
+  // Typing a name and then reaching for the mouse to click the one match is
+  // the whole reason this was slow on a laptop.
+  it("opens the top match on Enter", async () => {
+    stock();
+    openBar("/bartender/queue");
+
+    const field = await screen.findByRole("searchbox", {
+      name: "Search drinks",
+    });
+    await userEvent.type(field, "saz{Enter}");
+
+    expect(
+      await screen.findByRole("dialog", { name: "Sazerac" })
+    ).toBeInTheDocument();
+  });
+
+  it("does nothing on Enter when nothing matches", async () => {
+    stock();
+    openBar("/bartender/queue");
+
+    await userEvent.type(
+      await screen.findByRole("searchbox", { name: "Search drinks" }),
+      "espresso martini{Enter}"
+    );
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  // Nothing about the list of matches reaches a screen reader on its own.
+  it("says out loud how many matches there are", async () => {
+    stock();
+    openBar("/bartender/queue");
+
+    await userEvent.type(
+      await screen.findByRole("searchbox", { name: "Search drinks" }),
+      "e"
+    );
+
+    expect(await screen.findByText("3 results")).toBeInTheDocument();
   });
 });
 
@@ -302,6 +362,51 @@ describe("searching on a phone", () => {
       expect(
         screen.getAllByRole("searchbox", { name: "Search drinks" })
       ).toHaveLength(1)
+    );
+  });
+
+  // The sheet used to leave the keyboard nowhere: closing it dropped focus to
+  // the page, so the next Tab started from the top again.
+  it("hands the keyboard back to the button that opened it", async () => {
+    openBar("/bartender/queue");
+
+    const openSearch = (
+      await screen.findAllByRole("button", { name: "Search drinks" })
+    )[0];
+    await userEvent.click(openSearch);
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole("searchbox", { name: "Search drinks" })
+      ).toHaveLength(2)
+    );
+
+    await userEvent.keyboard("{Escape}");
+
+    await waitFor(() => expect(openSearch).toHaveFocus());
+  });
+
+  it("is a dialog, so a screen reader knows the queue is behind it", async () => {
+    openBar("/bartender/queue");
+
+    await userEvent.click(
+      (await screen.findAllByRole("button", { name: "Search drinks" }))[0]
+    );
+
+    expect(
+      await screen.findByRole("dialog", { name: "Search drinks" })
+    ).toBeInTheDocument();
+  });
+
+  // The scrim is a big tap target, not a second Close for the keyboard.
+  it("offers Close only once to the keyboard", async () => {
+    openBar("/bartender/queue");
+
+    await userEvent.click(
+      (await screen.findAllByRole("button", { name: "Search drinks" }))[0]
+    );
+
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: "Close" })).toHaveLength(1)
     );
   });
 

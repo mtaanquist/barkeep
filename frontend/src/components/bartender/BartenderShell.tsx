@@ -17,6 +17,7 @@ import { useTranslation } from "../../utils/translations";
 import { useSessionManager } from "../../hooks/useSessionManager";
 import { useLiveUpdates } from "../../hooks/useLiveUpdates";
 import { useCloseOnEscape } from "../../hooks/useCloseOnEscape";
+import { useDialogFocus } from "../../hooks/useDialogFocus";
 import { ConnectionLost } from "../ConnectionLost";
 import DrinkSearch from "./DrinkSearch";
 import QrCodeDialog from "./QrCodeDialog";
@@ -69,6 +70,9 @@ const BartenderShell: React.FC = () => {
 
   // Escape closes the search, the same as tapping away from it.
   useCloseOnEscape(() => setSearchOpen(false), searchOpen);
+
+  // Closing the sheet puts the keyboard back on the button that opened it.
+  const searchSheet = useDialogFocus<HTMLDivElement>(searchOpen);
 
   const barId = currentBar?.id;
   const onQueue = location.pathname.endsWith("/queue");
@@ -293,7 +297,14 @@ const BartenderShell: React.FC = () => {
           {/* A sheet at the top rather than a full screen, so the pending
               count along the bottom stays readable while looking something
               up. Anything below it closes, which is the easier reach. */}
-          <div className="shrink-0 bg-surface border-b border-border px-4 py-3 flex items-start gap-3">
+          <div
+            ref={searchSheet}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("searchDrinks")}
+            className="shrink-0 bg-surface border-b border-border px-4 py-3 flex items-start gap-3 focus:outline-none"
+          >
             <div className="flex-1 min-w-0">
               <DrinkSearch autoFocus onPicked={() => setSearchOpen(false)} />
             </div>
@@ -306,9 +317,12 @@ const BartenderShell: React.FC = () => {
             </button>
           </div>
 
+          {/* Tapping away closes, but this is not a second "Close" in the tab
+              order — Escape and the X are the ways out from a keyboard. */}
           <button
             type="button"
-            aria-label={t("close")}
+            tabIndex={-1}
+            aria-hidden="true"
             onClick={() => setSearchOpen(false)}
             className="flex-1 bg-overlay cursor-default"
           />
