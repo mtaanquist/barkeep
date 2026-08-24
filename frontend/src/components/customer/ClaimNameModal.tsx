@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 import { useApp } from "../../hooks/useApp";
+import { useCloseOnEscape } from "../../hooks/useCloseOnEscape";
 import { useTranslation } from "../../utils/translations";
 
 const PASSWORD_MIN = 4;
@@ -23,14 +24,7 @@ const ClaimNameModal: React.FC<ClaimNameModalProps> = ({ onClose }) => {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
-  // Escape closes it, the same as the labelled way out.
-  useEffect(() => {
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [onClose]);
+  useCloseOnEscape(onClose);
 
   const submit = async () => {
     if (password.trim().length < PASSWORD_MIN) return;

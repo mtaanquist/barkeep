@@ -16,6 +16,7 @@ import type { Analytics, BarQrCode, Drink, Order } from "../../types";
 import { useTranslation } from "../../utils/translations";
 import { useSessionManager } from "../../hooks/useSessionManager";
 import { useLiveUpdates } from "../../hooks/useLiveUpdates";
+import { useCloseOnEscape } from "../../hooks/useCloseOnEscape";
 import { ConnectionLost } from "../ConnectionLost";
 import DrinkSearch from "./DrinkSearch";
 import QrCodeDialog from "./QrCodeDialog";
@@ -67,14 +68,7 @@ const BartenderShell: React.FC = () => {
   useEffect(() => setSearchOpen(false), [location.pathname]);
 
   // Escape closes the search, the same as tapping away from it.
-  useEffect(() => {
-    if (!searchOpen) return;
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSearchOpen(false);
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [searchOpen]);
+  useCloseOnEscape(() => setSearchOpen(false), searchOpen);
 
   const barId = currentBar?.id;
   const onQueue = location.pathname.endsWith("/queue");

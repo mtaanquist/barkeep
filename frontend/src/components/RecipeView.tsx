@@ -1,6 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { X, Clock, Users, ChefHat } from "lucide-react";
 import { useApp } from "../hooks/useApp";
+import { useCloseOnEscape } from "../hooks/useCloseOnEscape";
 import type { DrinkToRead } from "../types";
 import { useTranslation } from "../utils/translations";
 import { LazyMarkdownViewer } from "./LazyMDEditor";
@@ -57,13 +58,7 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose, onEdit }) => {
   const metadata = readMetadata(drink.recipe);
   const onPhoto = !!drink.image_url;
 
-  useEffect(() => {
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [onClose]);
+  useCloseOnEscape(onClose);
 
   // The bottom padding keeps this clear of the queue bar on a phone, which
   // rides above it so the pending count stays readable while a drink is made.
