@@ -8,6 +8,7 @@ import type { Drink } from "../types";
 import { useTranslation } from "../utils/translations";
 import { ordersAreClosed } from "../utils/lastOrders";
 import { useGuestMenu } from "../hooks/useGuestMenu";
+import { useCloseOnEscape } from "../hooks/useCloseOnEscape";
 import RandomDrinkModal from "./RandomDrinkModal";
 import DrinkGrid from "./customer/DrinkGrid";
 import GuestShell from "./customer/GuestShell";
@@ -52,16 +53,7 @@ const CustomerInterface: React.FC = () => {
   const [randomDrink, setRandomDrink] = useState<Drink | null>(null);
 
   // Escape closes the surprise-me pick.
-  useEffect(() => {
-    if (!randomDrink) return;
-
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setRandomDrink(null);
-    };
-
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [randomDrink]);
+  useCloseOnEscape(() => setRandomDrink(null), !!randomDrink);
 
   // Last orders: what is already in still arrives, nothing new goes in.
   // Re-read on a timer so a guest holding the menu open at one minute to

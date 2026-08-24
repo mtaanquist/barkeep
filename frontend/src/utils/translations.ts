@@ -167,6 +167,7 @@ export interface TranslationMap {
   inTotal: string;
   searchDrinks: string;
   searchNoMatches: string;
+  searchResults: string;
   columnName: string;
   columnCategory: string;
   columnStock: string;
@@ -487,6 +488,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     inTotal: "in total",
     searchDrinks: "Search drinks",
     searchNoMatches: "Nothing matches",
+    searchResults: "results",
     columnName: "name",
     columnCategory: "category",
     columnStock: "stock",
@@ -810,6 +812,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     inTotal: "i alt",
     searchDrinks: "Søg drinks",
     searchNoMatches: "Ingen resultater",
+    searchResults: "resultater",
     columnName: "navn",
     columnCategory: "kategori",
     columnStock: "lager",

@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { ChevronLeft } from "lucide-react";
+import { useCloseOnEscape } from "../../hooks/useCloseOnEscape";
 import type { Drink, Order } from "../../types";
 import type { TranslationKeys } from "../../utils/translations";
 import ChangePasswordSection from "./ChangePasswordSection";
@@ -42,13 +43,7 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
   onNotMe,
 }) => {
   // Escape goes back to the menu, the same as the labelled way out.
-  useEffect(() => {
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [onClose]);
+  useCloseOnEscape(onClose);
 
   const mine = orders
     .filter(

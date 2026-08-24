@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { useApp } from "../../hooks/useApp";
+import { useCloseOnEscape } from "../../hooks/useCloseOnEscape";
 import type { Drink } from "../../types";
 import { useTranslation } from "../../utils/translations";
 
@@ -56,19 +57,20 @@ const DrinkSearch: React.FC<DrinkSearchProps> = ({ autoFocus, onPicked }) => {
 
   // On the rail there is nothing holding these, so they have to clear
   // themselves or they sit over the queue count below.
-  useEffect(() => {
-    if (!term) return;
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setTerm("");
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [term]);
+  useCloseOnEscape(() => setTerm(""), searching);
 
   const pick = (drink: Drink) => {
     setViewingRecipe(drink);
     setTerm("");
     onPicked?.();
+  };
+
+  // Typing a name and pressing Enter opens the top match, so a bartender on a
+  // laptop never has to reach for the mouse.
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter" || found.length === 0) return;
+    e.preventDefault();
+    pick(found[0]);
   };
 
   return (
@@ -85,11 +87,20 @@ const DrinkSearch: React.FC<DrinkSearchProps> = ({ autoFocus, onPicked }) => {
           value={term}
           autoFocus={autoFocus}
           onChange={(e) => setTerm(e.target.value)}
+          onKeyDown={onKeyDown}
           aria-label={t("searchDrinks")}
           placeholder={t("searchDrinks")}
           className="w-full h-12 pl-9 pr-3 rounded-md border border-border bg-surface-raised text-body text-text placeholder:text-text-muted"
         />
       </div>
+
+      {/* Read out for anyone who cannot see the list appear. */}
+      <p aria-live="polite" className="sr-only">
+        {searching &&
+          (found.length === 0
+            ? t("searchNoMatches")
+            : `${found.length} ${t("searchResults")}`)}
+      </p>
 
       {searching && (
         <div className="absolute top-full inset-x-0 z-30 mt-2 p-1 rounded-md border border-border bg-surface-raised shadow-float">

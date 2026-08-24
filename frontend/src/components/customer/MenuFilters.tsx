@@ -2,6 +2,7 @@ import React from "react";
 import { Dices, SlidersHorizontal, Star, X } from "lucide-react";
 import type { Drink } from "../../types";
 import type { MenuFilter } from "../../hooks/useGuestMenu";
+import { useCloseOnEscape } from "../../hooks/useCloseOnEscape";
 import { translations } from "../../utils/translations";
 
 interface FilterProps {
@@ -250,13 +251,7 @@ export const FilterSheet: React.FC<FilterProps & { onClose: () => void }> = ({
   onClose,
   t,
 }) => {
-  React.useEffect(() => {
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [onClose]);
+  useCloseOnEscape(onClose);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">

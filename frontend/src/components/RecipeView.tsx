@@ -1,6 +1,8 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { X, Clock, Users, ChefHat } from "lucide-react";
 import { useApp } from "../hooks/useApp";
+import { useCloseOnEscape } from "../hooks/useCloseOnEscape";
+import { useDialogFocus } from "../hooks/useDialogFocus";
 import type { DrinkToRead } from "../types";
 import { useTranslation } from "../utils/translations";
 import { LazyMarkdownViewer } from "./LazyMDEditor";
@@ -57,23 +59,20 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose, onEdit }) => {
   const metadata = readMetadata(drink.recipe);
   const onPhoto = !!drink.image_url;
 
-  useEffect(() => {
-    const close = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, [onClose]);
+  useCloseOnEscape(onClose);
+  const panel = useDialogFocus<HTMLDivElement>();
 
   // The bottom padding keeps this clear of the queue bar on a phone, which
   // rides above it so the pending count stays readable while a drink is made.
   return (
     <div className="fixed inset-0 z-50 bg-overlay flex items-center justify-center p-4 pb-28 lg:pb-4 overflow-y-auto">
       <div
+        ref={panel}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label={drink.title}
-        className="w-full max-w-lg my-8 bg-surface-raised border border-border rounded-lg shadow-float overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-lg my-8 bg-surface-raised border border-border rounded-lg shadow-float overflow-hidden flex flex-col max-h-[90vh] focus:outline-none"
       >
         <div className="relative shrink-0">
           {onPhoto && (
