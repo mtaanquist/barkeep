@@ -62,7 +62,11 @@ describe("orders", () => {
       drink_title: "Negroni",
       status: "new",
     });
-    expect(sent).toHaveBeenCalledWith(barId, expect.objectContaining({ type: "new_order" }));
+    expect(sent).toHaveBeenCalledWith(
+      barId,
+      expect.objectContaining({ type: "new_order" }),
+      "Mads"
+    );
   });
 
   it("refuses an order with pieces missing", async () => {
@@ -116,7 +120,8 @@ describe("orders", () => {
     expect(res.body.status).toBe("accepted");
     expect(sent).toHaveBeenCalledWith(
       barId,
-      expect.objectContaining({ type: "order_status_updated" })
+      expect.objectContaining({ type: "order_status_updated" }),
+      "Mads"
     );
   });
 
@@ -142,7 +147,8 @@ describe("orders", () => {
     expect(res.status).toBe(200);
     expect(sent).toHaveBeenCalledWith(
       barId,
-      expect.objectContaining({ type: "order_deleted" })
+      expect.objectContaining({ type: "order_deleted" }),
+      "Mads"
     );
 
     const remaining = await request(app)
