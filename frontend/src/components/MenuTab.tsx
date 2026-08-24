@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronRight, Plus, Trash2 } from "lucide-react";
+import { Eye, Plus, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
 import type { Drink } from "../types";
@@ -265,17 +265,22 @@ const MenuTab: React.FC = () => {
                       />
                     </span>
 
-                    <span className="relative flex items-center justify-end gap-5 lg:w-28 shrink-0">
+                    {/* This column sits above the row, so the delete button
+                        can be clicked. Everything else here lets taps through
+                        to the row underneath instead of swallowing them. */}
+                    <span className="relative pointer-events-none flex items-center justify-end gap-5 lg:w-28 shrink-0">
                       <button
                         type="button"
                         onClick={() => handleDelete(drink.id)}
                         disabled={loading}
                         aria-label={`${t("deleteDrink")} ${drink.title}`}
-                        className="hidden lg:flex w-14 h-14 items-center justify-center rounded-md border border-border bg-surface-raised text-danger transition-colors duration-(--duration-instant) hover:bg-status-rejected-bg disabled:opacity-50 cursor-pointer"
+                        className="hidden lg:flex pointer-events-auto w-14 h-14 items-center justify-center rounded-md border border-border bg-surface-raised text-danger transition-colors duration-(--duration-instant) hover:bg-status-rejected-bg disabled:opacity-50 cursor-pointer"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
-                      <ChevronRight
+                      {/* An eye, not an arrow: this opens a panel over the
+                          list, it does not go anywhere. */}
+                      <Eye
                         className="w-5 h-5 text-text-muted"
                         aria-hidden="true"
                       />
