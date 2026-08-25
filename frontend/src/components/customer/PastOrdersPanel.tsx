@@ -183,8 +183,11 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
 
           <span className="flex-1" />
 
-          <div className="shrink-0 pt-3.5 border-t border-border flex flex-col items-start gap-2">
-            <p className="text-body text-text-muted">
+          {/* The two account buttons share a row — vertical space down here
+              is the history the guest came to read. The password form takes
+              a full line of its own and so drops below them. */}
+          <div className="shrink-0 pt-3.5 border-t border-border flex flex-wrap items-start gap-2">
+            <p className="w-full text-body text-text-muted">
               {t("youAreHereAs")}{" "}
               <strong className="text-label text-text">{customerName}</strong>.
             </p>
