@@ -42,22 +42,26 @@ const ConfirmOrderModal: React.FC<ConfirmOrderModalProps> = ({
           <p className="text-body text-text-muted">{t("confirmOrderHelp")}</p>
         </div>
 
-        {/* Saying yes sits lowest, where the thumb already is, and backing
-            out is the wider target of the two. */}
-        <div className="px-5 pb-5 flex flex-col gap-2.5">
+        {/* Split the same way as the card that was just tapped: the quiet
+            way out on the left, going ahead on the right, so the thumb is
+            already over the right one. */}
+        <div className="flex border-t border-border">
+          <button
+            onClick={onCancel}
+            className="w-33 h-16 shrink-0 border-r border-border text-label text-text transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
+          >
+            {t("cancel")}
+          </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="w-full h-16 px-4 rounded-md bg-accent text-accent-contrast text-heading transition-colors duration-(--duration-instant) hover:bg-accent-hover disabled:bg-disabled-bg disabled:text-disabled-fg disabled:cursor-not-allowed cursor-pointer"
+            className={`flex-1 h-16 px-3 transition-colors duration-(--duration-instant) ${
+              loading
+                ? "bg-disabled-bg text-disabled-fg text-label cursor-not-allowed"
+                : "bg-accent text-accent-contrast text-heading hover:bg-accent-hover cursor-pointer"
+            }`}
           >
             {loading ? t("loading") : t("confirmOrderYes")}
-          </button>
-
-          <button
-            onClick={onCancel}
-            className="w-full h-14 rounded-md border border-border-strong bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
-          >
-            {t("cancel")}
           </button>
         </div>
       </div>
