@@ -70,14 +70,20 @@ beforeEach(() => {
 
 afterEach(() => vi.unstubAllGlobals());
 
+/** Tapping Order and then saying yes to the drink it asks about. */
+const orderFirstDrink = async () => {
+  await userEvent.click(screen.getAllByRole("button", { name: "Order" })[0]);
+  await userEvent.click(
+    screen.getByRole("button", { name: "Yes, order it" })
+  );
+};
+
 describe("ordering a drink", () => {
   it("sends the order and says so", async () => {
     menu = [aDrink({ id: 1, title: "Negroni", base_spirit: "Gin" })];
     await showMenu();
 
-    await userEvent.click(
-      screen.getAllByRole("button", { name: "Order" })[0]
-    );
+    await orderFirstDrink();
 
     await waitFor(() =>
       expect(api.calls.some((c) => c.method === "POST")).toBe(true)
@@ -307,6 +313,94 @@ describe("surprise me on a phone", () => {
   });
 });
 
+// A tap is easy to make by accident on a phone, and an unmeant order both
+// lands on the bartender's queue and blocks the guest's real one.
+describe("asking before an order goes in", () => {
+  it("sends nothing until the guest says yes", async () => {
+    menu = [aDrink({ id: 1, title: "Negroni", base_spirit: "Gin" })];
+    await showMenu();
+
+    await userEvent.click(screen.getAllByRole("button", { name: "Order" })[0]);
+
+    const ask = screen.getByRole("dialog", { name: "Order this drink?" });
+    expect(ask).toHaveTextContent("Negroni");
+    expect(api.calls.some((c) => c.method === "POST")).toBe(false);
+
+    await userEvent.click(
+      within(ask).getByRole("button", { name: "Yes, order it" })
+    );
+
+    await waitFor(() =>
+      expect(api.calls.some((c) => c.method === "POST")).toBe(true)
+    );
+  });
+
+  it("sends nothing when the guest backs out", async () => {
+    await showMenu();
+
+    await userEvent.click(screen.getAllByRole("button", { name: "Order" })[0]);
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(screen.queryByRole("dialog", { name: "Order this drink?" })).toBeNull();
+    expect(api.calls.some((c) => c.method === "POST")).toBe(false);
+  });
+
+  // Tapping beside it is the way out a phone leads you to expect, and it has
+  // to be the harmless one of the two answers.
+  it("takes a tap beside it as backing out, not as saying yes", async () => {
+    await showMenu();
+
+    await userEvent.click(screen.getAllByRole("button", { name: "Order" })[0]);
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+
+    expect(screen.queryByRole("dialog", { name: "Order this drink?" })).toBeNull();
+    expect(api.calls.some((c) => c.method === "POST")).toBe(false);
+  });
+
+  it("asks about the drink that was tapped", async () => {
+    await showMenu();
+
+    const daiquiri = screen
+      .getAllByRole("article")
+      .find((card) =>
+        within(card).queryByRole("heading", { name: "Daiquiri", level: 3 })
+      )!;
+    await userEvent.click(within(daiquiri).getByRole("button", { name: "Order" }));
+
+    const ask = screen.getByRole("dialog", { name: "Order this drink?" });
+    expect(ask).toHaveTextContent("Daiquiri");
+    expect(ask).not.toHaveTextContent("Negroni");
+
+    await userEvent.click(
+      within(ask).getByRole("button", { name: "Yes, order it" })
+    );
+
+    await waitFor(() =>
+      expect(api.calls.some((c) => c.method === "POST")).toBe(true)
+    );
+    expect(api.calls.find((c) => c.method === "POST")?.body).toMatchObject({
+      drinkId: 2,
+    });
+  });
+
+  // The reveal already names the drink and asks, so a second dialog on top of
+  // it would only be in the way.
+  it("does not ask twice when the bar chose the drink", async () => {
+    await showMenu();
+    await userEvent.click(
+      screen.getAllByRole("button", { name: /Surprise me/ })[0]
+    );
+
+    const reveal = screen.getByRole("dialog", { name: "Surprise me" });
+    await userEvent.click(within(reveal).getByRole("button", { name: /^Order / }));
+
+    await waitFor(() =>
+      expect(api.calls.some((c) => c.method === "POST")).toBe(true)
+    );
+    expect(screen.queryByRole("dialog", { name: "Order this drink?" })).toBeNull();
+  });
+});
+
 describe("looking at a recipe", () => {
   // A drink with no recipe used to throw, because the recipe was typed as
   // always being there.
@@ -461,6 +555,54 @@ describe("past orders, as a panel over the menu", () => {
     expect(within(history).getByRole("button", { name: "Again" })).toBeDisabled();
     // The reason sits beside the button rather than behind an alert.
     expect(history).toHaveTextContent(/once your current drink has been/i);
+  });
+
+  // Ordering again is one tap in a list of small rows, so it asks first too.
+  it("asks before ordering again, and closes the history once it has", async () => {
+    orders = [
+      anOrder({ id: 5, status: "processed", drink_id: 1, drink_title: "Negroni" }),
+    ];
+
+    openDirectly();
+
+    const history = await screen.findByRole("dialog", { name: "Past orders" });
+    await userEvent.click(within(history).getByRole("button", { name: "Again" }));
+
+    const ask = screen.getByRole("dialog", { name: "Order this drink?" });
+    expect(ask).toHaveTextContent("Negroni");
+    expect(api.calls.some((c) => c.method === "POST")).toBe(false);
+
+    await userEvent.click(
+      within(ask).getByRole("button", { name: "Yes, order it" })
+    );
+
+    await waitFor(() =>
+      expect(api.calls.some((c) => c.method === "POST")).toBe(true)
+    );
+    // What matters next is the drink coming, which the dock is carrying.
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: "Past orders" })).toBeNull()
+    );
+  });
+
+  // Escape used to reach both, so backing out of the asking also lost the
+  // guest's place in their history.
+  it("answers the asking with Escape, and leaves the history open", async () => {
+    orders = [
+      anOrder({ id: 5, status: "processed", drink_id: 1, drink_title: "Negroni" }),
+    ];
+
+    openDirectly();
+
+    const history = await screen.findByRole("dialog", { name: "Past orders" });
+    await userEvent.click(within(history).getByRole("button", { name: "Again" }));
+    await userEvent.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog", { name: "Order this drink?" })).toBeNull();
+    expect(
+      screen.getByRole("dialog", { name: "Past orders" })
+    ).toBeInTheDocument();
+    expect(api.calls.some((c) => c.method === "POST")).toBe(false);
   });
 });
 
