@@ -22,6 +22,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
 
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
+  const [again, setAgain] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -29,7 +30,15 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
   useCloseOnEscape(onClose);
 
   const submit = async () => {
-    if (!current.trim() || !next.trim()) return;
+    if (!current.trim() || !next.trim() || !again.trim()) return;
+
+    // Typed behind dots, so a slip would only turn up the next time they
+    // tried to use the name — by which point they cannot fix it themselves.
+    if (next.trim() !== again.trim()) {
+      setError(t("passwordsDoNotMatch"));
+      return;
+    }
+
     setBusy(true);
     setError(null);
     try {
@@ -43,6 +52,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       setDone(true);
       setCurrent("");
       setNext("");
+      setAgain("");
     } catch (err) {
       setError(
         err instanceof ApiError && err.code === "password_incorrect"
@@ -105,6 +115,15 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               value={next}
               onChange={(e) => setNext(e.target.value)}
               className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
+            />
+            {/* Behind dots there is nothing to read back, so it is asked for
+                twice rather than trusted once. */}
+            <input
+              type="password"
+              placeholder={t("repeatNewPassword")}
+              value={again}
+              onChange={(e) => setAgain(e.target.value)}
+              className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
               onKeyPress={(e) => e.key === "Enter" && submit()}
             />
             {error && <p className="text-body text-danger">{error}</p>}
@@ -114,7 +133,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
               <button
                 type="button"
                 onClick={submit}
-                disabled={busy || !current.trim() || !next.trim()}
+                disabled={busy || !current.trim() || !next.trim() || !again.trim()}
                 className="w-full sm:flex-1 h-14 rounded-md bg-text text-text-inverse text-label transition-colors duration-(--duration-instant) hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {t("changePassword")}
