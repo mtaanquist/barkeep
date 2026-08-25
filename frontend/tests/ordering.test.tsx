@@ -196,9 +196,12 @@ describe("ordering a drink", () => {
 
     expect(screen.getByText("The bar has stopped taking orders")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Order" })).toBeNull();
-    expect(
-      screen.getByRole("button", { name: /Surprise me/ })
-    ).toBeDisabled();
+    // One for the phone, one for the wide screen; both are off.
+    for (const button of screen.getAllByRole("button", {
+      name: /Surprise me/,
+    })) {
+      expect(button).toBeDisabled();
+    }
   });
 
   // A guest holding the menu open at one minute to should see it close,
@@ -284,6 +287,32 @@ describe("filtering on a phone", () => {
   });
 });
 
+describe("surprise me on a phone", () => {
+  // It used to be in the side menu only, which a phone never shows, so there
+  // was no way to be surprised on one at all.
+  it("is offered, and rides with the header so scrolling cannot lose it", async () => {
+    await showMenu();
+
+    const header = screen.getByRole("banner");
+    expect(
+      within(header).getByRole("button", { name: /Surprise me/ })
+    ).toBeInTheDocument();
+  });
+
+  it("picks a drink, the same as the side menu does", async () => {
+    await showMenu();
+
+    const header = screen.getByRole("banner");
+    await userEvent.click(
+      within(header).getByRole("button", { name: /Surprise me/ })
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "Surprise me" })
+    ).toHaveTextContent(/the bar chose for you/i);
+  });
+});
+
 // A tap is easy to make by accident on a phone, and an unmeant order both
 // lands on the bartender's queue and blocks the guest's real one.
 describe("asking before an order goes in", () => {
@@ -359,7 +388,7 @@ describe("asking before an order goes in", () => {
   it("does not ask twice when the bar chose the drink", async () => {
     await showMenu();
     await userEvent.click(
-      screen.getByRole("button", { name: /Surprise me/ })
+      screen.getAllByRole("button", { name: /Surprise me/ })[0]
     );
 
     const reveal = screen.getByRole("dialog", { name: "Surprise me" });
@@ -580,7 +609,9 @@ describe("past orders, as a panel over the menu", () => {
 describe("the surprise me reveal", () => {
   const roll = async () => {
     await showMenu();
-    await userEvent.click(screen.getByRole("button", { name: /Surprise me/ }));
+    await userEvent.click(
+      screen.getAllByRole("button", { name: /Surprise me/ })[0]
+    );
     return screen.getByRole("dialog", { name: "Surprise me" });
   };
 

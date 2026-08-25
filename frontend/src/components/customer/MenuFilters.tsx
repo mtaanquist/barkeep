@@ -15,12 +15,16 @@ interface FilterProps {
   t: (key: keyof typeof translations.en) => string;
 }
 
-interface SidebarProps extends FilterProps {
+interface SurpriseProps {
+  canSurprise: boolean;
+  onSurpriseMe: () => void;
+  t: (key: keyof typeof translations.en) => string;
+}
+
+interface SidebarProps extends FilterProps, SurpriseProps {
   favouriteCount: number;
   /** Everything on the menu, for the count beside "all drinks". */
   totalCount: number;
-  canSurprise: boolean;
-  onSurpriseMe: () => void;
 }
 
 const isChosen = (filter: MenuFilter, type: string, value: string): boolean =>
@@ -47,6 +51,44 @@ const GroupLabel: React.FC<{ label: string }> = ({ label }) => (
   </li>
 );
 
+/**
+ * Let the bar choose. Dashed, because it is the one thing here that is a bit
+ * of a game. The same button on both sizes of screen, so it does not have to
+ * be restyled twice.
+ */
+const SurpriseMeButton: React.FC<SurpriseProps> = ({
+  canSurprise,
+  onSurpriseMe,
+  t,
+}) => (
+  <button
+    onClick={onSurpriseMe}
+    disabled={!canSurprise}
+    className="w-full h-14 flex items-center justify-center gap-2.5 rounded-md border-2 border-dashed border-border-strong text-text transition-colors duration-(--duration-instant) hover:bg-surface-sunken disabled:border-disabled-border disabled:text-disabled-fg disabled:cursor-not-allowed cursor-pointer"
+  >
+    <Dices className="w-5 h-5 shrink-0 text-text-muted" />
+    <span className="flex flex-col items-start">
+      <span className="font-bold text-base leading-tight tracking-tight">
+        {t("surpriseMe")}
+      </span>
+      <span className="font-mono text-[0.5625rem] font-bold tracking-[0.14em] uppercase text-text-muted">
+        {t("letTheBarChoose")}
+      </span>
+    </span>
+  </button>
+);
+
+/**
+ * Surprise me, on a phone. It rides in the header's own sticky block, under
+ * the chips and above the first drink, so it is still there however far down
+ * the menu a guest has got.
+ */
+export const MenuSurpriseRow: React.FC<SurpriseProps> = (props) => (
+  <div className="lg:hidden max-w-7xl mx-auto px-4 pb-2.5">
+    <SurpriseMeButton {...props} />
+  </div>
+);
+
 /** The menu down the side, on a wide screen. */
 export const MenuSidebar: React.FC<SidebarProps> = ({
   categories,
@@ -63,23 +105,12 @@ export const MenuSidebar: React.FC<SidebarProps> = ({
 }) => (
   <nav className="hidden lg:block w-62 shrink-0 self-stretch border-r border-border py-4 px-3">
     <ul className="flex flex-col gap-1">
-      {/* Dashed, because it is the one thing here that is a bit of a game. */}
       <li className="mb-1">
-        <button
-          onClick={onSurpriseMe}
-          disabled={!canSurprise}
-          className="w-full h-14 flex items-center justify-center gap-2.5 rounded-md border-2 border-dashed border-border-strong text-text transition-colors duration-(--duration-instant) hover:bg-surface-sunken disabled:border-disabled-border disabled:text-disabled-fg disabled:cursor-not-allowed cursor-pointer"
-        >
-          <Dices className="w-5 h-5 shrink-0 text-text-muted" />
-          <span className="flex flex-col items-start">
-            <span className="font-bold text-base leading-tight tracking-tight">
-              {t("surpriseMe")}
-            </span>
-            <span className="font-mono text-[0.5625rem] font-bold tracking-[0.14em] uppercase text-text-muted">
-              {t("letTheBarChoose")}
-            </span>
-          </span>
-        </button>
+        <SurpriseMeButton
+          canSurprise={canSurprise}
+          onSurpriseMe={onSurpriseMe}
+          t={t}
+        />
       </li>
 
       <li>
