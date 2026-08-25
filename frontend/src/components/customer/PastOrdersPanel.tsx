@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useCloseOnEscape } from "../../hooks/useCloseOnEscape";
 import type { Drink, Order } from "../../types";
@@ -12,6 +12,8 @@ interface PastOrdersPanelProps {
   /** The drink already on the go, which is what stops a second one. */
   currentOrder: Order | undefined;
   loading: boolean;
+  /** Something is asking on top of the panel, so Escape belongs to that. */
+  dialogOnTop?: boolean;
   t: (key: TranslationKeys) => string;
   onClose: () => void;
   onOrderAgain: (drink: Drink) => void;
@@ -37,13 +39,18 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
   customerName,
   currentOrder,
   loading,
+  dialogOnTop = false,
   t,
   onClose,
   onOrderAgain,
   onNotMe,
 }) => {
-  // Escape goes back to the menu, the same as the labelled way out.
-  useCloseOnEscape(onClose);
+  // Changing a password happens in a dialog of its own, over this one.
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  // Escape goes back to the menu, the same as the labelled way out — unless
+  // something is open on top, which Escape should answer first.
+  useCloseOnEscape(onClose, !dialogOnTop && !changingPassword);
 
   const mine = orders
     .filter(
@@ -179,8 +186,11 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
 
           <span className="flex-1" />
 
-          <div className="shrink-0 pt-3.5 border-t border-border flex flex-col items-start gap-2">
-            <p className="text-body text-text-muted">
+          {/* The two account buttons share a row — vertical space down here
+              is the history the guest came to read. The password form takes
+              a full line of its own and so drops below them. */}
+          <div className="shrink-0 pt-3.5 border-t border-border flex flex-wrap items-start gap-2">
+            <p className="w-full text-body text-text-muted">
               {t("youAreHereAs")}{" "}
               <strong className="text-label text-text">{customerName}</strong>.
             </p>
@@ -194,7 +204,7 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
 
             {/* A regular — a guest who claimed their name — can change their
                 password here. Claiming itself is offered up in the greeting. */}
-            <ChangePasswordSection />
+            <ChangePasswordSection onOpenChange={setChangingPassword} />
           </div>
         </div>
       </aside>

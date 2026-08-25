@@ -82,6 +82,10 @@ describe("what a guest is told when something goes wrong", () => {
     await userEvent.click(
       (await screen.findAllByRole("button", { name: "Bestil" }))[0]
     );
+    // Ordering asks first, in the bar's language as well.
+    await userEvent.click(
+      screen.getByRole("button", { name: "Ja, bestil den" })
+    );
 
     expect(
       await screen.findByText(/Noget gik galt\. Din bestilling blev ikke lagt/)
