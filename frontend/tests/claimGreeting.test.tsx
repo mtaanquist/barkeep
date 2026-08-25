@@ -54,6 +54,9 @@ describe("the header greeting", () => {
       within(dialog).getByPlaceholderText("Choose a password"),
       { target: { value: "secret" } }
     );
+    fireEvent.change(within(dialog).getByPlaceholderText("Type it again"), {
+      target: { value: "secret" },
+    });
     fireEvent.click(within(dialog).getByRole("button", { name: CLAIM }));
 
     await waitFor(() => expect(api.countOf("/auth/guest/claim")).toBe(1));
@@ -82,5 +85,42 @@ describe("the header greeting", () => {
     expect(await screen.findByText(/welcome back, ada/i)).toBeInTheDocument();
     // No claim invitation for someone who already registered.
     expect(screen.queryByRole("button", { name: CLAIM })).toBeNull();
+  });
+
+  // A password is typed behind dots, so a typo would only turn up at the next
+  // party, when the name no longer lets them in.
+  it("will not claim a name on a password typed differently twice", async () => {
+    const api = fakeApi((path) => {
+      if (path.includes("/auth/me")) {
+        return {
+          success: true,
+          userType: "guest",
+          bar: aBar(),
+          customerName: "Ada",
+          authenticated: false,
+        };
+      }
+      if (path.includes("/auth/guest/claim")) return { success: true };
+      return undefined;
+    });
+    signIn({ as: "guest", name: "Ada" });
+
+    render(<GuestGreeting />, { wrapper: withApp });
+
+    fireEvent.click(await screen.findByRole("button", { name: CLAIM }));
+    const dialog = screen.getByRole("dialog");
+    fireEvent.change(
+      within(dialog).getByPlaceholderText("Choose a password"),
+      { target: { value: "secret" } }
+    );
+    fireEvent.change(within(dialog).getByPlaceholderText("Type it again"), {
+      target: { value: "secrte" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: CLAIM }));
+
+    expect(
+      await within(dialog).findByText(/not the same/i)
+    ).toBeInTheDocument();
+    expect(api.countOf("/auth/guest/claim")).toBe(0);
   });
 });
