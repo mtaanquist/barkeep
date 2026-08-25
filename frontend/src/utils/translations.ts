@@ -454,7 +454,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     newPassword: "New password",
     repeatPassword: "Type it again",
     repeatNewPassword: "Type the new one again",
-    passwordsDoNotMatch: "Those two are not the same. Have another go.",
+    passwordsDoNotMatch: "Those two are not the same.",
     passwordChanged: "Password changed.",
     nameIsYours: "This name is yours now — you will need this password next time.",
 
@@ -782,9 +782,9 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     changePassword: "Skift adgangskode",
     currentPassword: "Nuværende adgangskode",
     newPassword: "Ny adgangskode",
-    repeatPassword: "Skriv den igen",
-    repeatNewPassword: "Skriv den nye igen",
-    passwordsDoNotMatch: "De to er ikke ens. Prøv igen.",
+    repeatPassword: "Gentag",
+    repeatNewPassword: "Gentag",
+    passwordsDoNotMatch: "De to stemmer ikke.",
     passwordChanged: "Adgangskoden er skiftet.",
     nameIsYours: "Navnet er dit nu — du skal bruge denne adgangskode næste gang.",
 
@@ -896,7 +896,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     themeLight: "Udseende: lyst",
     themeDark: "Udseende: mørkt",
     tonight: "i aften",
-    orderAgain: "Igen",
+    orderAgain: "Genbestil",
     reorderWhenCollected:
       "Du kan bestille igen, når din nuværende drink er hentet.",
     youAreHereAs: "Du er her som",
