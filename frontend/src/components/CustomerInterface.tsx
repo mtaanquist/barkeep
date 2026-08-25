@@ -18,6 +18,7 @@ import {
   FilterSheet,
   MenuChipRail,
   MenuSidebar,
+  MenuSurpriseRow,
 } from "./customer/MenuFilters";
 
 /** Statuses that mean a guest still has a drink on the go. */
@@ -156,6 +157,9 @@ const CustomerInterface: React.FC = () => {
     setRandomDrink(pool[Math.floor(Math.random() * pool.length)]);
   };
 
+  const canSurprise =
+    menu.inStock.length > 0 && !currentOrder && !closed && !loading;
+
   // The same handful of props go to every section of the menu.
   const cardActions = {
     onViewRecipe: setViewingRecipe,
@@ -186,12 +190,19 @@ const CustomerInterface: React.FC = () => {
       onCancelOrder={cancelOrder}
       loading={loading}
       underHeader={
-        <MenuChipRail
-          {...filters}
-          favouriteCount={menu.favourites.length}
-          totalCount={menu.inStock.length}
-          onOpenFilters={() => setFiltersOpen(true)}
-        />
+        <>
+          <MenuChipRail
+            {...filters}
+            favouriteCount={menu.favourites.length}
+            totalCount={menu.inStock.length}
+            onOpenFilters={() => setFiltersOpen(true)}
+          />
+          <MenuSurpriseRow
+            canSurprise={canSurprise}
+            onSurpriseMe={pickRandom}
+            t={t}
+          />
+        </>
       }
     >
       {filtersOpen && (
@@ -245,9 +256,7 @@ const CustomerInterface: React.FC = () => {
           {...filters}
           favouriteCount={menu.favourites.length}
           totalCount={menu.inStock.length}
-          canSurprise={
-            menu.inStock.length > 0 && !currentOrder && !closed && !loading
-          }
+          canSurprise={canSurprise}
           onSurpriseMe={pickRandom}
         />
 
