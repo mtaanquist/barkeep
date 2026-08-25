@@ -89,17 +89,19 @@ const ClaimNameModal: React.FC<ClaimNameModalProps> = ({ onClose }) => {
               autoFocus
             />
             {error && <p className="text-body text-danger">{error}</p>}
+            {/* Full width while they are stacked: sharing the space is only
+                a row's job, and flex-1 in a column eats the height. */}
             <div className="flex flex-col sm:flex-row gap-2.5">
               <button
                 onClick={submit}
                 disabled={busy || password.trim().length < PASSWORD_MIN}
-                className="flex-1 h-14 rounded-md bg-text text-text-inverse text-label transition-colors hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full sm:flex-1 h-14 rounded-md bg-text text-text-inverse text-label transition-colors hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {t("setPassword")}
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 h-14 rounded-md border border-border text-label transition-colors hover:bg-surface-sunken cursor-pointer"
+                className="w-full sm:flex-1 h-14 rounded-md border border-border text-label transition-colors hover:bg-surface-sunken cursor-pointer"
               >
                 {t("cancel")}
               </button>

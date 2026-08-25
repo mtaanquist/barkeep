@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useCloseOnEscape } from "../../hooks/useCloseOnEscape";
 import type { Drink, Order } from "../../types";
@@ -45,9 +45,12 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
   onOrderAgain,
   onNotMe,
 }) => {
+  // Changing a password happens in a dialog of its own, over this one.
+  const [changingPassword, setChangingPassword] = useState(false);
+
   // Escape goes back to the menu, the same as the labelled way out — unless
-  // something is asking on top, which Escape should answer first.
-  useCloseOnEscape(onClose, !dialogOnTop);
+  // something is open on top, which Escape should answer first.
+  useCloseOnEscape(onClose, !dialogOnTop && !changingPassword);
 
   const mine = orders
     .filter(
@@ -201,7 +204,7 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
 
             {/* A regular — a guest who claimed their name — can change their
                 password here. Claiming itself is offered up in the greeting. */}
-            <ChangePasswordSection />
+            <ChangePasswordSection onOpenChange={setChangingPassword} />
           </div>
         </div>
       </aside>
