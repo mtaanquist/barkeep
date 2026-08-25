@@ -27,12 +27,21 @@ const ConfirmOrderModal: React.FC<ConfirmOrderModalProps> = ({
   useCloseOnEscape(onCancel);
 
   return (
-    <div className="fixed inset-0 z-50 bg-overlay flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Tapping beside it is a way out, the way a phone leads you to expect,
+          and it can only ever cancel. */}
+      <button
+        type="button"
+        aria-label={t("close")}
+        onClick={onCancel}
+        className="absolute inset-0 bg-overlay cursor-default"
+      />
+
       <div
         role="dialog"
         aria-modal="true"
         aria-label={t("confirmOrder")}
-        className="w-full max-w-sm bg-surface-raised border border-border rounded-lg shadow-float overflow-hidden"
+        className="relative w-full max-w-sm bg-surface-raised border border-border rounded-lg shadow-float overflow-hidden"
       >
         <div className="px-5 pt-5 pb-4 flex flex-col gap-1.5">
           <span className="font-mono text-caption uppercase text-text-muted">

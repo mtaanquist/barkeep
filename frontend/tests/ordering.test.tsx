@@ -345,6 +345,18 @@ describe("asking before an order goes in", () => {
     expect(api.calls.some((c) => c.method === "POST")).toBe(false);
   });
 
+  // Tapping beside it is the way out a phone leads you to expect, and it has
+  // to be the harmless one of the two answers.
+  it("takes a tap beside it as backing out, not as saying yes", async () => {
+    await showMenu();
+
+    await userEvent.click(screen.getAllByRole("button", { name: "Order" })[0]);
+    await userEvent.click(screen.getByRole("button", { name: "Close" }));
+
+    expect(screen.queryByRole("dialog", { name: "Order this drink?" })).toBeNull();
+    expect(api.calls.some((c) => c.method === "POST")).toBe(false);
+  });
+
   it("asks about the drink that was tapped", async () => {
     await showMenu();
 
