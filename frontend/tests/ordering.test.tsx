@@ -37,6 +37,9 @@ const serve = () => {
       orders = [];
       return { success: true };
     }
+    if (path.endsWith("/api/auth/guest/password") && options.method === "PUT") {
+      return { success: true };
+    }
     return undefined;
   });
 };
@@ -432,6 +435,110 @@ describe("past orders, as a panel over the menu", () => {
     expect(within(history).getByRole("button", { name: "Again" })).toBeDisabled();
     // The reason sits beside the button rather than behind an alert.
     expect(history).toHaveTextContent(/once your current drink has been/i);
+  });
+
+  // Changing a password is two fields and a keyboard, which is a dialog's
+  // worth of room rather than a form squeezed into the foot of the panel.
+  describe("changing the password on a name", () => {
+    const asARegular = async () => {
+      localStorage.setItem("homeBarSystem_authenticated", JSON.stringify(true));
+      openDirectly();
+      await screen.findByRole("dialog", { name: "Past orders" });
+      await userEvent.click(
+        screen.getByRole("button", { name: "Change password" })
+      );
+      return screen.getByRole("dialog", { name: "Change password" });
+    };
+
+    const fillIn = async (
+      dialog: HTMLElement,
+      { next, again }: { next: string; again: string }
+    ) => {
+      await userEvent.type(
+        within(dialog).getByPlaceholderText("Current password"),
+        "old-one"
+      );
+      await userEvent.type(
+        within(dialog).getByPlaceholderText("New password"),
+        next
+      );
+      await userEvent.type(
+        within(dialog).getByPlaceholderText("Type the new one again"),
+        again
+      );
+      await userEvent.click(
+        within(dialog).getByRole("button", { name: "Change password" })
+      );
+    };
+
+    it("takes the new password, and says it went through", async () => {
+      const dialog = await asARegular();
+
+      await fillIn(dialog, { next: "new-one", again: "new-one" });
+
+      await waitFor(() =>
+        expect(api.calls.some((c) => c.method === "PUT")).toBe(true)
+      );
+      expect(api.calls.find((c) => c.method === "PUT")?.body).toMatchObject({
+        currentPassword: "old-one",
+        newPassword: "new-one",
+      });
+      expect(await screen.findByText("Password changed.")).toBeInTheDocument();
+    });
+
+    // Typed behind dots twice over, so the slip is caught here rather than
+    // the next time the guest tries to use their name.
+    it("says so when the two are not typed the same, and sends nothing", async () => {
+      const dialog = await asARegular();
+
+      await fillIn(dialog, { next: "new-one", again: "nwe-one" });
+
+      expect(
+        await within(dialog).findByText(/not the same/i)
+      ).toBeInTheDocument();
+      expect(api.calls.some((c) => c.method === "PUT")).toBe(false);
+
+      // Putting it right sends it, without having to start over.
+      await userEvent.clear(
+        within(dialog).getByPlaceholderText("Type the new one again")
+      );
+      await userEvent.type(
+        within(dialog).getByPlaceholderText("Type the new one again"),
+        "new-one"
+      );
+      await userEvent.click(
+        within(dialog).getByRole("button", { name: "Change password" })
+      );
+
+      await waitFor(() =>
+        expect(api.calls.some((c) => c.method === "PUT")).toBe(true)
+      );
+    });
+
+    // Escape used to reach the panel underneath as well, which would have
+    // dropped the guest back on the menu.
+    it("closes on Escape, and leaves the history open", async () => {
+      await asARegular();
+
+      await userEvent.keyboard("{Escape}");
+
+      expect(
+        screen.queryByRole("dialog", { name: "Change password" })
+      ).toBeNull();
+      expect(
+        screen.getByRole("dialog", { name: "Past orders" })
+      ).toBeInTheDocument();
+    });
+
+    // Nobody without an account has a password to change.
+    it("is not offered to a one-time guest", async () => {
+      openDirectly();
+
+      await screen.findByRole("dialog", { name: "Past orders" });
+      expect(
+        screen.queryByRole("button", { name: "Change password" })
+      ).toBeNull();
+    });
   });
 });
 

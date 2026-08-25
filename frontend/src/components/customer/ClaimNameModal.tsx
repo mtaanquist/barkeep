@@ -20,6 +20,7 @@ const ClaimNameModal: React.FC<ClaimNameModalProps> = ({ onClose }) => {
   const t = useTranslation(language);
 
   const [password, setPassword] = useState("");
+  const [again, setAgain] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -27,7 +28,15 @@ const ClaimNameModal: React.FC<ClaimNameModalProps> = ({ onClose }) => {
   useCloseOnEscape(onClose);
 
   const submit = async () => {
-    if (password.trim().length < PASSWORD_MIN) return;
+    if (password.trim().length < PASSWORD_MIN || !again.trim()) return;
+
+    // A slip here locks a guest out of their own name, and they would not
+    // find out until the next party.
+    if (password.trim() !== again.trim()) {
+      setError(t("passwordsDoNotMatch"));
+      return;
+    }
+
     setBusy(true);
     setError(null);
     try {
@@ -85,21 +94,34 @@ const ClaimNameModal: React.FC<ClaimNameModalProps> = ({ onClose }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
-              onKeyPress={(e) => e.key === "Enter" && submit()}
               autoFocus
             />
+            {/* Behind dots there is nothing to read back, so it is asked for
+                twice rather than trusted once. */}
+            <input
+              type="password"
+              placeholder={t("repeatPassword")}
+              value={again}
+              onChange={(e) => setAgain(e.target.value)}
+              className="w-full p-3 border border-border rounded-md focus:ring-2 focus:border-transparent"
+              onKeyPress={(e) => e.key === "Enter" && submit()}
+            />
             {error && <p className="text-body text-danger">{error}</p>}
+            {/* Full width while they are stacked: sharing the space is only
+                a row's job, and flex-1 in a column eats the height. */}
             <div className="flex flex-col sm:flex-row gap-2.5">
               <button
                 onClick={submit}
-                disabled={busy || password.trim().length < PASSWORD_MIN}
-                className="flex-1 h-14 rounded-md bg-text text-text-inverse text-label transition-colors hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                disabled={
+                  busy || password.trim().length < PASSWORD_MIN || !again.trim()
+                }
+                className="w-full sm:flex-1 h-14 rounded-md bg-text text-text-inverse text-label transition-colors hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {t("setPassword")}
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 h-14 rounded-md border border-border text-label transition-colors hover:bg-surface-sunken cursor-pointer"
+                className="w-full sm:flex-1 h-14 rounded-md border border-border text-label transition-colors hover:bg-surface-sunken cursor-pointer"
               >
                 {t("cancel")}
               </button>

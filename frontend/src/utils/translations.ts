@@ -127,6 +127,9 @@ export interface TranslationMap {
   changePassword: string;
   currentPassword: string;
   newPassword: string;
+  repeatPassword: string;
+  repeatNewPassword: string;
+  passwordsDoNotMatch: string;
   passwordChanged: string;
   nameIsYours: string;
 
@@ -446,6 +449,9 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     changePassword: "Change password",
     currentPassword: "Current password",
     newPassword: "New password",
+    repeatPassword: "Type it again",
+    repeatNewPassword: "Type the new one again",
+    passwordsDoNotMatch: "Those two are not the same.",
     passwordChanged: "Password changed.",
     nameIsYours: "This name is yours now — you will need this password next time.",
 
@@ -770,6 +776,9 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     changePassword: "Skift adgangskode",
     currentPassword: "Nuværende adgangskode",
     newPassword: "Ny adgangskode",
+    repeatPassword: "Gentag",
+    repeatNewPassword: "Gentag",
+    passwordsDoNotMatch: "De to stemmer ikke.",
     passwordChanged: "Adgangskoden er skiftet.",
     nameIsYours: "Navnet er dit nu — du skal bruge denne adgangskode næste gang.",
 
@@ -878,7 +887,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     themeLight: "Udseende: lyst",
     themeDark: "Udseende: mørkt",
     tonight: "i aften",
-    orderAgain: "Igen",
+    orderAgain: "Genbestil",
     reorderWhenCollected:
       "Du kan bestille igen, når din nuværende drink er hentet.",
     youAreHereAs: "Du er her som",
