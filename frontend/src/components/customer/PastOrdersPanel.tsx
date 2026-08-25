@@ -12,6 +12,8 @@ interface PastOrdersPanelProps {
   /** The drink already on the go, which is what stops a second one. */
   currentOrder: Order | undefined;
   loading: boolean;
+  /** Something is asking on top of the panel, so Escape belongs to that. */
+  dialogOnTop?: boolean;
   t: (key: TranslationKeys) => string;
   onClose: () => void;
   onOrderAgain: (drink: Drink) => void;
@@ -37,6 +39,7 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
   customerName,
   currentOrder,
   loading,
+  dialogOnTop = false,
   t,
   onClose,
   onOrderAgain,
@@ -47,7 +50,7 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
 
   // Escape goes back to the menu, the same as the labelled way out — unless
   // something is open on top, which Escape should answer first.
-  useCloseOnEscape(onClose, !changingPassword);
+  useCloseOnEscape(onClose, !dialogOnTop && !changingPassword);
 
   const mine = orders
     .filter(

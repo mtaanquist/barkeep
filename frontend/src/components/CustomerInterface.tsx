@@ -10,6 +10,7 @@ import { ordersAreClosed } from "../utils/lastOrders";
 import { useGuestMenu } from "../hooks/useGuestMenu";
 import { useCloseOnEscape } from "../hooks/useCloseOnEscape";
 import RandomDrinkModal from "./RandomDrinkModal";
+import ConfirmOrderModal from "./customer/ConfirmOrderModal";
 import DrinkGrid from "./customer/DrinkGrid";
 import GuestShell from "./customer/GuestShell";
 import OrderPlacedModal from "./customer/OrderPlacedModal";
@@ -18,6 +19,7 @@ import {
   FilterSheet,
   MenuChipRail,
   MenuSidebar,
+  MenuSurpriseRow,
 } from "./customer/MenuFilters";
 
 /** Statuses that mean a guest still has a drink on the go. */
@@ -51,6 +53,8 @@ const CustomerInterface: React.FC = () => {
   const [showOrderPlaced, setShowOrderPlaced] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [randomDrink, setRandomDrink] = useState<Drink | null>(null);
+  // The drink a guest has tapped but not yet said yes to.
+  const [pendingDrink, setPendingDrink] = useState<Drink | null>(null);
 
   // Escape closes the surprise-me pick.
   useCloseOnEscape(() => setRandomDrink(null), !!randomDrink);
@@ -104,10 +108,16 @@ const CustomerInterface: React.FC = () => {
     }
   };
 
-  // Ordering again closes the history, because what matters next is the
-  // drink coming, which the dock is carrying.
-  const orderAgain = async (drink: Drink) => {
-    if (await placeOrder(drink)) navigate("/customer");
+  const confirmOrder = async () => {
+    const drink = pendingDrink;
+    if (!drink) return;
+
+    setPendingDrink(null);
+    const placed = await placeOrder(drink);
+
+    // Ordering again closes the history, because what matters next is the
+    // drink coming, which the dock is carrying.
+    if (placed && historyOpen) navigate("/customer");
   };
 
   const toggleFavourite = async (drink: Drink) => {
@@ -156,10 +166,13 @@ const CustomerInterface: React.FC = () => {
     setRandomDrink(pool[Math.floor(Math.random() * pool.length)]);
   };
 
+  const canSurprise =
+    menu.inStock.length > 0 && !currentOrder && !closed && !loading;
+
   // The same handful of props go to every section of the menu.
   const cardActions = {
     onViewRecipe: setViewingRecipe,
-    onOrder: placeOrder,
+    onOrder: setPendingDrink,
     onToggleFavourite: toggleFavourite,
     disabled: !!currentOrder || closed || loading,
     loading,
@@ -186,12 +199,19 @@ const CustomerInterface: React.FC = () => {
       onCancelOrder={cancelOrder}
       loading={loading}
       underHeader={
-        <MenuChipRail
-          {...filters}
-          favouriteCount={menu.favourites.length}
-          totalCount={menu.inStock.length}
-          onOpenFilters={() => setFiltersOpen(true)}
-        />
+        <>
+          <MenuChipRail
+            {...filters}
+            favouriteCount={menu.favourites.length}
+            totalCount={menu.inStock.length}
+            onOpenFilters={() => setFiltersOpen(true)}
+          />
+          <MenuSurpriseRow
+            canSurprise={canSurprise}
+            onSurpriseMe={pickRandom}
+            t={t}
+          />
+        </>
       }
     >
       {filtersOpen && (
@@ -216,10 +236,21 @@ const CustomerInterface: React.FC = () => {
           customerName={customerName}
           currentOrder={currentOrder}
           loading={loading}
+          dialogOnTop={!!pendingDrink}
           t={t}
           onClose={() => navigate("/customer")}
-          onOrderAgain={orderAgain}
+          onOrderAgain={setPendingDrink}
           onNotMe={clearSession}
+        />
+      )}
+
+      {pendingDrink && (
+        <ConfirmOrderModal
+          drink={pendingDrink}
+          onConfirm={confirmOrder}
+          onCancel={() => setPendingDrink(null)}
+          loading={loading}
+          t={t}
         />
       )}
 
@@ -227,6 +258,8 @@ const CustomerInterface: React.FC = () => {
         <RandomDrinkModal
           drink={randomDrink}
           visible
+          // No second asking here: this panel names the drink and is already
+          // the guest saying yes to it.
           onOrder={() => {
             const chosen = randomDrink;
             setRandomDrink(null);
@@ -245,9 +278,7 @@ const CustomerInterface: React.FC = () => {
           {...filters}
           favouriteCount={menu.favourites.length}
           totalCount={menu.inStock.length}
-          canSurprise={
-            menu.inStock.length > 0 && !currentOrder && !closed && !loading
-          }
+          canSurprise={canSurprise}
           onSurpriseMe={pickRandom}
         />
 

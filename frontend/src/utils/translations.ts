@@ -229,6 +229,9 @@ export interface TranslationMap {
   servings: string;
   orderThis: string;
   tryAnother: string;
+  confirmOrder: string;
+  confirmOrderHelp: string;
+  confirmOrderYes: string;
   pastOrders: string; // Added
   menuLabel: string;
   themeSystem: string;
@@ -554,6 +557,9 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     servings: "serves",
     orderThis: "Order this!",
     tryAnother: "Try another",
+    confirmOrder: "Order this drink?",
+    confirmOrderHelp: "It goes straight to the bar.",
+    confirmOrderYes: "Yes, order it",
     pastOrders: "Past orders", // Added
     menuLabel: "Menu",
     themeSystem: "Theme: follow my phone",
@@ -881,6 +887,9 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     servings: "til",
     orderThis: "Bestil denne!",
     tryAnother: "Prøv en anden",
+    confirmOrder: "Bestil denne drink?",
+    confirmOrderHelp: "Den går direkte til baren.",
+    confirmOrderYes: "Ja, bestil den",
     pastOrders: "Tidligere bestillinger", // Added
     menuLabel: "Menu",
     themeSystem: "Udseende: følg min telefon",
