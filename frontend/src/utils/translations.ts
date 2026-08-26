@@ -311,6 +311,31 @@ export interface TranslationMap {
   errorFavouriteFailed: string;
   errorCancelFailed: string;
   categoryNamePlaceholder: string;
+
+  // Ingredients
+  ingredients: string;
+  ingredient: string;
+  ingredientsHelp: string;
+  addIngredient: string;
+  ingredientName: string;
+  ingredientNamePlaceholder: string;
+  amount: string;
+  amountPlaceholder: string;
+  removeIngredient: string;
+  noIngredients: string;
+  noIngredientsHelp: string;
+  editIngredient: string;
+  deleteIngredient: string;
+  confirmDeleteIngredient: string;
+  ingredientInStockHelp: string;
+  usedInDrinks: string;
+  usedInOneDrink: string;
+  columnUsedBy: string;
+  sectionIngredients: string;
+  noIngredientsOnDrink: string;
+  missingIngredients: string;
+  ingredientsKicker: string;
+  viewIngredients: string;
 }
 
 export const translations: { en: TranslationMap; da: TranslationMap } = {
@@ -535,6 +560,34 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     cancel: "Cancel",
     confirmCancelOrder: "Are you sure you want to cancel your order?",
     cancelOrder: "Cancel Order",
+
+    // Ingredients
+    ingredients: "Ingredients",
+    ingredient: "Ingredient",
+    ingredientsHelp:
+      "Mark one out of stock and every drink that needs it leaves the menu.",
+    addIngredient: "Add ingredient",
+    ingredientName: "Name",
+    ingredientNamePlaceholder: "e.g. Campari",
+    amount: "Amount",
+    amountPlaceholder: "3 cl",
+    removeIngredient: "Remove",
+    noIngredients: "No ingredients yet",
+    noIngredientsHelp:
+      "Add what your bar is pouring, and put it on the drinks that use it.",
+    editIngredient: "Rename",
+    deleteIngredient: "Delete",
+    confirmDeleteIngredient: "Delete this ingredient?",
+    ingredientInStockHelp:
+      "Turn this off and every drink that needs it leaves the menu.",
+    usedInDrinks: "drinks",
+    usedInOneDrink: "1 drink",
+    columnUsedBy: "used in",
+    sectionIngredients: "what is in it",
+    noIngredientsOnDrink: "Nothing yet — add what goes in.",
+    missingIngredients: "Out of",
+    ingredientsKicker: "ingredients",
+    viewIngredients: "What is in it",
 
     // Customer interface
     availableDrinks: "Available Drinks",
@@ -865,6 +918,34 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     cancel: "Annuller",
     confirmCancelOrder: "Er du sikker på, at du vil annullere din bestilling?",
     cancelOrder: "Annuller bestilling",
+
+    // Ingredients
+    ingredients: "Ingredienser",
+    ingredient: "Ingrediens",
+    ingredientsHelp:
+      "Marker en som udsolgt, og alle drinks, der bruger den, forsvinder fra menuen.",
+    addIngredient: "Tilføj ingrediens",
+    ingredientName: "Navn",
+    ingredientNamePlaceholder: "fx Campari",
+    amount: "Mængde",
+    amountPlaceholder: "3 cl",
+    removeIngredient: "Fjern",
+    noIngredients: "Ingen ingredienser endnu",
+    noIngredientsHelp:
+      "Tilføj det, baren skænker, og sæt det på de drinks, der bruger det.",
+    editIngredient: "Omdøb",
+    deleteIngredient: "Slet",
+    confirmDeleteIngredient: "Slet denne ingrediens?",
+    ingredientInStockHelp:
+      "Slå fra, og alle drinks, der bruger den, forsvinder fra menuen.",
+    usedInDrinks: "drinks",
+    usedInOneDrink: "1 drink",
+    columnUsedBy: "bruges i",
+    sectionIngredients: "hvad der er i",
+    noIngredientsOnDrink: "Ingenting endnu — tilføj det, der skal i.",
+    missingIngredients: "Mangler",
+    ingredientsKicker: "ingredienser",
+    viewIngredients: "Hvad er der i",
 
     // Customer interface
     availableDrinks: "Tilgængelige drinks",

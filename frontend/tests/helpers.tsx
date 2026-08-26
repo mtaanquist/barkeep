@@ -1,7 +1,13 @@
 import type { ReactNode } from "react";
 import { vi } from "vitest";
 import { AppProvider } from "../src/context/AppContext";
-import type { Bar, Drink, Order, OrderStatus } from "../src/types";
+import type {
+  Bar,
+  Drink,
+  Ingredient,
+  Order,
+  OrderStatus,
+} from "../src/types";
 
 /** A bar with nothing unusual about it. */
 export const aBar = (extra: Partial<Bar> = {}): Bar => ({
@@ -23,6 +29,9 @@ export const aDrink = (extra: Partial<Drink> = {}): Drink => ({
   image_url: null,
   recipe: "gin, campari, vermouth",
   in_stock: 1,
+  // What the menu actually asks: switched on, and nothing it needs has run out.
+  available: 1,
+  ingredient_names: [],
   base_spirit: "Gin",
   guest_description: null,
   show_recipe_to_guests: 0,
@@ -31,6 +40,16 @@ export const aDrink = (extra: Partial<Drink> = {}): Drink => ({
   image_crop_x: 0,
   image_crop_y: 0,
   image_crop_zoom: 1,
+  created_at: "2025-07-13 14:23:32",
+  ...extra,
+});
+
+/** Something the bar pours, in stock unless a test says otherwise. */
+export const anIngredient = (extra: Partial<Ingredient> = {}): Ingredient => ({
+  id: 1,
+  bar_id: 1,
+  name: "Campari",
+  in_stock: 1,
   created_at: "2025-07-13 14:23:32",
   ...extra,
 });

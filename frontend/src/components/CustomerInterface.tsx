@@ -158,16 +158,16 @@ const CustomerInterface: React.FC = () => {
   /** Any drink but the one already showing, so a second go feels like one. */
   const pickRandom = () => {
     const pool =
-      menu.inStock.length > 1 && randomDrink
-        ? menu.inStock.filter((d) => d.id !== randomDrink.id)
-        : menu.inStock;
+      menu.available.length > 1 && randomDrink
+        ? menu.available.filter((d) => d.id !== randomDrink.id)
+        : menu.available;
 
     if (pool.length === 0) return;
     setRandomDrink(pool[Math.floor(Math.random() * pool.length)]);
   };
 
   const canSurprise =
-    menu.inStock.length > 0 && !currentOrder && !closed && !loading;
+    menu.available.length > 0 && !currentOrder && !closed && !loading;
 
   // The same handful of props go to every section of the menu.
   const cardActions = {
@@ -203,7 +203,7 @@ const CustomerInterface: React.FC = () => {
           <MenuChipRail
             {...filters}
             favouriteCount={menu.favourites.length}
-            totalCount={menu.inStock.length}
+            totalCount={menu.available.length}
             onOpenFilters={() => setFiltersOpen(true)}
           />
           <MenuSurpriseRow
@@ -277,7 +277,7 @@ const CustomerInterface: React.FC = () => {
         <MenuSidebar
           {...filters}
           favouriteCount={menu.favourites.length}
-          totalCount={menu.inStock.length}
+          totalCount={menu.available.length}
           canSurprise={canSurprise}
           onSurpriseMe={pickRandom}
         />

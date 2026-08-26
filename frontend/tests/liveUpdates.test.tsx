@@ -7,6 +7,7 @@ import { useApp } from "../src/hooks/useApp";
 import { useLiveUpdates } from "../src/hooks/useLiveUpdates";
 import { AppProvider } from "../src/context/AppContext";
 import {
+  aDrink,
   anOrder,
   fakeApi,
   FakeEventSource,
@@ -46,7 +47,11 @@ beforeEach(() => {
   vi.stubGlobal("EventSource", FakeEventSource);
   signIn();
   served = [anOrder({ id: 7 }), anOrder({ id: 8 })];
-  api = fakeApi((path) => (path.includes("/orders/bar/") ? served : undefined));
+  api = fakeApi((path) => {
+    if (path.includes("/orders/bar/")) return served;
+    if (path.includes("/drinks/bar/")) return [aDrink()];
+    return undefined;
+  });
 });
 
 afterEach(() => {
@@ -99,6 +104,20 @@ describe("live updates", () => {
     );
 
     expect(screen.getByTestId("orders")).toHaveTextContent("8");
+  });
+
+  // Marking one bottle out of stock can take a dozen drinks off the menu.
+  // Which ones is the server's to work out, so the menu is asked again rather
+  // than guessed at here.
+  it("fetches the menu again when it changes", async () => {
+    show();
+    await waitFor(() => expect(FakeEventSource.live).toHaveLength(1));
+
+    expect(api.countOf("/drinks/bar/1")).toBe(0);
+
+    act(() => FakeEventSource.live[0].send({ type: "menu_changed" }));
+
+    await waitFor(() => expect(api.countOf("/drinks/bar/1")).toBe(1));
   });
 
   // The connection used to be torn down and reopened every time an order came

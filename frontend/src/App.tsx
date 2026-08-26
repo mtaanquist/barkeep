@@ -13,6 +13,7 @@ import OrdersTab from "./components/OrdersTab";
 import MenuTab from "./components/MenuTab";
 import CategoriesTab from "./components/CategoriesTab";
 import RegularsTab from "./components/bartender/RegularsTab";
+import IngredientsTab from "./components/bartender/IngredientsTab";
 import AnalyticsTab from "./components/AnalyticsTab";
 import SettingsTab from "./components/SettingsTab";
 import CustomerInterface from "./components/CustomerInterface";
@@ -103,6 +104,7 @@ const AppContent: React.FC = () => {
           {/* Adding and editing a drink are screens, not a dialog over one. */}
           <Route path="menu/:drinkId" element={<DrinkForm />} />
           <Route path="categories" element={<CategoriesTab />} />
+          <Route path="ingredients" element={<IngredientsTab />} />
           <Route path="regulars" element={<RegularsTab />} />
           <Route path="analytics" element={<AnalyticsTab />} />
           <Route path="settings" element={<SettingsTab />} />
