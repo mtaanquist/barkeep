@@ -9,10 +9,12 @@ import type { Express } from "express";
 import {
   makeTempDir,
   makeTestApp,
+  makeTestDatabase,
   cleanUpTempDirs,
   seedBar,
   operatorCookie,
 } from "./helpers.js";
+import { createApp } from "../src/app.js";
 import type { Db } from "../src/db/queries.js";
 
 afterAll(cleanUpTempDirs);
@@ -144,5 +146,59 @@ describe("downloading a copy of the data", () => {
     expect(
       namesIn(zip).some((name) => name.includes("session-secret"))
     ).toBe(false);
+  });
+});
+
+describe("the note inside the archive", () => {
+  /**
+   * A bar that is still taking orders while the copy is made. This stands in
+   * for one landing in the moment right after SQLite takes its snapshot.
+   */
+  function dbThatTakesAnOrderMidCopy(db: Db, drinkId: number): Db {
+    return {
+      prepare: (sql: string) => db.prepare(sql),
+      backup: async (destination: string) => {
+        const result = await db.backup(destination);
+        db.prepare(
+          "INSERT INTO orders (bar_id, customer_name, drink_id, drink_title) VALUES ((SELECT id FROM bars), 'Grace', ?, 'Negroni')"
+        ).run(drinkId);
+        return result;
+      },
+    } as unknown as Db;
+  }
+
+  it("never claims more than the copy actually holds", async () => {
+    const db = makeTestDatabase();
+    const { drinkId } = seedBar(db);
+    db.prepare(
+      "INSERT INTO orders (bar_id, customer_name, drink_id, drink_title) VALUES ((SELECT id FROM bars), 'Ada', ?, 'Negroni')"
+    ).run(drinkId);
+
+    const app = createApp({
+      db: dbThatTakesAnOrderMidCopy(db, drinkId),
+      uploadsDir: makeTempDir("barkeep-uploads-"),
+      frontendDir: makeTempDir("barkeep-frontend-"),
+      operatorPassword: PASSWORD,
+    });
+
+    const { zip } = await download(app);
+
+    const claimed = (
+      JSON.parse(zip.readAsText("manifest.json")) as { orders: number }
+    ).orders;
+
+    const copyDir = makeTempDir("barkeep-copy-");
+    fs.writeFileSync(
+      path.join(copyDir, "bar.db"),
+      zip.getEntry("data/bar.db")?.getData() as Buffer
+    );
+    const copy = new Database(path.join(copyDir, "bar.db"), { readonly: true });
+    const actual = (
+      copy.prepare("SELECT COUNT(*) AS n FROM orders").get() as { n: number }
+    ).n;
+    copy.close();
+
+    // Counting after the copy would say two orders for a file holding one.
+    expect(claimed).toBeLessThanOrEqual(actual);
   });
 });

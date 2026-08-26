@@ -75,12 +75,15 @@ export async function streamExport(
   );
 
   try {
+    // Counted before the copy is taken, so a bar that is still serving can
+    // only ever make the archive hold more than the note claims. A note that
+    // promised more than the file has would be the worse way round.
+    const manifest = describe(db, uploadsDir, includeUploads);
+
     // A plain file copy would miss whatever is still in the write-ahead log,
     // so let SQLite settle it into one file for us.
     const snapshot = path.join(workDir, "bar.db");
     await db.backup(snapshot);
-
-    const manifest = describe(db, uploadsDir, includeUploads);
 
     // Nothing is sent until the copy worked, so a failure up to here can still
     // be answered with an ordinary error.
