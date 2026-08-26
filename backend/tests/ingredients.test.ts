@@ -90,6 +90,39 @@ describe("ingredients", () => {
     expect(on.body.in_stock).toBe(1);
   });
 
+  // A bottle in six drinks nobody orders is not the one to go out for, so the
+  // shopping list is sorted by what has actually been asked for.
+  it("counts how often the drinks that need it have been ordered", async () => {
+    await add("Campari");
+    await request(app)
+      .put(`/api/drinks/${drinkId}`)
+      .set("Cookie", asBartender())
+      .send({ ingredients: [{ name: "Campari" }] });
+
+    for (const name of ["Mads", "Ada"]) {
+      await request(app)
+        .post("/api/orders")
+        .set("Cookie", sessionCookie({ barId, role: "guest", name }))
+        .send({ drinkId });
+    }
+
+    const list = await request(app)
+      .get(`/api/ingredients/bar/${barId}`)
+      .set("Cookie", asBartender());
+
+    expect(list.body[0]).toMatchObject({ name: "Campari", ordered: 2 });
+  });
+
+  it("counts nothing for something no drink uses", async () => {
+    await add("Absinthe");
+
+    const list = await request(app)
+      .get(`/api/ingredients/bar/${barId}`)
+      .set("Cookie", asBartender());
+
+    expect(list.body[0]).toMatchObject({ used_by: 0, ordered: 0 });
+  });
+
   it("says how many drinks would go without it", async () => {
     await add("Campari");
     await request(app)

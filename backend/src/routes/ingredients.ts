@@ -1,6 +1,9 @@
 import express, { type Router } from "express";
 
-import type { Ingredient } from "../../../shared/types.js";
+import type {
+  Ingredient,
+  IngredientWithUse,
+} from "../../../shared/types.js";
 import { HttpError, idParam, requireText, route } from "../http.js";
 import {
   all,
@@ -16,11 +19,19 @@ import {
 } from "../auth/middleware.js";
 import { liveUpdates } from "../realtime.js";
 
-/** An ingredient with how many drinks would go off the menu without it. */
+/**
+ * An ingredient with how much rides on it: how many drinks would leave the
+ * menu without it, and how often those drinks have been asked for. The second
+ * is what sorts a shopping list — a bottle in six drinks nobody orders is not
+ * the one to go out for.
+ */
 const WITH_USE_COUNT = `
   SELECT i.*,
          (SELECT COUNT(*) FROM drink_ingredients di
-          WHERE di.ingredient_id = i.id) AS used_by
+          WHERE di.ingredient_id = i.id) AS used_by,
+         (SELECT COUNT(*) FROM orders o
+          JOIN drink_ingredients di ON di.drink_id = o.drink_id
+          WHERE di.ingredient_id = i.id AND o.bar_id = i.bar_id) AS ordered
   FROM ingredients i
 `;
 
@@ -39,7 +50,7 @@ export default function createIngredientRoutes(db: Db): Router {
       requireBartenderForBar(res, barId);
 
       res.json(
-        all<Ingredient & { used_by: number }>(
+        all<IngredientWithUse>(
           db,
           `${WITH_USE_COUNT} WHERE i.bar_id = ? ORDER BY i.name COLLATE NOCASE`,
           barId

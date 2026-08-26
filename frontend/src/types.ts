@@ -10,6 +10,7 @@ export type {
   DrinkIngredient,
   Flag,
   Ingredient,
+  IngredientWithUse,
   Language,
   LiveUpdate,
   OperatorBar,

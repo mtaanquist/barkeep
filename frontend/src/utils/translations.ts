@@ -315,6 +315,11 @@ export interface TranslationMap {
   // Ingredients
   ingredients: string;
   ingredient: string;
+  shoppingList: string;
+  shoppingListHelp: string;
+  toBuy: string;
+  timesOrdered: string;
+  neverOrdered: string;
   ingredientsHelp: string;
   addIngredient: string;
   ingredientName: string;
@@ -564,6 +569,11 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     // Ingredients
     ingredients: "Ingredients",
     ingredient: "Ingredient",
+    shoppingList: "Shopping list",
+    shoppingListHelp: "What has run out, with what the bar misses most first.",
+    toBuy: "to buy",
+    timesOrdered: "ordered",
+    neverOrdered: "never ordered",
     ingredientsHelp:
       "Mark one out of stock and every drink that needs it leaves the menu.",
     addIngredient: "Add ingredient",
@@ -922,6 +932,11 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     // Ingredients
     ingredients: "Ingredienser",
     ingredient: "Ingrediens",
+    shoppingList: "Indkøbsliste",
+    shoppingListHelp: "Det, der er sluppet op, med det baren savner mest øverst.",
+    toBuy: "at købe",
+    timesOrdered: "bestilt",
+    neverOrdered: "aldrig bestilt",
     ingredientsHelp:
       "Marker en som udsolgt, og alle drinks, der bruger den, forsvinder fra menuen.",
     addIngredient: "Tilføj ingrediens",

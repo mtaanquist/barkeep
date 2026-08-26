@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 
@@ -17,10 +17,11 @@ import {
 
 const t = (key: TranslationKeys) => translations.en[key] as string;
 
-/** An ingredient as the bartender's screen gets it, with its use count. */
+/** An ingredient as the bartender's screen gets it, with how much rides on it. */
 const stocked = (extra: Record<string, unknown> = {}) => ({
   ...anIngredient(),
   used_by: 0,
+  ordered: 0,
   ...extra,
 });
 
@@ -115,6 +116,111 @@ describe("the ingredients screen", () => {
     showTab();
 
     expect(await screen.findByText(t("noIngredients"))).toBeInTheDocument();
+  });
+});
+
+describe("the shopping list", () => {
+  beforeEach(() => signIn({ as: "bartender" }));
+
+  const showing = (list: ReturnType<typeof stocked>[]) => {
+    api = fakeApi((path) =>
+      path.includes("/ingredients/bar/") ? list : undefined
+    );
+    return showTab();
+  };
+
+  // Nothing to buy is nothing to say.
+  it("stays away while the bar has everything", async () => {
+    showing([stocked({ id: 1, name: "Campari", in_stock: 1, used_by: 3 })]);
+
+    expect(await screen.findByText("Campari")).toBeInTheDocument();
+    expect(screen.queryByText(t("shoppingList"))).not.toBeInTheDocument();
+  });
+
+  it("lists only what has run out", async () => {
+    showing([
+      stocked({ id: 1, name: "Campari", in_stock: 0 }),
+      stocked({ id: 2, name: "Gin", in_stock: 1 }),
+    ]);
+
+    const list = (await screen.findByRole("heading", {
+      name: t("shoppingList"),
+    })).closest("section") as HTMLElement;
+
+    expect(within(list).getByText("Campari")).toBeInTheDocument();
+    expect(within(list).queryByText("Gin")).not.toBeInTheDocument();
+  });
+
+  // A bottle in six drinks nobody orders can wait; one in a single drink
+  // everybody asks for cannot.
+  it("puts what the bar misses most at the top", async () => {
+    showing([
+      stocked({ id: 1, name: "Absinthe", in_stock: 0, used_by: 6, ordered: 0 }),
+      stocked({ id: 2, name: "Gin", in_stock: 0, used_by: 1, ordered: 40 }),
+      stocked({ id: 3, name: "Campari", in_stock: 0, used_by: 3, ordered: 12 }),
+    ]);
+
+    const list = (await screen.findByRole("heading", {
+      name: t("shoppingList"),
+    })).closest("section") as HTMLElement;
+
+    expect(
+      within(list)
+        .getAllByRole("listitem")
+        .map((row) => row.textContent)
+    ).toEqual([
+      expect.stringMatching(/^Gin/),
+      expect.stringMatching(/^Campari/),
+      expect.stringMatching(/^Absinthe/),
+    ]);
+  });
+
+  it("falls back to what is held up when nothing has been ordered", async () => {
+    showing([
+      stocked({ id: 1, name: "Absinthe", in_stock: 0, used_by: 1, ordered: 0 }),
+      stocked({ id: 2, name: "Campari", in_stock: 0, used_by: 6, ordered: 0 }),
+    ]);
+
+    const list = (await screen.findByRole("heading", {
+      name: t("shoppingList"),
+    })).closest("section") as HTMLElement;
+
+    expect(
+      within(list)
+        .getAllByRole("listitem")
+        .map((row) => row.textContent)
+    ).toEqual([
+      expect.stringMatching(/^Campari/),
+      expect.stringMatching(/^Absinthe/),
+    ]);
+  });
+
+  it("says how much rides on each, and never an amount", async () => {
+    showing([
+      stocked({ id: 1, name: "Campari", in_stock: 0, used_by: 6, ordered: 12 }),
+    ]);
+
+    const list = (await screen.findByRole("heading", {
+      name: t("shoppingList"),
+    })).closest("section") as HTMLElement;
+
+    expect(
+      within(list).getByText(
+        `6 ${t("usedInDrinks")} · 12 ${t("timesOrdered")}`
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("says so plainly when nobody has ordered it yet", async () => {
+    showing([stocked({ id: 1, name: "Campari", in_stock: 0, used_by: 1 })]);
+
+    const list = (await screen.findByRole("heading", {
+      name: t("shoppingList"),
+    })).closest("section") as HTMLElement;
+
+    expect(
+      within(list).getByText(`${t("usedInOneDrink")} · ${t("neverOrdered")}`)
+    ).toBeInTheDocument();
   });
 });
 

@@ -54,6 +54,18 @@ export interface Ingredient {
   created_at: string;
 }
 
+/**
+ * An ingredient with how much rides on it. The bartender's screens ask for
+ * this rather than the bare row, because "should I go and buy more" is
+ * answered by what would go off the menu without it.
+ */
+export interface IngredientWithUse extends Ingredient {
+  /** How many drinks would leave the menu without it. */
+  used_by: number;
+  /** How many orders have ever been placed for drinks that need it. */
+  ordered: number;
+}
+
 /** One line of a drink's recipe: what goes in, and how much. */
 export interface DrinkIngredient {
   ingredient_id: number;

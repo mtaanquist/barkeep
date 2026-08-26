@@ -1,23 +1,19 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useApp } from "../../hooks/useApp";
-import type { Ingredient } from "../../types";
+import type { IngredientWithUse } from "../../types";
 import { translations, useTranslation } from "../../utils/translations";
 import StockSwitch from "./StockSwitch";
+import ShoppingList from "./ShoppingList";
 
 type T = (key: keyof typeof translations.en) => string;
-
-/** An ingredient, with how many drinks would go without it. */
-interface Stocked extends Ingredient {
-  used_by: number;
-}
 
 const INPUT =
   "h-14 px-3.5 rounded-md border border-border bg-surface-raised text-body focus:outline-none focus:border-border-strong focus:shadow-focus";
 
 /** The row while it is being renamed. */
 const Rename: React.FC<{
-  ingredient: Stocked;
+  ingredient: IngredientWithUse;
   onSave: (name: string) => void;
   onCancel: () => void;
   loading: boolean;
@@ -71,7 +67,7 @@ const IngredientsTab: React.FC = () => {
 
   const t: T = useTranslation(language);
 
-  const [ingredients, setIngredients] = useState<Stocked[]>([]);
+  const [ingredients, setIngredients] = useState<IngredientWithUse[]>([]);
   const [renaming, setRenaming] = useState<number | null>(null);
   const [adding, setAdding] = useState("");
 
@@ -80,7 +76,9 @@ const IngredientsTab: React.FC = () => {
   const fetchIngredients = useCallback(async () => {
     if (!barId) return;
     try {
-      setIngredients(await apiCall<Stocked[]>(`/ingredients/bar/${barId}`));
+      setIngredients(
+        await apiCall<IngredientWithUse[]>(`/ingredients/bar/${barId}`)
+      );
     } catch (err) {
       console.error("Could not load the ingredients:", err);
     }
@@ -122,7 +120,7 @@ const IngredientsTab: React.FC = () => {
     if (added) setAdding("");
   };
 
-  const handleRename = async (ingredient: Stocked, name: string) => {
+  const handleRename = async (ingredient: IngredientWithUse, name: string) => {
     const renamed = await change(
       () =>
         apiCall(`/ingredients/${ingredient.id}`, {
@@ -135,7 +133,7 @@ const IngredientsTab: React.FC = () => {
     if (renamed) setRenaming(null);
   };
 
-  const toggleStock = (ingredient: Stocked) =>
+  const toggleStock = (ingredient: IngredientWithUse) =>
     change(
       () =>
         apiCall(`/ingredients/${ingredient.id}/stock`, {
@@ -145,7 +143,7 @@ const IngredientsTab: React.FC = () => {
       "Failed to toggle stock"
     );
 
-  const handleDelete = (ingredient: Stocked) => {
+  const handleDelete = (ingredient: IngredientWithUse) => {
     if (!confirm(t("confirmDeleteIngredient"))) return;
 
     return change(
@@ -169,6 +167,8 @@ const IngredientsTab: React.FC = () => {
           {outOfStock > 0 && ` · ${outOfStock} ${t("outOfStock")}`}
         </p>
       </div>
+
+      <ShoppingList ingredients={ingredients} t={t} />
 
       <form
         onSubmit={handleAdd}
