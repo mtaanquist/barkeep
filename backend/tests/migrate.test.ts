@@ -41,7 +41,16 @@ describe("migrations", () => {
     runMigrations(db);
 
     expect(appliedNames(db)).toEqual(allMigrations);
-    for (const table of ["bars", "drinks", "orders", "categories", "user_favourites"]) {
+    for (const table of [
+      "bars",
+      "drinks",
+      "orders",
+      "categories",
+      "user_favourites",
+      "ingredients",
+      "drink_ingredients",
+      "setup_steps",
+    ]) {
       expect(columnsOf(db, table).length).toBeGreaterThan(0);
     }
   });
