@@ -33,6 +33,15 @@ import {
   type Db,
 } from "../db/queries.js";
 import {
+  AVAILABLE,
+  ingredientLinesIn,
+  ingredientsByDrink,
+  ingredientsOf,
+  setDrinkIngredients,
+  withIngredients,
+} from "../db/drinkIngredients.js";
+import { liveUpdates } from "../realtime.js";
+import {
   requireBarMember,
   requireBartender,
   requireBartenderForBar,
@@ -50,7 +59,7 @@ import {
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 const WITH_CATEGORY = `
-  SELECT d.*, c.name AS category_name
+  SELECT d.*, c.name AS category_name, ${AVAILABLE}
   FROM drinks d
   LEFT JOIN categories c ON d.category_id = c.id
 `;
@@ -137,6 +146,37 @@ export default function createDrinkRoutes({
       : null;
   }
 
+  /**
+   * One drink in the shape the bartender's list sends, so a form saving a
+   * drink gets back the same thing it would have read from the menu.
+   */
+  function bartenderDrink(drinkId: number, barId: number): DrinkWithCategory {
+    findDrink(db, drinkId, barId);
+
+    const drink = all<DrinkWithCategory>(
+      db,
+      `${WITH_CATEGORY} WHERE d.id = ? AND d.bar_id = ?`,
+      drinkId,
+      barId
+    )[0] as DrinkWithCategory;
+
+    const ingredients = ingredientsOf(db, drinkId);
+
+    return {
+      ...drink,
+      ingredient_names: ingredients.map((i) => i.name),
+      ingredients,
+      missing_ingredients: ingredients
+        .filter((i) => i.in_stock === 0)
+        .map((i) => i.name),
+    };
+  }
+
+  /** Nothing about the menu names a guest, so everyone watching is told. */
+  const menuChanged = (req: express.Request, barId: number): void => {
+    liveUpdates(req)?.announce(barId, { type: "menu_changed" });
+  };
+
   /** Turns whichever fields were sent into the columns they belong to. */
   function changedColumns(body: unknown): Record<string, unknown> {
     const sent = <T>(field: string, convert: (value: unknown) => T) =>
@@ -165,10 +205,14 @@ export default function createDrinkRoutes({
       const barId = idParam(req, "barId");
       requireBartenderForBar(res, barId);
       res.json(
-        all<DrinkWithCategory>(
-          db,
-          `${WITH_CATEGORY} WHERE d.bar_id = ? ORDER BY d.created_at DESC`,
-          barId
+        withIngredients(
+          all<DrinkWithCategory>(
+            db,
+            `${WITH_CATEGORY} WHERE d.bar_id = ? ORDER BY d.created_at DESC`,
+            barId
+          ),
+          ingredientsByDrink(db, barId),
+          { forBartender: true }
         )
       );
     })
@@ -181,10 +225,14 @@ export default function createDrinkRoutes({
       requireBarMember(res, barId);
       res.json(
         asGuestSees(
-          all<DrinkWithCategory>(
-            db,
-            `${WITH_CATEGORY} WHERE d.bar_id = ? ORDER BY d.created_at DESC`,
-            barId
+          withIngredients(
+            all<DrinkWithCategory>(
+              db,
+              `${WITH_CATEGORY} WHERE d.bar_id = ? ORDER BY d.created_at DESC`,
+              barId
+            ),
+            ingredientsByDrink(db, barId),
+            { forBartender: false }
           )
         )
       );
@@ -196,7 +244,7 @@ export default function createDrinkRoutes({
     route((req, res) => {
       const barId = idParam(req, "barId");
       requireBartenderForBar(res, barId);
-      res.json(findDrink(db, idParam(req, "drinkId"), barId));
+      res.json(bartenderDrink(idParam(req, "drinkId"), barId));
     })
   );
 
@@ -293,7 +341,14 @@ export default function createDrinkRoutes({
         Number(body["imageCropZoom"] ?? 1)
       );
 
-      res.status(201).json(findDrink(db, Number(lastInsertRowid), barId));
+      const drinkId = Number(lastInsertRowid);
+
+      const lines = ingredientLinesIn(req.body);
+      if (lines) setDrinkIngredients(db, barId, drinkId, lines);
+
+      menuChanged(req, barId);
+
+      res.status(201).json(bartenderDrink(drinkId, barId));
     })
   );
 
@@ -322,29 +377,45 @@ export default function createDrinkRoutes({
         changes["image_url"] = existing.image_url;
       }
 
-      const { clause, values } = buildUpdate(changes);
+      const lines = ingredientLinesIn(req.body);
 
-      // The photo being replaced is no longer needed.
-      const nextPhoto = changes["image_url"];
-      if (
-        nextPhoto !== undefined &&
-        existing.image_url &&
-        existing.image_url !== nextPhoto
-      ) {
-        deletePhotoIfUnused({ db, uploadsDir }, existing.image_url, {
-          exceptDrinkId: drinkId,
-        });
-      }
-
-      run(
-        db,
-        `UPDATE drinks SET ${clause} WHERE id = ? AND bar_id = ?`,
-        ...values,
-        drinkId,
-        barId
+      // A save that only changes what a drink is made of touches no column, and
+      // buildUpdate refuses an empty change rather than write nothing.
+      const changedAnyColumn = Object.values(changes).some(
+        (value) => value !== undefined
       );
 
-      res.json(findDrink(db, drinkId, barId));
+      if (!changedAnyColumn && !lines) buildUpdate(changes);
+
+      if (changedAnyColumn) {
+        const { clause, values } = buildUpdate(changes);
+
+        // The photo being replaced is no longer needed.
+        const nextPhoto = changes["image_url"];
+        if (
+          nextPhoto !== undefined &&
+          existing.image_url &&
+          existing.image_url !== nextPhoto
+        ) {
+          deletePhotoIfUnused({ db, uploadsDir }, existing.image_url, {
+            exceptDrinkId: drinkId,
+          });
+        }
+
+        run(
+          db,
+          `UPDATE drinks SET ${clause} WHERE id = ? AND bar_id = ?`,
+          ...values,
+          drinkId,
+          barId
+        );
+      }
+
+      if (lines) setDrinkIngredients(db, barId, drinkId, lines);
+
+      menuChanged(req, barId);
+
+      res.json(bartenderDrink(drinkId, barId));
     })
   );
 
@@ -364,7 +435,9 @@ export default function createDrinkRoutes({
         barId
       );
 
-      res.json(findDrink(db, drinkId, barId));
+      menuChanged(req, barId);
+
+      res.json(bartenderDrink(drinkId, barId));
     })
   );
 
@@ -381,6 +454,8 @@ export default function createDrinkRoutes({
       });
 
       run(db, "DELETE FROM drinks WHERE id = ? AND bar_id = ?", drinkId, barId);
+
+      menuChanged(req, barId);
 
       res.json({ success: true, message: "Drink deleted successfully" });
     })
@@ -407,7 +482,9 @@ export default function createDrinkRoutes({
         ),
         inStockDrinks: count(
           db,
-          "SELECT COUNT(*) AS n FROM drinks WHERE bar_id = ? AND in_stock = 1",
+          `SELECT COUNT(*) AS n FROM (
+             SELECT ${AVAILABLE} FROM drinks d WHERE d.bar_id = ?
+           ) WHERE available = 1`,
           barId
         ),
       } satisfies DrinkAnalytics;
@@ -425,17 +502,21 @@ export default function createDrinkRoutes({
 
       res.json(
         asGuestSees(
-          all<DrinkForGuest & { favourited_at: string }>(
-            db,
-            `SELECT d.*, c.name AS category_name,
-                    uf.created_at AS favourited_at, 1 AS is_favourite
-             FROM drinks d
-             LEFT JOIN categories c ON d.category_id = c.id
-             INNER JOIN user_favourites uf ON d.id = uf.drink_id
-             WHERE uf.bar_id = ? AND uf.customer_name = ? AND d.in_stock = 1
-             ORDER BY uf.created_at DESC`,
-            barId,
-            customerName
+          withIngredients(
+            all<DrinkForGuest & { favourited_at: string }>(
+              db,
+              `SELECT d.*, c.name AS category_name, ${AVAILABLE},
+                      uf.created_at AS favourited_at, 1 AS is_favourite
+               FROM drinks d
+               LEFT JOIN categories c ON d.category_id = c.id
+               INNER JOIN user_favourites uf ON d.id = uf.drink_id
+               WHERE uf.bar_id = ? AND uf.customer_name = ?
+               ORDER BY uf.created_at DESC`,
+              barId,
+              customerName
+            ).filter((drink) => drink.available === 1),
+            ingredientsByDrink(db, barId),
+            { forBartender: false }
           )
         )
       );
@@ -499,18 +580,22 @@ export default function createDrinkRoutes({
 
       res.json(
         asGuestSees(
-          all<DrinkForGuest>(
-            db,
-            `SELECT d.*, c.name AS category_name,
-                    CASE WHEN uf.drink_id IS NOT NULL THEN 1 ELSE 0 END AS is_favourite
-             FROM drinks d
-             LEFT JOIN categories c ON d.category_id = c.id
-             LEFT JOIN user_favourites uf
-               ON d.id = uf.drink_id AND uf.bar_id = d.bar_id AND uf.customer_name = ?
-             WHERE d.bar_id = ?
-             ORDER BY d.created_at DESC`,
-            customerName,
-            barId
+          withIngredients(
+            all<DrinkForGuest>(
+              db,
+              `SELECT d.*, c.name AS category_name, ${AVAILABLE},
+                      CASE WHEN uf.drink_id IS NOT NULL THEN 1 ELSE 0 END AS is_favourite
+               FROM drinks d
+               LEFT JOIN categories c ON d.category_id = c.id
+               LEFT JOIN user_favourites uf
+                 ON d.id = uf.drink_id AND uf.bar_id = d.bar_id AND uf.customer_name = ?
+               WHERE d.bar_id = ?
+               ORDER BY d.created_at DESC`,
+              customerName,
+              barId
+            ),
+            ingredientsByDrink(db, barId),
+            { forBartender: false }
           )
         )
       );

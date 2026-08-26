@@ -23,6 +23,7 @@ import {
   run,
   type Db,
 } from "../db/queries.js";
+import { drinkIsAvailable } from "../db/drinkIngredients.js";
 import {
   requireBarMember,
   requireBartender,
@@ -170,7 +171,9 @@ export default function createOrderRoutes(db: Db): Router {
         throw HttpError.badRequest("The bar has stopped taking orders", "orders_closed");
       }
 
-      if (!drink.in_stock) {
+      // Switched off by the bartender, or something it needs has run out —
+      // either way it cannot be made tonight.
+      if (!drinkIsAvailable(db, drinkId)) {
         throw HttpError.badRequest("Drink is currently out of stock", "drink_out_of_stock");
       }
 

@@ -1,5 +1,11 @@
 import type DatabaseType from "better-sqlite3";
-import type { Bar, Category, Drink, Order } from "../../../shared/types.js";
+import type {
+  Bar,
+  Category,
+  Drink,
+  Ingredient,
+  Order,
+} from "../../../shared/types.js";
 import { HttpError } from "../http.js";
 
 export type Db = DatabaseType.Database;
@@ -121,6 +127,21 @@ export function findOrder(db: Db, orderId: number, barId: number): Order {
   );
   if (!order) throw HttpError.notFound("Order not found");
   return order;
+}
+
+export function findIngredient(
+  db: Db,
+  ingredientId: number,
+  barId: number
+): Ingredient {
+  const ingredient = one<Ingredient>(
+    db,
+    "SELECT * FROM ingredients WHERE id = ? AND bar_id = ?",
+    ingredientId,
+    barId
+  );
+  if (!ingredient) throw HttpError.notFound("Ingredient not found");
+  return ingredient;
 }
 
 export function findCategory(

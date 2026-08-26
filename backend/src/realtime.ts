@@ -38,6 +38,12 @@ export interface Realtime {
    * required so a new kind of update can't quietly go out to the whole room.
    */
   broadcast(barId: number | string, data: Update, customerName: string): void;
+  /**
+   * To everyone watching this bar, guests included. Only for updates that say
+   * nothing about any one person — "the menu moved, look again" names nobody,
+   * which is why it does not have to.
+   */
+  announce(barId: number | string, data: Update): void;
   closeAll(): void;
   readonly listenerCount: number;
 }
@@ -100,10 +106,15 @@ export function createRealtime(): Realtime {
     req.on("error", drop);
   }
 
-  function broadcast(
+  /**
+   * Writes to everyone watching this bar. `onlyFor` names the guest an update
+   * is about; leave it out and every listener gets it, which is only right for
+   * an update that is about nobody.
+   */
+  function send(
     barId: number | string,
     data: Update,
-    customerName: string
+    onlyFor?: string
   ): void {
     const wanted = Number(barId);
     const payload = `data: ${JSON.stringify({
@@ -116,7 +127,13 @@ export function createRealtime(): Realtime {
       // An order carries the name of whoever ordered it, so a guest is only
       // sent their own. Otherwise every browser in the room would get a list
       // of who is here and what they are drinking.
-      if (client.role === "guest" && client.name !== customerName) continue;
+      if (
+        onlyFor !== undefined &&
+        client.role === "guest" &&
+        client.name !== onlyFor
+      ) {
+        continue;
+      }
       try {
         client.res.write(payload);
         flush(client.res);
@@ -124,6 +141,18 @@ export function createRealtime(): Realtime {
         clients.delete(client);
       }
     }
+  }
+
+  function broadcast(
+    barId: number | string,
+    data: Update,
+    customerName: string
+  ): void {
+    send(barId, data, customerName);
+  }
+
+  function announce(barId: number | string, data: Update): void {
+    send(barId, data);
   }
 
   function closeAll(): void {
@@ -140,6 +169,7 @@ export function createRealtime(): Realtime {
   return {
     subscribe,
     broadcast,
+    announce,
     closeAll,
     get listenerCount() {
       return clients.size;

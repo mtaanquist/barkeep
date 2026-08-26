@@ -46,6 +46,7 @@ import {
   type BarRow,
   type Db,
 } from "../db/queries.js";
+import { AVAILABLE } from "../db/drinkIngredients.js";
 
 const LANGUAGES: readonly Language[] = ["en", "da"];
 
@@ -278,7 +279,9 @@ export default function createBarRoutes({
           ),
           inStockDrinks: count(
             db,
-            "SELECT COUNT(*) AS n FROM drinks WHERE bar_id = ? AND in_stock = 1",
+            `SELECT COUNT(*) AS n FROM (
+               SELECT ${AVAILABLE} FROM drinks d WHERE d.bar_id = ?
+             ) WHERE available = 1`,
             barId
           ),
           totalOrders: count(
