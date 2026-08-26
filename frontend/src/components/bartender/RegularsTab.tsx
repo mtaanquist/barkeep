@@ -5,7 +5,7 @@ import { useTranslation } from "../../utils/translations";
 import { ApiError } from "../../utils/api";
 
 const INPUT =
-  "h-12 px-3.5 rounded-md border border-border bg-surface-raised text-body focus:outline-none focus:border-border-strong focus:shadow-focus";
+  "h-14 px-3.5 rounded-md border border-border bg-surface-raised text-body focus:outline-none focus:border-border-strong focus:shadow-focus";
 
 // Mirrors the server's minimum, so the button doesn't invite a password the
 // server will only reject.
@@ -46,7 +46,11 @@ const RegularsTab: React.FC = () => {
   }, [refresh]);
 
   const open = (regular: Regular, mode: Edit["mode"]) => {
-    setEdit({ id: regular.id, mode, value: mode === "rename" ? regular.name : "" });
+    setEdit({
+      id: regular.id,
+      mode,
+      value: mode === "rename" ? regular.name : "",
+    });
     setError(null);
     setDoneId(null);
   };
@@ -102,40 +106,67 @@ const RegularsTab: React.FC = () => {
 
   const editing = (regular: Regular) => edit?.id === regular.id;
 
-  return (
-    <div className="max-w-160">
-      <div className="bg-surface border border-border rounded-md overflow-hidden">
-        <div className="px-5 py-4 border-b border-border">
-          <h2 className="text-heading">{t("regulars")}</h2>
-          <p className="text-body text-text-muted mt-1">{t("regularsIntro")}</p>
-        </div>
+  const sinceDate = (regular: Regular) =>
+    new Date(regular.created_at).toLocaleDateString();
 
-        <div className="px-5 py-4.5 flex flex-col gap-2.5">
-          {loading ? (
-            <p className="text-body text-text-muted">{t("loading")}</p>
-          ) : regulars.length === 0 ? (
-            <p className="text-body text-text-muted">{t("noRegulars")}</p>
-          ) : (
-            regulars.map((regular) => (
-              <div
+  // On a phone there is no column header to say what the date is.
+  const since = (regular: Regular) =>
+    `${t("regularSince")} ${sinceDate(regular)}`;
+
+  // Laid out like the drinks and ingredients lists, so the three read alike.
+  return (
+    <div className="bg-surface border border-border rounded-md overflow-hidden">
+      <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 px-5 py-4 border-b border-border">
+        <h2 className="text-display">{t("regulars")}</h2>
+        {!loading && regulars.length > 0 && (
+          <p className="font-mono text-caption uppercase text-text-muted">
+            {regulars.length} {t("inTotal")}
+          </p>
+        )}
+        <p className="basis-full text-body text-text-muted">
+          {t("regularsIntro")}
+        </p>
+      </div>
+
+      {loading ? (
+        <p className="px-5 py-10 text-center text-body text-text-muted">
+          {t("loading")}
+        </p>
+      ) : regulars.length === 0 ? (
+        <p className="px-5 py-10 text-center text-body text-text-muted">
+          {t("noRegulars")}
+        </p>
+      ) : (
+        <>
+          <div className="hidden lg:flex items-center gap-4 px-5 py-2.5 border-b border-border bg-surface-sunken font-mono text-caption text-text-muted">
+            <span className="flex-1 uppercase">{t("ingredientName")}</span>
+            <span className="w-38 shrink-0 uppercase">{t("regularSince")}</span>
+            <span className="w-72 shrink-0" />
+          </div>
+
+          <ul>
+            {regulars.map((regular) => (
+              <li
                 key={regular.id}
-                className="p-3 rounded-md border border-border flex flex-col gap-2"
+                className="flex flex-wrap items-center gap-4 px-4 lg:px-5 py-3 border-b border-border last:border-b-0 transition-colors duration-(--duration-instant) hover:bg-surface-sunken"
               >
-                <div className="flex items-center gap-3">
-                  {editing(regular) ? (
-                    <>
+                {editing(regular) ? (
+                  <div className="flex-1 min-w-0 flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center gap-3">
                       <input
                         type={edit?.mode === "password" ? "password" : "text"}
                         value={edit?.value ?? ""}
                         placeholder={
-                          edit?.mode === "password" ? t("newPassword") : undefined
+                          edit?.mode === "password"
+                            ? t("newPassword")
+                            : undefined
                         }
                         onChange={(e) =>
                           setEdit((prev) =>
                             prev ? { ...prev, value: e.target.value } : prev
                           )
                         }
-                        className={`${INPUT} flex-1 min-w-0`}
+                        className={`${INPUT} flex-1 min-w-40`}
                         autoFocus
                         onKeyDown={(e) => e.key === "Enter" && save(regular)}
                       />
@@ -143,7 +174,7 @@ const RegularsTab: React.FC = () => {
                         type="button"
                         onClick={() => save(regular)}
                         disabled={busy || !canSave(regular)}
-                        className="h-12 px-3.5 shrink-0 rounded-md bg-text text-text-inverse text-label transition-colors hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="h-14 px-5 shrink-0 rounded-md bg-text text-text-inverse text-label transition-colors duration-(--duration-instant) hover:bg-neutral-800 disabled:bg-disabled-bg disabled:text-disabled-fg disabled:cursor-not-allowed cursor-pointer"
                       >
                         {edit?.mode === "password"
                           ? t("setGuestPassword")
@@ -152,56 +183,62 @@ const RegularsTab: React.FC = () => {
                       <button
                         type="button"
                         onClick={cancel}
-                        className="h-12 px-3.5 shrink-0 rounded-md border border-border text-label text-text-muted transition-colors hover:text-text cursor-pointer"
+                        className="h-14 px-4 shrink-0 rounded-md text-label text-text-muted transition-colors duration-(--duration-instant) hover:text-text cursor-pointer"
                       >
                         {t("cancel")}
                       </button>
-                    </>
-                  ) : (
-                    <>
-                      <span className="flex-1 min-w-0 flex flex-col gap-0.5">
-                        <span className="font-bold text-[1.0625rem] leading-tight tracking-tight truncate">
-                          {regular.name}
-                        </span>
-                        <span className="text-body text-text-muted truncate">
-                          {doneId === regular.id
-                            ? t("guestPasswordSet")
-                            : `${t("regularSince")} ${new Date(
-                                regular.created_at
-                              ).toLocaleDateString()}`}
-                        </span>
+                    </div>
+
+                    {/* Why to reset it, shown only while setting one. */}
+                    {edit?.mode === "password" && (
+                      <p className="text-body text-text-muted">
+                        {t("setGuestPasswordHelp")}
+                      </p>
+                    )}
+                    {error && <p className="text-body text-danger">{error}</p>}
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                      <span className="text-heading truncate">
+                        {regular.name}
                       </span>
+                      <span className="text-body text-text-muted truncate">
+                        {doneId === regular.id ? (
+                          t("guestPasswordSet")
+                        ) : (
+                          <span className="lg:hidden">{since(regular)}</span>
+                        )}
+                      </span>
+                    </div>
+
+                    <span className="hidden lg:block w-38 shrink-0 text-body text-text-muted truncate">
+                      {sinceDate(regular)}
+                    </span>
+
+                    <span className="flex gap-2.5 shrink-0 lg:w-72 lg:justify-end">
                       <button
                         type="button"
                         onClick={() => open(regular, "rename")}
-                        className="h-12 px-3.5 shrink-0 rounded-md border border-border-strong text-label transition-colors hover:bg-surface-sunken cursor-pointer"
+                        className="h-14 px-4 rounded-md border border-border bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
                       >
                         {t("rename")}
                       </button>
                       <button
                         type="button"
                         onClick={() => open(regular, "password")}
-                        className="h-12 px-3.5 shrink-0 rounded-md border border-border-strong text-label transition-colors hover:bg-surface-sunken cursor-pointer"
+                        className="h-14 px-4 rounded-md border border-border bg-surface-raised text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
                       >
                         {t("setGuestPassword")}
                       </button>
-                    </>
-                  )}
-                </div>
-
-                {/* Why to reset it, shown only while setting one. */}
-                {editing(regular) && edit?.mode === "password" && (
-                  <p className="text-body text-text-muted">
-                    {t("setGuestPasswordHelp")}
-                  </p>
+                    </span>
+                  </>
                 )}
-              </div>
-            ))
-          )}
-
-          {error && <p className="text-body text-danger">{error}</p>}
-        </div>
-      </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 };
