@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2, RotateCcw } from "lucide-react";
+import { Trash2, RotateCcw, Download } from "lucide-react";
 
 import { useApp } from "../../hooks/useApp";
 import { useTranslation } from "../../utils/translations";
@@ -12,6 +12,8 @@ const DANGER =
   "h-12 px-4 rounded-md bg-danger text-danger-contrast text-label transition-colors duration-(--duration-instant) hover:bg-danger-hover disabled:bg-disabled-bg disabled:text-disabled-fg disabled:cursor-not-allowed cursor-pointer";
 const INPUT =
   "h-14 px-3.5 rounded-md border border-border bg-surface-raised text-body focus:outline-none focus:border-border-strong focus:shadow-focus";
+const SECONDARY =
+  "h-12 px-4 flex items-center gap-1.5 rounded-md border border-border text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken disabled:text-disabled-fg disabled:cursor-not-allowed cursor-pointer";
 
 /** SQLite keeps times as "YYYY-MM-DD HH:MM:SS" in UTC; show just the day. */
 const asDay = (value: string | null): string | null =>
@@ -30,6 +32,10 @@ const OperatorPanel: React.FC = () => {
   const [bars, setBars] = useState<OperatorBar[]>([]);
   const [loadError, setLoadError] = useState(false);
   const [confirming, setConfirming] = useState<OperatorBar | null>(null);
+
+  const [withPhotos, setWithPhotos] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
 
   const loadBars = useCallback(async () => {
     try {
@@ -90,6 +96,33 @@ const OperatorPanel: React.FC = () => {
       await loadBars();
     } finally {
       setBusy(false);
+    }
+  };
+
+  // The download is a file, not JSON, so it cannot go through apiCall. Saving
+  // it is the same trick the QR code uses: a link nobody sees, clicked for you.
+  const download = async () => {
+    setExporting(true);
+    setExportError(false);
+    try {
+      const response = await fetch(
+        `/api/operator/export${withPhotos ? "?uploads=1" : ""}`,
+        { credentials: "include" }
+      );
+      if (!response.ok) throw new Error("Export failed");
+
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = nameFromReply(response) ?? "barkeep-export.zip";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportError(true);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -216,7 +249,7 @@ const OperatorPanel: React.FC = () => {
                         type="button"
                         onClick={() => restore(bar)}
                         disabled={busy}
-                        className="h-12 px-4 shrink-0 flex items-center gap-1.5 rounded-md border border-border text-label transition-colors duration-(--duration-instant) hover:bg-surface-sunken disabled:cursor-not-allowed cursor-pointer"
+                        className={`${SECONDARY} shrink-0`}
                       >
                         <RotateCcw className="w-4 h-4" />
                         {t("operatorRestore")}
@@ -237,6 +270,46 @@ const OperatorPanel: React.FC = () => {
             </ul>
           </div>
         )}
+
+        <div className="bg-surface border border-border rounded-md overflow-hidden">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="text-heading">{t("operatorExportTitle")}</h2>
+          </div>
+
+          <div className="px-5 py-4 space-y-4">
+            <p className="text-body text-text-muted max-w-[60ch]">
+              {t("operatorExportBody")}
+            </p>
+
+            <label className="flex items-center gap-2.5 text-body cursor-pointer w-fit">
+              <input
+                type="checkbox"
+                checked={withPhotos}
+                onChange={(e) => setWithPhotos(e.target.checked)}
+                className="w-4.5 h-4.5 accent-text cursor-pointer"
+              />
+              {t("operatorExportPhotos")}
+            </label>
+
+            <button
+              type="button"
+              onClick={download}
+              disabled={exporting}
+              className={SECONDARY}
+            >
+              <Download className="w-4 h-4" />
+              {exporting ? t("operatorExportBusy") : t("operatorExportButton")}
+            </button>
+
+            {exportError && (
+              <p className="text-body text-danger">{t("operatorExportError")}</p>
+            )}
+
+            <p className="text-caption text-text-muted max-w-[60ch]">
+              {t("operatorExportWarning")}
+            </p>
+          </div>
+        </div>
       </div>
 
       {confirming && (
@@ -250,6 +323,14 @@ const OperatorPanel: React.FC = () => {
     </div>
   );
 };
+
+/** The name the server picked, when the browser is allowed to read it. */
+function nameFromReply(response: Response): string | null {
+  const match = /filename="([^"]+)"/.exec(
+    response.headers.get("Content-Disposition") ?? ""
+  );
+  return match?.[1] ?? null;
+}
 
 interface ConfirmRemovalProps {
   bar: OperatorBar;

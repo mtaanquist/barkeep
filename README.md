@@ -141,6 +141,13 @@ Retiring a bar can be undone: it disappears for guests and bartenders straight
 away but can be restored, and is removed for good after
 `SOFT_DELETE_RETENTION_DAYS` (60 days by default).
 
+The panel will also hand you a copy of everything as one zip file — the
+database, and the drink photos if you tick the box. Unpack it over a checkout's
+`data/` and `uploads/` and you have the real bar to try a change against before
+it reaches the real thing. The file holds guests' names and their scrambled
+passwords, so keep it somewhere safe and delete it when you are done. The key
+that signs sign-in cookies is never in it.
+
 ### If a code is lost
 
 Recovering a password does not need a screen — it needs the machine. From the

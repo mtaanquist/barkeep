@@ -286,6 +286,13 @@ export interface TranslationMap {
   operatorRestore: string;
   operatorRetiredTag: string;
   operatorRemovedOnPrefix: string;
+  operatorExportTitle: string;
+  operatorExportBody: string;
+  operatorExportPhotos: string;
+  operatorExportButton: string;
+  operatorExportBusy: string;
+  operatorExportWarning: string;
+  operatorExportError: string;
   operatorConfirmTitle: string;
   operatorConfirmBody: string;
   operatorConfirmButton: string;
@@ -684,6 +691,15 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     operatorConfirmButton: "Remove bar",
     operatorNoBars: "No bars on this server yet.",
     operatorLoadError: "Could not load the bars.",
+    operatorExportTitle: "Download a copy",
+    operatorExportBody:
+      "Takes a copy of everything on this server as one file, so a change can be tried out somewhere else first.",
+    operatorExportPhotos: "Include the drink photos",
+    operatorExportButton: "Download",
+    operatorExportBusy: "Getting it ready…",
+    operatorExportWarning:
+      "The file holds guests' names and their scrambled passwords. Keep it somewhere safe and delete it when you are done with it.",
+    operatorExportError: "The copy could not be made. Please try again.",
 
     // What went wrong, in the bar's language
     errorOrdersClosed: "The bar has stopped taking orders",
@@ -1048,6 +1064,15 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     operatorConfirmButton: "Fjern bar",
     operatorNoBars: "Ingen barer på denne server endnu.",
     operatorLoadError: "Kunne ikke hente barerne.",
+    operatorExportTitle: "Hent en kopi",
+    operatorExportBody:
+      "Tager en kopi af alt på denne server som én fil, så en ændring kan prøves af et andet sted først.",
+    operatorExportPhotos: "Tag drinkbillederne med",
+    operatorExportButton: "Hent",
+    operatorExportBusy: "Gør den klar…",
+    operatorExportWarning:
+      "Filen indeholder gæsternes navne og deres krypterede adgangskoder. Gem den et sikkert sted, og slet den når du er færdig med den.",
+    operatorExportError: "Kopien kunne ikke laves. Prøv igen.",
 
     // What went wrong, in the bar's language
     errorOrdersClosed: "Baren tager ikke længere imod bestillinger",
