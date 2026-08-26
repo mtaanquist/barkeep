@@ -195,7 +195,10 @@ export function createApp({
   app.use("/api/orders", createOrderRoutes(db));
   app.use("/api/auth", createAuthRoutes(db));
   app.use("/api/categories", createCategoryRoutes(db));
-  app.use("/api/operator", createOperatorRoutes({ db, operatorPassword }));
+  app.use(
+    "/api/operator",
+    createOperatorRoutes({ db, operatorPassword, uploadsDir })
+  );
 
   // Must come before the catch-all below, or unknown addresses under /api
   // would answer with a web page instead of an error.

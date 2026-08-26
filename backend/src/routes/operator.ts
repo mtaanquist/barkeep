@@ -9,6 +9,7 @@ import {
   route,
 } from "../http.js";
 import { all, one, run, type Db } from "../db/queries.js";
+import { streamExport } from "../export.js";
 import { requireOperator } from "../auth/middleware.js";
 import {
   clearOperatorCookie,
@@ -21,11 +22,14 @@ interface OperatorRoutesOptions {
   db: Db;
   /** Left undefined when no OPERATOR_PASSWORD is set, which switches the panel off. */
   operatorPassword?: string | undefined;
+  /** Where the drink photos are, for the download. */
+  uploadsDir: string;
 }
 
 export default function createOperatorRoutes({
   db,
   operatorPassword,
+  uploadsDir,
 }: OperatorRoutesOptions): Router {
   const router = express.Router();
 
@@ -138,6 +142,20 @@ export default function createOperatorRoutes({
       run(db, "UPDATE bars SET deleted_at = NULL WHERE id = ?", barId);
 
       res.json({ success: true });
+    })
+  );
+
+  // A copy of everything, for trying a change out on your own machine first.
+  // Photos are asked for, since they are most of the size.
+  router.get(
+    "/export",
+    route(async (req, res) => {
+      requireOperator(req);
+
+      await streamExport(
+        { db, uploadsDir, includeUploads: req.query["uploads"] === "1" },
+        res
+      );
     })
   );
 
