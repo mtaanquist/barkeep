@@ -75,16 +75,18 @@ export function useGuestMenu() {
     refreshOrders();
   }, [refreshDrinks, refreshFavourites, refreshOrders]);
 
-  const inStock = useMemo(() => drinks.filter((d) => d.in_stock), [drinks]);
+  // Not the bartender's own switch: a drink is on the menu when that is on
+  // *and* nothing it is made of has run out.
+  const available = useMemo(() => drinks.filter((d) => d.available), [drinks]);
 
   const bySpirit = useMemo(
-    () => groupBy(inStock, (d) => d.base_spirit || "Other"),
-    [inStock]
+    () => groupBy(available, (d) => d.base_spirit || "Other"),
+    [available]
   );
 
   const byCategory = useMemo(
-    () => groupBy(inStock, (d) => d.category_name || "Uncategorized"),
-    [inStock]
+    () => groupBy(available, (d) => d.category_name || "Uncategorized"),
+    [available]
   );
 
   const spirits = BASE_SPIRITS.filter((s) => bySpirit[s]?.length);
@@ -99,7 +101,7 @@ export function useGuestMenu() {
         : [];
 
   return {
-    inStock,
+    available,
     favourites,
     bySpirit,
     byCategory,

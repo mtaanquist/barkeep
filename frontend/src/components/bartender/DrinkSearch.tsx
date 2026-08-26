@@ -4,26 +4,10 @@ import { useApp } from "../../hooks/useApp";
 import { useCloseOnEscape } from "../../hooks/useCloseOnEscape";
 import type { Drink } from "../../types";
 import { useTranslation } from "../../utils/translations";
+import { loosely } from "../../utils/matching";
 
 /** How many matches are worth showing before the list stops being a shortcut. */
 const MOST_SHOWN = 8;
-
-/**
- * Case and accents are not how anyone remembers a drink's name, so neither
- * gets in the way of finding it: "creme de" finds "Crème de Menthe".
- *
- * Danish letters are stood in for the way they are typed on a keyboard that
- * lacks them — "oel" for "øl", "aeble" for "æble". Stripping accents alone
- * would have folded å and left the other two, which is worse than either.
- */
-const DANISH: Record<string, string> = { "ø": "oe", "æ": "ae" };
-
-const loosely = (text: string): string =>
-  text
-    .toLocaleLowerCase()
-    .replace(/[øæ]/g, (letter) => DANISH[letter])
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "");
 
 const matches = (drinks: Drink[], term: string): Drink[] => {
   const wanted = loosely(term.trim());
@@ -120,7 +104,9 @@ const DrinkSearch: React.FC<DrinkSearchProps> = ({ autoFocus, onPicked }) => {
                   <span className="flex-1 min-w-0 truncate text-body text-text">
                     {drink.title}
                   </span>
-                  {drink.in_stock !== 1 && (
+                  {/* Switched off, or held up by a bottle that ran out — from
+                      here they mean the same thing: it cannot be made. */}
+                  {drink.available !== 1 && (
                     <span className="shrink-0 font-mono text-caption uppercase text-text-muted">
                       {t("outOfStock")}
                     </span>

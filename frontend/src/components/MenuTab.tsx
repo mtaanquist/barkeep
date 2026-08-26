@@ -4,35 +4,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
 import type { Drink } from "../types";
 import { translations, useTranslation } from "../utils/translations";
-import Switch from "./bartender/Switch";
+import StockSwitch from "./bartender/StockSwitch";
 
 type Sort = "default" | "alphabetical" | "category";
 type T = (key: keyof typeof translations.en) => string;
 
-/** The stock column: the pill, with what it currently means beside it. */
-const StockSwitch: React.FC<{
-  on: boolean;
-  onChange: () => void;
-  disabled?: boolean;
-  label: string;
-}> = ({ on, onChange, disabled, label }) => (
-  <button
-    type="button"
-    role="switch"
-    aria-checked={on}
-    aria-label={label}
-    disabled={disabled}
-    onClick={onChange}
-    className="inline-flex items-center gap-2 text-label disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-  >
-    <Switch on={on} />
-    <span className={on ? "text-text" : "text-text-muted"}>{label}</span>
-  </button>
-);
-
 /** 56 square: the photo, or a dashed box saying there isn't one. */
 const Thumbnail: React.FC<{ drink: Drink; t: T }> = ({ drink, t }) => {
-  const dimmed = drink.in_stock !== 1 ? "grayscale opacity-50" : "";
+  const dimmed = drink.available !== 1 ? "grayscale opacity-50" : "";
 
   if (!drink.image_url) {
     return (
@@ -67,6 +46,16 @@ const Thumbnail: React.FC<{ drink: Drink; t: T }> = ({ drink, t }) => {
 const SoldOutTag: React.FC<{ t: T }> = ({ t }) => (
   <span className="inline-flex items-center h-6 px-2 shrink-0 rounded-sm bg-status-processed-bg border border-status-processed-border text-status-processed-fg font-mono text-[0.625rem] font-bold tracking-[0.12em] uppercase">
     {t("outOfStock")}
+  </span>
+);
+
+/**
+ * Held up by something it is made of, rather than by its own switch. Says
+ * which, because "why is this off the menu" is the next question.
+ */
+const MissingTag: React.FC<{ missing: string[]; t: T }> = ({ missing, t }) => (
+  <span className="inline-flex items-center h-6 px-2 shrink-0 rounded-sm bg-status-processed-bg border border-status-processed-border text-status-processed-fg font-mono text-[0.625rem] font-bold tracking-[0.12em] uppercase">
+    {t("missingIngredients")} {missing.join(", ")}
   </span>
 );
 
@@ -151,7 +140,7 @@ const MenuTab: React.FC = () => {
     }
   };
 
-  const soldOut = drinks.filter((drink) => drink.in_stock !== 1).length;
+  const soldOut = drinks.filter((drink) => drink.available !== 1).length;
 
   const sorted = [...drinks].sort((a, b) => {
     if (sortBy === "alphabetical") return a.title.localeCompare(b.title);
@@ -213,6 +202,8 @@ const MenuTab: React.FC = () => {
             <ul>
               {sorted.map((drink) => {
                 const inStock = drink.in_stock === 1;
+                const missing = drink.missing_ingredients ?? [];
+                const canBeMade = drink.available === 1;
 
                 return (
                   <li
@@ -229,19 +220,24 @@ const MenuTab: React.FC = () => {
                           type="button"
                           onClick={() => setViewingRecipe(drink)}
                           className={`text-heading truncate text-left after:absolute after:inset-0 cursor-pointer ${
-                            inStock ? "" : "text-text-muted"
+                            canBeMade ? "" : "text-text-muted"
                           }`}
                         >
                           {drink.title}
                         </button>
+                        {/* Switched off by hand is its own thing; held up by a
+                            bottle that ran out says which bottle. */}
                         {!inStock && <SoldOutTag t={t} />}
+                        {inStock && missing.length > 0 && (
+                          <MissingTag missing={missing} t={t} />
+                        )}
                       </span>
                       <span className="text-body text-text-muted truncate">
                         {/* On a phone the columns fold into this line. */}
                         <span className="lg:hidden">
                           {[
                             drink.category_name,
-                            inStock ? t("inStock") : null,
+                            canBeMade ? t("inStock") : null,
                           ]
                             .filter(Boolean)
                             .join(" · ")}

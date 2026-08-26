@@ -10,8 +10,18 @@ const MENU = [
   aDrink({ id: 2, title: "Aviation", base_spirit: "Gin", category_name: "Classics" }),
   aDrink({ id: 3, title: "Daiquiri", base_spirit: "Rum", category_name: "Sours" }),
   aDrink({ id: 4, title: "Old Fashioned", base_spirit: "Whisky/Whiskey" }),
-  // Off the menu tonight, so it should not appear anywhere.
-  aDrink({ id: 5, title: "Mojito", base_spirit: "Rum", in_stock: 0 }),
+  // Switched off by the bartender, so it should not appear anywhere.
+  aDrink({ id: 5, title: "Mojito", base_spirit: "Rum", in_stock: 0, available: 0 }),
+  // Still switched on, but the gin has run out — which the menu treats the
+  // same way. Before ingredients existed this one would have been on it.
+  aDrink({
+    id: 6,
+    title: "Martini",
+    base_spirit: "Gin",
+    in_stock: 1,
+    available: 0,
+    ingredient_names: ["gin", "dry vermouth"],
+  }),
 ];
 
 let api: FakeApi;
@@ -30,15 +40,26 @@ afterEach(() => vi.unstubAllGlobals());
 
 const openMenu = async () => {
   const view = renderHook(() => useGuestMenu(), { wrapper: withApp });
-  await waitFor(() => expect(view.result.current.inStock.length).toBe(4));
+  await waitFor(() => expect(view.result.current.available.length).toBe(4));
   return view;
 };
 
 describe("the guest's menu", () => {
+  it("leaves out anything whose ingredient has run out", async () => {
+    const { result } = await openMenu();
+
+    expect(result.current.available.map((d) => d.title)).not.toContain(
+      "Martini"
+    );
+    expect(result.current.bySpirit["Gin"]).toHaveLength(2);
+  });
+
   it("leaves out anything that is not in stock", async () => {
     const { result } = await openMenu();
 
-    expect(result.current.inStock.map((d) => d.title)).not.toContain("Mojito");
+    expect(result.current.available.map((d) => d.title)).not.toContain(
+      "Mojito"
+    );
     expect(result.current.bySpirit["Rum"]).toHaveLength(1);
   });
 

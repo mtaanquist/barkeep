@@ -20,6 +20,73 @@ const cardActions = {
   t,
 };
 
+// Names say what a drink is; amounts say how to make it. The guest gets the
+// first whether or not the bartender shared the recipe.
+describe("what is in a drink, as the guest reads it", () => {
+  it("says what is in it when nobody wrote a description", () => {
+    render(
+      <DrinkCard
+        {...cardActions}
+        drink={aDrink({
+          guest_description: null,
+          ingredient_names: ["Campari", "rød vermouth"],
+        })}
+      />
+    );
+
+    expect(screen.getByText("Campari, rød vermouth")).toBeInTheDocument();
+  });
+
+  // Never both, or the card says overlapping things twice.
+  it("keeps the description someone wrote instead", () => {
+    render(
+      <DrinkCard
+        {...cardActions}
+        drink={aDrink({
+          guest_description: "Bitter, bubbly, orange.",
+          ingredient_names: ["Campari", "rød vermouth"],
+        })}
+      />
+    );
+
+    expect(screen.getByText("Bitter, bubbly, orange.")).toBeInTheDocument();
+    expect(screen.queryByText(/Campari/)).not.toBeInTheDocument();
+  });
+
+  it("opens the panel for a drink with no shared recipe but something in it", async () => {
+    const onViewRecipe = vi.fn();
+    render(
+      <DrinkCard
+        {...cardActions}
+        onViewRecipe={onViewRecipe}
+        drink={aDrink({ recipe: null, ingredient_names: ["Campari"] })}
+      />
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: t("viewIngredients") })
+    );
+
+    expect(onViewRecipe).toHaveBeenCalledOnce();
+  });
+
+  it("offers nothing to open for a drink with neither", () => {
+    render(
+      <DrinkCard
+        {...cardActions}
+        drink={aDrink({ recipe: null, ingredient_names: [] })}
+      />
+    );
+
+    expect(
+      screen.queryByRole("button", { name: t("viewIngredients") })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: t("viewRecipe") })
+    ).not.toBeInTheDocument();
+  });
+});
+
 describe("a drink on the menu", () => {
   // in_stock arrives as 0 or 1, and used to be typed as a boolean.
   it("offers a drink that is in stock", async () => {

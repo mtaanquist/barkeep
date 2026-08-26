@@ -46,6 +46,37 @@ export interface Category {
   created_at: string;
 }
 
+export interface Ingredient {
+  id: number;
+  bar_id: number;
+  name: string;
+  in_stock: Flag;
+  created_at: string;
+}
+
+/**
+ * An ingredient with how much rides on it. The bartender's screens ask for
+ * this rather than the bare row, because "should I go and buy more" is
+ * answered by what would go off the menu without it.
+ */
+export interface IngredientWithUse extends Ingredient {
+  /** How many drinks would leave the menu without it. */
+  used_by: number;
+  /** How many orders have ever been placed for drinks that need it. */
+  ordered: number;
+  /** Those drinks, so one can be found and opened. */
+  used_in: { id: number; title: string }[];
+}
+
+/** One line of a drink's recipe: what goes in, and how much. */
+export interface DrinkIngredient {
+  ingredient_id: number;
+  name: string;
+  /** What the recipe says, as written. Empty when it does not say. */
+  amount: string | null;
+  in_stock: Flag;
+}
+
 export interface Drink {
   id: number;
   bar_id: number;
@@ -66,6 +97,20 @@ export interface Drink {
 /** A drink as listed, with its category name filled in. */
 export interface DrinkWithCategory extends Drink {
   category_name: string | null;
+  /**
+   * Switched on, and nothing it needs has run out. This, not `in_stock`, is
+   * what decides whether a guest can order it.
+   */
+  available: Flag;
+  /**
+   * What it is made of, in the recipe's order. Names only, so it can be shown
+   * to anyone: it says what the drink is, not how to make it.
+   */
+  ingredient_names: string[];
+  /** The same, with the amounts. Only sent to the bartender. */
+  ingredients?: DrinkIngredient[];
+  /** What it needs that has run out. Only sent to the bartender. */
+  missing_ingredients?: string[];
 }
 
 /** A drink as a guest sees it, with favourites marked. */
@@ -89,7 +134,13 @@ export type DrinkToRead = Pick<
   | "image_crop_y"
   | "image_crop_zoom"
   | "base_spirit"
-> & { in_stock?: Flag };
+> & {
+  in_stock?: Flag;
+  /** Empty for a drink read back off an order rather than off the menu. */
+  ingredient_names?: string[];
+  /** The same with the amounts, which only the bartender gets. */
+  ingredients?: DrinkIngredient[];
+};
 
 export interface Order {
   id: number;
@@ -197,7 +248,13 @@ export interface DrinkAnalytics {
 export type LiveUpdate =
   | { type: "new_order"; order: Order; timestamp: string }
   | { type: "order_status_updated"; order: Order; timestamp: string }
-  | { type: "order_deleted"; orderId: number; timestamp: string };
+  | { type: "order_deleted"; orderId: number; timestamp: string }
+  /**
+   * Something about the menu moved — a drink, or an ingredient running out.
+   * Carries nothing but the fact, which is what makes it safe to send to
+   * everyone in the room: look again.
+   */
+  | { type: "menu_changed"; timestamp: string };
 
 export interface ApiError {
   error: string;

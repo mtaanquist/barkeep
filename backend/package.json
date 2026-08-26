@@ -8,6 +8,7 @@
     "start": "node dist/server.js",
     "init-db": "tsx src/db/init.ts",
     "reset-code": "node dist/cli/reset-code.js",
+    "read-recipes": "node dist/cli/read-recipes.js",
     "typecheck": "tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -2,13 +2,16 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ChevronDown, ChevronLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useApp } from "../hooks/useApp";
-import type { Drink } from "../types";
+import type { Drink, Ingredient } from "../types";
 import { translations, useTranslation } from "../utils/translations";
 import { BASE_SPIRITS } from "../utils/spirits";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 import LazyMDEditor from "./LazyMDEditor";
 import DrinkImageField, { type DrinkImage } from "./drinkForm/DrinkImageField";
+import IngredientRows, {
+  type IngredientRow,
+} from "./drinkForm/IngredientRows";
 import Field from "./Field";
 import ToggleRow from "./ToggleRow";
 
@@ -87,6 +90,10 @@ export const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onDone }) => {
     guestDescription: drink?.guest_description ?? "",
     showRecipeToGuests: drink?.show_recipe_to_guests === 1,
     inStock: drink === null || drink.in_stock === 1,
+    ingredients: (drink?.ingredients ?? []).map((i) => ({
+      name: i.name,
+      amount: i.amount ?? "",
+    })) satisfies IngredientRow[],
     image: {
       url: drink?.image_url ?? "",
       cropX: drink?.image_crop_x ?? 0,
@@ -99,13 +106,28 @@ export const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onDone }) => {
   // recipe sits in its own column, so there is nothing to save by hiding it.
   const [open, setOpen] = useState(() => {
     const wide = window.matchMedia("(min-width: 80rem)").matches;
-    return { recipe: isEditing || wide, placement: isEditing || wide };
+    return {
+      recipe: isEditing || wide,
+      placement: isEditing || wide,
+      ingredients: isEditing || wide,
+    };
   });
 
   const update = (patch: Partial<typeof form>) =>
     setForm((prev) => ({ ...prev, ...patch }));
 
   const barId = currentBar?.id;
+
+  const [known, setKnown] = useState<Ingredient[]>([]);
+
+  const fetchIngredients = useCallback(async () => {
+    if (!barId) return;
+    try {
+      setKnown(await apiCall<Ingredient[]>(`/ingredients/bar/${barId}`));
+    } catch (err) {
+      console.error("Could not load the ingredients:", err);
+    }
+  }, [barId, apiCall]);
 
   const fetchCategories = useCallback(async () => {
     if (!barId) return;
@@ -118,7 +140,8 @@ export const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onDone }) => {
 
   useEffect(() => {
     fetchCategories();
-  }, [fetchCategories]);
+    fetchIngredients();
+  }, [fetchCategories, fetchIngredients]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,7 +152,7 @@ export const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onDone }) => {
 
     if (missing) {
       // Whichever part holds the missing field has to be on screen.
-      setOpen({ recipe: true, placement: true });
+      setOpen({ recipe: true, placement: true, ingredients: true });
       setError(missing);
       return;
     }
@@ -150,6 +173,8 @@ export const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onDone }) => {
             guestDescription: form.guestDescription.trim() || null,
             showRecipeToGuests: form.showRecipeToGuests,
             inStock: form.inStock,
+            // Blank lines are half-typed, not empty ingredients.
+            ingredients: form.ingredients.filter((row) => row.name.trim()),
             categoryId: form.categoryId || null,
             imageCropX: form.image.cropX,
             imageCropY: form.image.cropY,
@@ -323,6 +348,24 @@ export const DrinkForm: React.FC<DrinkFormProps> = ({ drink, onDone }) => {
         </div>
 
         <div className="flex-1 min-w-0 border-t border-border xl:border-t-0">
+          {/* What goes in comes before how, the way a recipe is read and the
+              way the bar runs out of things. */}
+          <Section
+            kicker={t("sectionIngredients")}
+            marker={t("optionalSection")}
+            open={open.ingredients}
+            onOpen={() => setOpen((prev) => ({ ...prev, ingredients: true }))}
+          >
+            <IngredientRows
+              rows={form.ingredients}
+              onChange={(ingredients) => update({ ingredients })}
+              known={known}
+              t={t}
+            />
+          </Section>
+
+          <div className="h-px bg-border" />
+
           <Section
             kicker={t("sectionRecipe")}
             marker={t("oneRequiredSection")}

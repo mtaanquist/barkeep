@@ -142,13 +142,13 @@ describe("adding and editing a drink", () => {
 
     await screen.findByRole("heading", { name: "New drink" });
 
-    // The name is there to type; the recipe is one tap away.
+    // The name is there to type; how to make it is one tap away.
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
-    const recipe = screen.getByRole("button", { name: /recipe/i });
+    const recipe = screen.getByRole("button", { name: /how to make it/i });
     expect(recipe).toBeInTheDocument();
 
     await userEvent.click(recipe);
-    expect(screen.queryByRole("button", { name: /^recipe/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^how to make it/i })).toBeNull();
   });
 
   it("opens an existing drink filled in, with a labelled way back", async () => {

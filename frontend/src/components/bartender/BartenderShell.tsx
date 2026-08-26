@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3,
+  FlaskConical,
   Grid2x2,
   List,
   LogOut,
@@ -25,10 +26,11 @@ import QueueTile from "./QueueTile";
 
 const PENDING = ["new", "accepted", "ready"];
 
-/** The four screens that are set up once and then mostly left alone. */
+/** The screens that are set up once and then mostly left alone. */
 const SETUP = [
   { to: "menu", label: "drinkMenu", Icon: List },
   { to: "categories", label: "categories", Icon: Grid2x2 },
+  { to: "ingredients", label: "ingredients", Icon: FlaskConical },
   { to: "regulars", label: "regulars", Icon: Users },
   { to: "analytics", label: "analytics", Icon: BarChart3 },
   { to: "settings", label: "settings", Icon: Settings },

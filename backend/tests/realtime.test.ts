@@ -166,6 +166,54 @@ describe("live updates", () => {
   });
 });
 
+// A menu change is about nobody, which is what lets it go to the whole room.
+// An order is about one person, and must not.
+describe("something everyone should hear", () => {
+  it("reaches a guest as well as the bartender", () => {
+    const realtime = createRealtime();
+    const bartender = fakeListener(1);
+    const guest = fakeListener(1, "Mads");
+    realtime.subscribe(bartender.req, bartender.res);
+    realtime.subscribe(guest.req, guest.res);
+
+    realtime.announce(1, { type: "menu_changed" });
+
+    expect(bartender.messages()).toEqual([
+      expect.objectContaining({ type: "menu_changed" }),
+    ]);
+    expect(guest.messages()).toEqual([
+      expect.objectContaining({ type: "menu_changed" }),
+    ]);
+  });
+
+  it("still stops at the bar it was announced to", () => {
+    const realtime = createRealtime();
+    const mine = fakeListener(1, "Mads");
+    const theirs = fakeListener(2, "Ada");
+    realtime.subscribe(mine.req, mine.res);
+    realtime.subscribe(theirs.req, theirs.res);
+
+    realtime.announce(1, { type: "menu_changed" });
+
+    expect(mine.messages()).toHaveLength(1);
+    expect(theirs.messages()).toHaveLength(0);
+  });
+
+  // The rule announce is allowed to skip is the one broadcast must keep.
+  it("has not loosened what an order update does", () => {
+    const realtime = createRealtime();
+    const mads = fakeListener(1, "Mads");
+    const ada = fakeListener(1, "Ada");
+    realtime.subscribe(mads.req, mads.res);
+    realtime.subscribe(ada.req, ada.res);
+
+    realtime.broadcast(1, { type: "new_order", order: anOrder() }, "Mads");
+
+    expect(mads.messages()).toHaveLength(1);
+    expect(ada.messages()).toHaveLength(0);
+  });
+});
+
 describe("the updates address", () => {
   it("answers with a stream that stays open", async () => {
     const { app } = makeTestApp();

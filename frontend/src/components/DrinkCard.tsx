@@ -27,6 +27,8 @@ const DrinkCard: React.FC<DrinkCardProps> = ({
   const imageCropY = drink.image_crop_y || 0;
   const imageCropZoom = drink.image_crop_zoom || 1;
 
+  const ingredients = drink.ingredient_names ?? [];
+
   // A guest who cannot order should be able to see why without tapping.
   const orderLabel = loading
     ? t("loading")
@@ -87,19 +89,29 @@ const DrinkCard: React.FC<DrinkCardProps> = ({
           )}
         </div>
 
-        {drink.guest_description && (
+        {/* A description someone wrote wins. Without one, saying what is in it
+            beats leaving the card blank — but never both, or the card says
+            overlapping things twice. */}
+        {drink.guest_description ? (
           <p className="text-body text-text-muted">{drink.guest_description}</p>
+        ) : (
+          ingredients.length > 0 && (
+            <p className="text-body text-text-muted">
+              {ingredients.join(", ")}
+            </p>
+          )
         )}
       </div>
 
       <div className="flex border-t border-border">
-        {/* Only show view recipe button if recipe is available to guests */}
-        {drink.recipe && (
+        {/* The recipe when the bartender shares it, and otherwise just what is
+            in it — which is worth opening the panel for on its own. */}
+        {(drink.recipe || ingredients.length > 0) && (
           <button
             onClick={() => onViewRecipe(drink)}
             className="w-33 h-16 shrink-0 border-r border-border text-label text-text transition-colors duration-(--duration-instant) hover:bg-surface-sunken cursor-pointer"
           >
-            {t("viewRecipe")}
+            {drink.recipe ? t("viewRecipe") : t("viewIngredients")}
           </button>
         )}
         <button

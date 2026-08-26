@@ -26,6 +26,7 @@ import createDrinkRoutes from "./routes/drinks.js";
 import createOrderRoutes from "./routes/orders.js";
 import createAuthRoutes from "./routes/auth.js";
 import createCategoryRoutes from "./routes/categories.js";
+import createIngredientRoutes from "./routes/ingredients.js";
 import createOperatorRoutes from "./routes/operator.js";
 
 export interface AppOptions {
@@ -195,6 +196,7 @@ export function createApp({
   app.use("/api/orders", createOrderRoutes(db));
   app.use("/api/auth", createAuthRoutes(db));
   app.use("/api/categories", createCategoryRoutes(db));
+  app.use("/api/ingredients", createIngredientRoutes(db));
   app.use(
     "/api/operator",
     createOperatorRoutes({ db, operatorPassword, uploadsDir })

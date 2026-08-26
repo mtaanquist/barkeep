@@ -117,7 +117,7 @@ const PastOrdersPanel: React.FC<PastOrdersPanelProps> = ({
                     const wasRejected = order.status === "rejected";
                     const canOrderAgain =
                       !!drink &&
-                      drink.in_stock === 1 &&
+                      drink.available === 1 &&
                       !currentOrder &&
                       !loading;
 

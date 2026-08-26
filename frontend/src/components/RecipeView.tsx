@@ -58,6 +58,9 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose, onEdit }) => {
 
   const metadata = readMetadata(drink.recipe);
   const onPhoto = !!drink.image_url;
+  const ingredients = drink.ingredient_names ?? [];
+  // The bartender gets the amounts as well; a guest only what goes in.
+  const lines = drink.ingredients ?? [];
 
   useCloseOnEscape(onClose);
   const panel = useDialogFocus<HTMLDivElement>();
@@ -151,6 +154,33 @@ const RecipeView: React.FC<RecipeViewProps> = ({ drink, onClose, onEdit }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 border-t border-border">
+          {/* What is in it. For a guest, without how much: that says what the
+              drink is, not how to make it, so it is here whether or not the
+              recipe is shared — and it is what the guest asks about anyway.
+              The bartender, who is about to make it, gets the amounts too. */}
+          {(lines.length > 0 || ingredients.length > 0) && (
+            <div className="flex flex-col gap-1.5 mb-5">
+              <span className="font-mono text-caption uppercase text-text-muted">
+                {t("ingredientsKicker")}
+              </span>
+              {lines.length > 0 ? (
+                <ul className="flex flex-col gap-1 text-body text-text">
+                  {lines.map((line) => (
+                    <li key={line.ingredient_id} className="flex gap-3">
+                      {/* Read across a bar, so the same size as the name. */}
+                      <span className="w-20 shrink-0 text-text-muted tabular-nums">
+                        {line.amount ?? ""}
+                      </span>
+                      <span>{line.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-body text-text">{ingredients.join(", ")}</p>
+              )}
+            </div>
+          )}
+
           <LazyMarkdownViewer
             source={drink.recipe ?? ""}
             style={

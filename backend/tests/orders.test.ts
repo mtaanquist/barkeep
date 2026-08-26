@@ -353,6 +353,24 @@ describe("errors a guest can run into carry a tag", () => {
     expect(res.body.code).toBe("drink_out_of_stock");
   });
 
+  // Running out of one bottle takes every drink that needs it off the menu.
+  // Before ingredients existed this only looked at the drink's own switch, so
+  // an order for a drink whose Campari had run out went straight through.
+  it("refuses a drink whose ingredient has run out", async () => {
+    db.prepare(
+      "INSERT INTO ingredients (bar_id, name, in_stock) VALUES (?, 'Campari', 0)"
+    ).run(barId);
+    db.prepare(
+      `INSERT INTO drink_ingredients (drink_id, ingredient_id, position)
+       VALUES (?, (SELECT id FROM ingredients WHERE bar_id = ?), 0)`
+    ).run(drinkId, barId);
+
+    const res = await order();
+
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe("drink_out_of_stock");
+  });
+
   it("tags a guest who already has as many on the go as they may", async () => {
     await order();
 

@@ -22,7 +22,8 @@ export const LiveUpdatesProvider: React.FC<{ children: ReactNode }> = ({
   const [connectionError, setConnectionError] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
-  const { currentBar, userType, customerName, setOrders, apiCall } = useApp();
+  const { currentBar, userType, customerName, setDrinks, setOrders, apiCall } =
+    useApp();
 
   const complainTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -39,6 +40,29 @@ export const LiveUpdatesProvider: React.FC<{ children: ReactNode }> = ({
       console.error("Could not refresh orders:", err);
     }
   }, [barId, apiCall, setOrders]);
+
+  /**
+   * The menu, from whichever end the person watching is at. A bartender sees
+   * every drink; a guest sees theirs, with their favourites marked.
+   */
+  const refreshDrinks = useCallback(async () => {
+    if (!barId) return;
+
+    const where =
+      userType === "bartender"
+        ? `/drinks/bar/${barId}`
+        : customerName
+          ? `/drinks/bar/${barId}/guest/${encodeURIComponent(customerName)}`
+          : null;
+
+    if (!where) return;
+
+    try {
+      setDrinks(await apiCall(where));
+    } catch (err) {
+      console.error("Could not refresh the drinks:", err);
+    }
+  }, [barId, userType, customerName, apiCall, setDrinks]);
 
   const reconnect = useCallback(() => {
     setConnectionError(false);
@@ -91,6 +115,11 @@ export const LiveUpdatesProvider: React.FC<{ children: ReactNode }> = ({
               prev.filter((order) => order.id !== update.orderId)
             );
             break;
+          // A bottle ran out, or a drink changed. Which drinks that touches is
+          // the server's to work out, so ask it again rather than guess.
+          case "menu_changed":
+            refreshDrinks();
+            break;
         }
       } catch (err) {
         console.error("Could not read update:", event.data, err);
@@ -108,7 +137,7 @@ export const LiveUpdatesProvider: React.FC<{ children: ReactNode }> = ({
       source.close();
       setIsConnected(false);
     };
-  }, [signedIn, barId, attempt, refreshOrders, setOrders]);
+  }, [signedIn, barId, attempt, refreshDrinks, refreshOrders, setOrders]);
 
   return (
     <LiveUpdatesContext.Provider
