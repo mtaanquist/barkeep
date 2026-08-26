@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useApp } from "../../hooks/useApp";
 import type { IngredientWithUse } from "../../types";
 import { translations, useTranslation } from "../../utils/translations";
@@ -56,6 +57,58 @@ const Rename: React.FC<{
   );
 };
 
+/** How many drinks can be named before the rest wait behind a button. */
+const NAMES_SHOWN = 4;
+
+/**
+ * The drinks an ingredient is in, each a link to its card. A count alone is
+ * no help to someone looking for the one drink that still says "campari" in
+ * lower case so they can move it over and delete the spare.
+ */
+const UsedIn: React.FC<{ ingredient: IngredientWithUse; t: T }> = ({
+  ingredient,
+  t,
+}) => {
+  const [showingAll, setShowingAll] = useState(false);
+
+  const names = ingredient.used_in;
+  const shown = showingAll ? names : names.slice(0, NAMES_SHOWN);
+  const hidden = names.length - shown.length;
+
+  return (
+    <span className="text-body text-text-muted">
+      <span>
+        {ingredient.used_by === 1
+          ? t("usedInOneDrink")
+          : `${ingredient.used_by} ${t("usedInDrinks")}`}
+      </span>
+      {shown.map((drink, n) => (
+        <React.Fragment key={drink.id}>
+          {n === 0 ? " · " : ", "}
+          <Link
+            to={`/bartender/menu/${drink.id}`}
+            className="underline underline-offset-2 hover:text-text"
+          >
+            {drink.title}
+          </Link>
+        </React.Fragment>
+      ))}
+      {hidden > 0 && (
+        <>
+          {" "}
+          <button
+            type="button"
+            onClick={() => setShowingAll(true)}
+            className="underline underline-offset-2 hover:text-text cursor-pointer"
+          >
+            {t("andMoreBefore")} {hidden} {t("andMoreAfter")}
+          </button>
+        </>
+      )}
+    </span>
+  );
+};
+
 /**
  * What the bar is pouring. One switch each: turn it off and every drink that
  * needs it leaves the menu at once, which is the whole reason this screen
@@ -89,7 +142,10 @@ const IngredientsTab: React.FC = () => {
   }, [fetchIngredients]);
 
   /** Runs something against the server and puts the list right afterwards. */
-  const change = async (work: () => Promise<unknown>, whenItGoesWrong: string) => {
+  const change = async (
+    work: () => Promise<unknown>,
+    whenItGoesWrong: string
+  ) => {
     setLoading(true);
     try {
       await work();
@@ -201,7 +257,6 @@ const IngredientsTab: React.FC = () => {
         <>
           <div className="hidden lg:flex items-center gap-4 px-5 py-2.5 border-b border-border bg-surface-sunken font-mono text-caption text-text-muted">
             <span className="flex-1 uppercase">{t("ingredientName")}</span>
-            <span className="w-28 shrink-0 uppercase">{t("columnUsedBy")}</span>
             <span className="w-28 shrink-0 uppercase">{t("columnStock")}</span>
             <span className="w-14 shrink-0" />
           </div>
@@ -238,18 +293,8 @@ const IngredientsTab: React.FC = () => {
                         >
                           {ingredient.name}
                         </button>
-                        <span className="lg:hidden text-body text-text-muted truncate">
-                          {ingredient.used_by === 1
-                            ? t("usedInOneDrink")
-                            : `${ingredient.used_by} ${t("usedInDrinks")}`}
-                        </span>
+                        <UsedIn ingredient={ingredient} t={t} />
                       </div>
-
-                      <span className="hidden lg:block w-28 shrink-0 text-body text-text-muted">
-                        {ingredient.used_by === 1
-                          ? t("usedInOneDrink")
-                          : `${ingredient.used_by} ${t("usedInDrinks")}`}
-                      </span>
 
                       <span className="w-28 shrink-0">
                         <StockSwitch

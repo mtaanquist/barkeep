@@ -120,10 +120,12 @@ describe("ingredients", () => {
       .get(`/api/ingredients/bar/${barId}`)
       .set("Cookie", asBartender());
 
-    expect(list.body[0]).toMatchObject({ used_by: 0, ordered: 0 });
+    expect(list.body[0]).toMatchObject({ used_by: 0, ordered: 0, used_in: [] });
   });
 
-  it("says how many drinks would go without it", async () => {
+  // The names are what let one be found and changed — "1 drink" on its own
+  // is no help to someone tidying up two spellings of the same thing.
+  it("says which drinks would go without it", async () => {
     await add("Campari");
     await request(app)
       .put(`/api/drinks/${drinkId}`)
@@ -134,7 +136,11 @@ describe("ingredients", () => {
       .get(`/api/ingredients/bar/${barId}`)
       .set("Cookie", asBartender());
 
-    expect(list.body[0]).toMatchObject({ name: "Campari", used_by: 1 });
+    expect(list.body[0]).toMatchObject({
+      name: "Campari",
+      used_by: 1,
+      used_in: [{ id: drinkId, title: "Negroni" }],
+    });
   });
 
   it("refuses to delete one a drink still needs", async () => {

@@ -35,6 +35,35 @@ const WITH_USE_COUNT = `
   FROM ingredients i
 `;
 
+/**
+ * Which drinks each ingredient is in, by name. Asked for separately rather
+ * than joined in, so a name with a comma in it cannot be mistaken for two.
+ */
+function drinksByIngredient(
+  db: Db,
+  barId: number
+): Map<number, IngredientWithUse["used_in"]> {
+  const rows = all<{ ingredient_id: number; id: number; title: string }>(
+    db,
+    `SELECT di.ingredient_id, d.id, d.title
+     FROM drink_ingredients di
+     JOIN drinks d ON d.id = di.drink_id
+     WHERE d.bar_id = ?
+     ORDER BY d.title COLLATE NOCASE`,
+    barId
+  );
+
+  const byIngredient = new Map<number, IngredientWithUse["used_in"]>();
+
+  for (const { ingredient_id, id, title } of rows) {
+    const soFar = byIngredient.get(ingredient_id);
+    if (soFar) soFar.push({ id, title });
+    else byIngredient.set(ingredient_id, [{ id, title }]);
+  }
+
+  return byIngredient;
+}
+
 export default function createIngredientRoutes(db: Db): Router {
   const router = express.Router();
 
@@ -49,11 +78,20 @@ export default function createIngredientRoutes(db: Db): Router {
       const barId = idParam(req, "barId");
       requireBartenderForBar(res, barId);
 
+      const drinks = drinksByIngredient(db, barId);
+
+      const ingredients = all<Omit<IngredientWithUse, "used_in">>(
+        db,
+        `${WITH_USE_COUNT} WHERE i.bar_id = ? ORDER BY i.name COLLATE NOCASE`,
+        barId
+      );
+
       res.json(
-        all<IngredientWithUse>(
-          db,
-          `${WITH_USE_COUNT} WHERE i.bar_id = ? ORDER BY i.name COLLATE NOCASE`,
-          barId
+        ingredients.map(
+          (ingredient): IngredientWithUse => ({
+            ...ingredient,
+            used_in: drinks.get(ingredient.id) ?? [],
+          })
         )
       );
     })

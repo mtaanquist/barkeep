@@ -64,6 +64,8 @@ export interface IngredientWithUse extends Ingredient {
   used_by: number;
   /** How many orders have ever been placed for drinks that need it. */
   ordered: number;
+  /** Those drinks, so one can be found and opened. */
+  used_in: { id: number; title: string }[];
 }
 
 /** One line of a drink's recipe: what goes in, and how much. */
@@ -136,6 +138,8 @@ export type DrinkToRead = Pick<
   in_stock?: Flag;
   /** Empty for a drink read back off an order rather than off the menu. */
   ingredient_names?: string[];
+  /** The same with the amounts, which only the bartender gets. */
+  ingredients?: DrinkIngredient[];
 };
 
 export interface Order {

@@ -199,7 +199,7 @@ export interface TranslationMap {
   drinkImage: string;
   uploadImage: string;
   or: string;
-  recipe: string;
+  howToMake: string;
   guestDescription: string;
   showRecipeToGuests: string;
   guestDescriptionHelp: string;
@@ -335,7 +335,9 @@ export interface TranslationMap {
   ingredientInStockHelp: string;
   usedInDrinks: string;
   usedInOneDrink: string;
-  columnUsedBy: string;
+  // Around the number of drinks not listed: "and 12 more".
+  andMoreBefore: string;
+  andMoreAfter: string;
   sectionIngredients: string;
   noIngredientsOnDrink: string;
   missingIngredients: string;
@@ -536,7 +538,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
 
     // Drink form
     sectionGuestSees: "what the guest sees",
-    sectionRecipe: "recipe",
+    sectionRecipe: "how to make it",
     sectionPlacement: "where it lives",
     optionalSection: "optional",
     oneRequiredSection: "1 needed",
@@ -556,7 +558,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     drinkImage: "Photo",
     uploadImage: "Upload Image",
     or: "or",
-    recipe: "Recipe (Markdown)",
+    howToMake: "How to make it",
     guestDescription: "Description for the guest",
     showRecipeToGuests: "Show Recipe to Guests",
     guestDescriptionHelp: "Optional description shown to guests instead of or alongside the recipe",
@@ -592,7 +594,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
       "Turn this off and every drink that needs it leaves the menu.",
     usedInDrinks: "drinks",
     usedInOneDrink: "1 drink",
-    columnUsedBy: "used in",
+    andMoreBefore: "and",
+    andMoreAfter: "more",
     sectionIngredients: "what is in it",
     noIngredientsOnDrink: "Nothing yet — add what goes in.",
     missingIngredients: "Out of",
@@ -899,7 +902,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
 
     // Drink form
     sectionGuestSees: "det gæsten ser",
-    sectionRecipe: "opskrift",
+    sectionRecipe: "sådan laves den",
     sectionPlacement: "hvor den hører til",
     optionalSection: "valgfri",
     oneRequiredSection: "1 påkrævet",
@@ -919,7 +922,7 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
     drinkImage: "Foto",
     uploadImage: "Upload billede",
     or: "eller",
-    recipe: "Opskrift (Markdown)",
+    howToMake: "Sådan laves den",
     guestDescription: "Beskrivelse til gæsten",
     showRecipeToGuests: "Vis opskrift til gæster",
     guestDescriptionHelp: "Valgfri beskrivelse vist til gæster i stedet for eller sammen med opskriften",
@@ -955,7 +958,8 @@ export const translations: { en: TranslationMap; da: TranslationMap } = {
       "Slå fra, og alle drinks, der bruger den, forsvinder fra menuen.",
     usedInDrinks: "drinks",
     usedInOneDrink: "1 drink",
-    columnUsedBy: "bruges i",
+    andMoreBefore: "og",
+    andMoreAfter: "til",
     sectionIngredients: "hvad der er i",
     noIngredientsOnDrink: "Ingenting endnu — tilføj det, der skal i.",
     missingIngredients: "Mangler",
