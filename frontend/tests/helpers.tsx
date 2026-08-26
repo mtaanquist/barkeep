@@ -72,7 +72,8 @@ export interface FakeApi {
 /**
  * Stands in for the server. `reply` gets the path and returns the body;
  * returning undefined answers with a 404, so a route nobody set up is
- * obvious rather than silently empty.
+ * obvious rather than silently empty. A Blob comes back as a file, the way a
+ * download does.
  */
 export function fakeApi(
   reply: (path: string, options: RequestInit) => unknown
@@ -94,7 +95,10 @@ export function fakeApi(
       return {
         ok: body !== undefined,
         status: body === undefined ? 404 : 200,
+        headers: new Headers(),
         json: async () => body ?? { error: "Not found" },
+        blob: async () =>
+          body instanceof Blob ? body : new Blob([JSON.stringify(body)]),
       } as Response;
     })
   );
