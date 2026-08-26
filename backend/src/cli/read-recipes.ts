@@ -62,7 +62,7 @@ export function reportOn(db: Db, barId: number | null): void {
   const names = new Set<string>();
 
   for (const drink of drinks) {
-    const found = ingredientsIn(drink.recipe);
+    const found = ingredientsIn(drink.recipe, { title: drink.title });
 
     console.log(`\n${drink.title}  (bar ${drink.bar_id}, drink ${drink.id})`);
 

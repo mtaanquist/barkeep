@@ -19,6 +19,7 @@ const announce = (message: string): void => {
 interface DrinkRow {
   id: number;
   bar_id: number;
+  title: string;
   recipe: string | null;
 }
 
@@ -40,13 +41,16 @@ export function alreadyRead(db: Db): boolean {
 export function backfillIngredients(db: Db): number {
   if (alreadyRead(db)) return 0;
 
-  const drinks = all<DrinkRow>(db, "SELECT id, bar_id, recipe FROM drinks");
+  const drinks = all<DrinkRow>(
+    db,
+    "SELECT id, bar_id, title, recipe FROM drinks"
+  );
 
   let read = 0;
 
   db.transaction(() => {
     for (const drink of drinks) {
-      const found = ingredientsIn(drink.recipe);
+      const found = ingredientsIn(drink.recipe, { title: drink.title });
       if (found.length === 0) continue;
 
       let position = 0;
