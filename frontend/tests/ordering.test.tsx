@@ -76,9 +76,7 @@ afterEach(() => vi.unstubAllGlobals());
 /** Tapping Order and then saying yes to the drink it asks about. */
 const orderFirstDrink = async () => {
   await userEvent.click(screen.getAllByRole("button", { name: "Order" })[0]);
-  await userEvent.click(
-    screen.getByRole("button", { name: "Yes, order it" })
-  );
+  await userEvent.click(screen.getByRole("button", { name: "Yes, order it" }));
 };
 
 describe("ordering a drink", () => {
@@ -197,7 +195,9 @@ describe("ordering a drink", () => {
 
     await showMenu();
 
-    expect(screen.getByText("The bar has stopped taking orders")).toBeInTheDocument();
+    expect(
+      screen.getByText("The bar has stopped taking orders")
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Order" })).toBeNull();
     // One for the phone, one for the wide screen; both are off.
     for (const button of screen.getAllByRole("button", {
@@ -215,8 +215,9 @@ describe("ordering a drink", () => {
     signIn({ bar: aBar({ last_orders_at: closesAt }) });
 
     await showMenu();
-    expect(screen.getAllByRole("button", { name: "Order" }).length)
-      .toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole("button", { name: "Order" }).length
+    ).toBeGreaterThan(0);
 
     await act(async () => {
       vi.advanceTimersByTime(61_000);
@@ -344,7 +345,9 @@ describe("asking before an order goes in", () => {
     await userEvent.click(screen.getAllByRole("button", { name: "Order" })[0]);
     await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-    expect(screen.queryByRole("dialog", { name: "Order this drink?" })).toBeNull();
+    expect(
+      screen.queryByRole("dialog", { name: "Order this drink?" })
+    ).toBeNull();
     expect(api.calls.some((c) => c.method === "POST")).toBe(false);
   });
 
@@ -356,7 +359,9 @@ describe("asking before an order goes in", () => {
     await userEvent.click(screen.getAllByRole("button", { name: "Order" })[0]);
     await userEvent.click(screen.getByRole("button", { name: "Close" }));
 
-    expect(screen.queryByRole("dialog", { name: "Order this drink?" })).toBeNull();
+    expect(
+      screen.queryByRole("dialog", { name: "Order this drink?" })
+    ).toBeNull();
     expect(api.calls.some((c) => c.method === "POST")).toBe(false);
   });
 
@@ -368,7 +373,9 @@ describe("asking before an order goes in", () => {
       .find((card) =>
         within(card).queryByRole("heading", { name: "Daiquiri", level: 3 })
       )!;
-    await userEvent.click(within(daiquiri).getByRole("button", { name: "Order" }));
+    await userEvent.click(
+      within(daiquiri).getByRole("button", { name: "Order" })
+    );
 
     const ask = screen.getByRole("dialog", { name: "Order this drink?" });
     expect(ask).toHaveTextContent("Daiquiri");
@@ -395,12 +402,16 @@ describe("asking before an order goes in", () => {
     );
 
     const reveal = screen.getByRole("dialog", { name: "Surprise me" });
-    await userEvent.click(within(reveal).getByRole("button", { name: /^Order / }));
+    await userEvent.click(
+      within(reveal).getByRole("button", { name: /^Order / })
+    );
 
     await waitFor(() =>
       expect(api.calls.some((c) => c.method === "POST")).toBe(true)
     );
-    expect(screen.queryByRole("dialog", { name: "Order this drink?" })).toBeNull();
+    expect(
+      screen.queryByRole("dialog", { name: "Order this drink?" })
+    ).toBeNull();
   });
 });
 
@@ -417,6 +428,37 @@ describe("looking at a recipe", () => {
 
   // The same view serves the bartender, where it does have a way in to the
   // form. A guest must never be handed one.
+  // The bartender is about to make it, so how much matters. The guest only
+  // asks what is in it.
+  it("shows the bartender the amounts, and the guest only the names", () => {
+    const negroni = aDrink({
+      ingredient_names: ["Campari", "gin"],
+      ingredients: [
+        { ingredient_id: 1, name: "Campari", amount: "3 cl", in_stock: 1 },
+        { ingredient_id: 2, name: "gin", amount: null, in_stock: 1 },
+      ],
+    });
+
+    const { unmount } = render(
+      <RecipeView drink={negroni} onClose={vi.fn()} />,
+      { wrapper: withApp }
+    );
+
+    expect(screen.getByText("3 cl")).toBeInTheDocument();
+    expect(screen.getByText("Campari")).toBeInTheDocument();
+    unmount();
+
+    const { ingredients: _withAmounts, ...asGuest } = negroni;
+    void _withAmounts;
+
+    render(<RecipeView drink={asGuest} onClose={vi.fn()} />, {
+      wrapper: withApp,
+    });
+
+    expect(screen.getByText("Campari, gin")).toBeInTheDocument();
+    expect(screen.queryByText("3 cl")).not.toBeInTheDocument();
+  });
+
   it("offers no way to edit unless the caller gives one", () => {
     render(<RecipeView drink={aDrink()} onClose={vi.fn()} />, {
       wrapper: withApp,
@@ -498,7 +540,12 @@ describe("past orders, as a panel over the menu", () => {
   // arriving straight at it, or refreshing, showed nothing.
   it("loads the orders itself rather than relying on the menu", async () => {
     orders = [
-      anOrder({ id: 5, status: "processed", drink_id: 1, drink_title: "Negroni" }),
+      anOrder({
+        id: 5,
+        status: "processed",
+        drink_id: 1,
+        drink_title: "Negroni",
+      }),
       anOrder({
         id: 6,
         status: "processed",
@@ -518,7 +565,12 @@ describe("past orders, as a panel over the menu", () => {
     orders = [
       anOrder({ id: 5, status: "processed", drink_title: "Negroni" }),
       anOrder({ id: 6, status: "new", drink_title: "Still Coming" }),
-      anOrder({ id: 7, status: "processed", customer_name: "Bob", drink_title: "Someone Elses" }),
+      anOrder({
+        id: 7,
+        status: "processed",
+        customer_name: "Bob",
+        drink_title: "Someone Elses",
+      }),
     ];
 
     openDirectly();
@@ -548,14 +600,21 @@ describe("past orders, as a panel over the menu", () => {
 
   it("cannot order again while a drink is already on the way", async () => {
     orders = [
-      anOrder({ id: 5, status: "processed", drink_id: 1, drink_title: "Negroni" }),
+      anOrder({
+        id: 5,
+        status: "processed",
+        drink_id: 1,
+        drink_title: "Negroni",
+      }),
       anOrder({ id: 6, status: "new", drink_id: 2, drink_title: "Daiquiri" }),
     ];
 
     openDirectly();
 
     const history = await screen.findByRole("dialog", { name: "Past orders" });
-    expect(within(history).getByRole("button", { name: "Again" })).toBeDisabled();
+    expect(
+      within(history).getByRole("button", { name: "Again" })
+    ).toBeDisabled();
     // The reason sits beside the button rather than behind an alert.
     expect(history).toHaveTextContent(/once your current drink has been/i);
   });
@@ -563,13 +622,20 @@ describe("past orders, as a panel over the menu", () => {
   // Ordering again is one tap in a list of small rows, so it asks first too.
   it("asks before ordering again, and closes the history once it has", async () => {
     orders = [
-      anOrder({ id: 5, status: "processed", drink_id: 1, drink_title: "Negroni" }),
+      anOrder({
+        id: 5,
+        status: "processed",
+        drink_id: 1,
+        drink_title: "Negroni",
+      }),
     ];
 
     openDirectly();
 
     const history = await screen.findByRole("dialog", { name: "Past orders" });
-    await userEvent.click(within(history).getByRole("button", { name: "Again" }));
+    await userEvent.click(
+      within(history).getByRole("button", { name: "Again" })
+    );
 
     const ask = screen.getByRole("dialog", { name: "Order this drink?" });
     expect(ask).toHaveTextContent("Negroni");
@@ -592,16 +658,25 @@ describe("past orders, as a panel over the menu", () => {
   // guest's place in their history.
   it("answers the asking with Escape, and leaves the history open", async () => {
     orders = [
-      anOrder({ id: 5, status: "processed", drink_id: 1, drink_title: "Negroni" }),
+      anOrder({
+        id: 5,
+        status: "processed",
+        drink_id: 1,
+        drink_title: "Negroni",
+      }),
     ];
 
     openDirectly();
 
     const history = await screen.findByRole("dialog", { name: "Past orders" });
-    await userEvent.click(within(history).getByRole("button", { name: "Again" }));
+    await userEvent.click(
+      within(history).getByRole("button", { name: "Again" })
+    );
     await userEvent.keyboard("{Escape}");
 
-    expect(screen.queryByRole("dialog", { name: "Order this drink?" })).toBeNull();
+    expect(
+      screen.queryByRole("dialog", { name: "Order this drink?" })
+    ).toBeNull();
     expect(
       screen.getByRole("dialog", { name: "Past orders" })
     ).toBeInTheDocument();
@@ -784,7 +859,12 @@ describe("a menu full of photos", () => {
 describe("what a guest is allowed to do with a recipe", () => {
   it("is never offered a way into the form", async () => {
     menu = [
-      aDrink({ id: 1, title: "Negroni", recipe: "gin", show_recipe_to_guests: 1 }),
+      aDrink({
+        id: 1,
+        title: "Negroni",
+        recipe: "gin",
+        show_recipe_to_guests: 1,
+      }),
     ];
     serve();
     window.history.pushState({}, "", "/customer");

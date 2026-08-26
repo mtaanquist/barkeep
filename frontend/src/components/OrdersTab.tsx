@@ -266,11 +266,10 @@ const OrdersTab: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Recipe Display */}
                     {order.drink_recipe && showRecipes && (
                       <div className="mt-4 pt-4 border-t border-border">
                         <h4 className="font-mono text-caption uppercase text-text-muted mb-2">
-                          {t("recipe")}
+                          {t("howToMake")}
                         </h4>
                         <div className="text-body text-text-muted whitespace-pre-wrap">
                           {order.drink_recipe}
